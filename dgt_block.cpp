@@ -45,6 +45,22 @@ static void verify_U_idx(int nsoln, int idx) {
   }
 }
 
+static void verify_no_field(
+    std::string const& name,
+    std::vector<Field> const& fields) {
+  for (Field const& f : fields) {
+    if (f.name() == name) {
+      throw std::runtime_error("Block - field " + name + " exists");
+    }
+  }
+}
+
+static void verify_field_idx(int idx, std::string const& name) {
+  if (idx == -1) {
+    throw std::runtime_error("Block - field " + name + " doesn't exist");
+  }
+}
+
 int Block::id() const {
   return m_id;
 }
@@ -62,21 +78,25 @@ int Block::nsoln() const {
   return m_soln.size();
 }
 
-grid3 Block::cell_grid() const {
+int Block::nfields() const {
+  return m_fields.size();
+}
+
+p3a::grid3 Block::cell_grid() const {
   verify_mesh(m_mesh);
   return m_mesh->cell_grid();
 }
 
-box3<double> Block::domain() const {
+p3a::box3<double> Block::domain() const {
   verify_mesh(m_mesh);
   verify_node(m_node);
   Point const base_pt = m_mesh->tree().base();
   Point const node_pt = m_node->pt();
-  box3<double> const box = m_mesh->domain();
+  p3a::box3<double> const box = m_mesh->domain();
   return get_block_domain(base_pt, node_pt, box);
 }
 
-vector3<double> Block::dx() const {
+p3a::vector3<double> Block::dx() const {
   return get_dx(domain(), cell_grid());
 }
 
@@ -132,18 +152,33 @@ View<double***> Block::resid() const {
   return m_resid;
 }
 
-simd_view<double***> Block::simd_soln(int idx) const {
+p3a::simd_view<double***> Block::simd_soln(int idx) const {
   verify_U_idx(m_soln.size(), idx);
-  return simd_view<double***>(m_soln[idx]);
+  return p3a::simd_view<double***>(m_soln[idx]);
 }
 
-simd_view<double***> Block::simd_flux(int axis) const {
+p3a::simd_view<double***> Block::simd_flux(int axis) const {
   verify_axis(dim(), axis);
-  return simd_view<double***>(m_flux[axis]);
+  return p3a::simd_view<double***>(m_flux[axis]);
 }
 
-simd_view<double***> Block::simd_resid() const {
-  return simd_view<double***>(m_resid);
+p3a::simd_view<double***> Block::simd_resid() const {
+  return p3a::simd_view<double***>(m_resid);
+}
+
+int Block::field_idx(std::string name) const {
+  for (int idx = 0; idx < int(m_fields.size()); ++idx) {
+    if (m_fields[idx].name() == name) {
+      return idx;
+    }
+  }
+  return -1;
+}
+
+Field const& Block::field(std::string name) const {
+  int const idx = field_idx(name);
+  verify_field_idx(idx, name);
+  return m_fields[idx];
 }
 
 void Block::set_id(int id) {
@@ -162,6 +197,13 @@ void Block::set_node(Node* node) {
   m_node = node;
 }
 
+void Block::add_field(FieldInfo const& info) {
+  verify_no_field(info.name, m_fields);
+  Field field;
+  field.set_info(info);
+  m_fields.push_back(field);
+}
+
 void Block::reset() {
   m_id = -1;
   m_owner = -1;
@@ -174,27 +216,41 @@ void Block::reset() {
   }
 }
 
-void Block::allocate(int nsoln, int neq) {
+static std::string resid_name() {
+  return "dgt::Block::m_resid";
+}
+
+static std::string soln_name(int i) {
+  return "dgt::Block::m_soln[" + std::to_string(i) + "]";
+}
+
+static std::string flux_name(int i) {
+  return "dgt::Block::m_flux[" + std::to_string(i) + "]";
+}
+
+void Block::allocate(int nsoln, int nmodal_eq, int nflux_eq) {
   CALI_CXX_MARK_FUNCTION;
-  using Kokkos::resize;
   verify_basis(basis());
   m_soln.resize(nsoln);
-  grid3 const cgrid = generalize(cell_grid());
+  p3a::grid3 const cgrid = generalize(cell_grid());
   int const nmodes = basis().nmodes;
   int const nside_pts = num_pts(dim()-1, basis().p);
   int const ncells = cgrid.size();
-  resize(m_resid, ncells, neq, nmodes);
+  m_resid = View<double***>(resid_name(), ncells, nmodal_eq, nmodes);
   for (int soln = 0; soln < nsoln; ++soln) {
-    resize(m_soln[soln], ncells, neq, nmodes);
+    m_soln[soln] = View<double***>(soln_name(soln), ncells, nmodal_eq, nmodes);
   }
   for (int axis = 0; axis < dim(); ++axis) {
     int const nsides = get_side_grid(cgrid, axis).size();
-    resize(m_flux[axis], nsides, nside_pts, neq);
+    m_flux[axis] = View<double***>(flux_name(axis), nsides, nside_pts, nflux_eq);
   }
   for (int axis = 0; axis < dim(); ++axis) {
     for (int dir = 0; dir < ndirs; ++dir) {
-      m_border[axis][dir].allocate(neq);
+      m_border[axis][dir].allocate(nmodal_eq, nflux_eq);
     }
+  }
+  for (int field = 0; field < nfields(); ++field) {
+    m_fields[field].allocate(cell_grid());
   }
 }
 
@@ -202,6 +258,7 @@ void Block::deallocate() {
   CALI_CXX_MARK_FUNCTION;
   m_resid = View<double***>();
   m_soln.resize(0);
+  m_fields.resize(0);
   for (int axis = 0; axis < DIMS; ++axis) {
     for (int dir = 0; dir < ndirs; ++dir) {
       m_border[axis][dir].deallocate();

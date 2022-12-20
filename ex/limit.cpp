@@ -19,11 +19,11 @@ static constexpr double rho_floor_val = 1.e-12;
 static constexpr double P_floor_val = 1.e-12;
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-static_vector<double, NEQ> gather_dg_slopes(
+p3a::static_vector<double, NEQ> gather_dg_slopes(
     View<double***> U,
     int cell,
     int mode) {
-  static_vector<double, NEQ> dc;
+  p3a::static_vector<double, NEQ> dc;
   for (int eq = 0; eq < NEQ; ++eq) {
     dc[eq] = U(cell, eq, mode);
   }
@@ -31,10 +31,10 @@ static_vector<double, NEQ> gather_dg_slopes(
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-static_vector<double, NEQ> gather_border_avg(
+p3a::static_vector<double, NEQ> gather_border_avg(
     View<double**> soln,
     int const bside) {
-  static_vector<double, NEQ> U_avg;
+  p3a::static_vector<double, NEQ> U_avg;
   for (int eq = 0; eq < NEQ; ++eq) {
     U_avg[eq] = soln(bside, eq);
   }
@@ -42,11 +42,11 @@ static_vector<double, NEQ> gather_border_avg(
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-static_vector<double, NEQ> gather_amr_border_avg(
+p3a::static_vector<double, NEQ> gather_amr_border_avg(
     View<double***> soln,
     int const nchild,
     int const bside) {
-  static_vector<double, NEQ> U_avg = decltype(U_avg)::zero();
+  p3a::static_vector<double, NEQ> U_avg = decltype(U_avg)::zero();
   for (int eq = 0; eq < NEQ; ++eq) {
     for (int child = 0; child < nchild; ++child) {
       U_avg[eq] += soln(bside, child, eq);
@@ -57,10 +57,10 @@ static_vector<double, NEQ> gather_amr_border_avg(
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-static_vector<double, NEQ> convert_to_primitive(
-    static_vector<double, NEQ> const& c,
+p3a::static_vector<double, NEQ> convert_to_primitive(
+    p3a::static_vector<double, NEQ> const& c,
     double gamma) {
-  static_vector<double, NEQ> p;
+  p3a::static_vector<double, NEQ> p;
   p[RH] = c[RH];
   p[VX] = c[MX]/c[RH];
   p[VY] = c[MY]/c[RH];
@@ -70,13 +70,13 @@ static_vector<double, NEQ> convert_to_primitive(
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-static_vector<double, NEQ> convert_to_dprimitive(
-    static_vector<double, NEQ> const& c,
-    static_vector<double, NEQ> const& dc,
+p3a::static_vector<double, NEQ> convert_to_dprimitive(
+    p3a::static_vector<double, NEQ> const& c,
+    p3a::static_vector<double, NEQ> const& dc,
     double gamma) {
-  static_vector<double, NEQ> dp;
+  p3a::static_vector<double, NEQ> dp;
   double const rho = c[RH];
-  vector3<double> const v = get_vec3(c, MM) / rho;
+  p3a::vector3<double> const v = get_vec3(c, MM) / rho;
   double const v2 = dot_product(v, v);
   dp[RH] = dc[RH];
   dp[VX] = (dc[MX] - dp[RH]*v.x())/rho;
@@ -92,13 +92,13 @@ static_vector<double, NEQ> convert_to_dprimitive(
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-static_vector<double, NEQ> convert_to_dconservative(
-    static_vector<double, NEQ> const c,
-    static_vector<double, NEQ> const& dp,
+p3a::static_vector<double, NEQ> convert_to_dconservative(
+    p3a::static_vector<double, NEQ> const c,
+    p3a::static_vector<double, NEQ> const& dp,
     double gamma) {
-  static_vector<double, NEQ> dc;
+  p3a::static_vector<double, NEQ> dc;
   double const rho = c[RH];
-  vector3<double> const v = get_vec3(c, MM) / rho;
+  p3a::vector3<double> const v = get_vec3(c, MM) / rho;
   double const v2 = dot_product(v, v);
   dc[RH] = dp[RH];
   dc[MX] = dp[RH]*v.x() + rho*dp[VX];
@@ -114,8 +114,8 @@ static_vector<double, NEQ> convert_to_dconservative(
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
 double minmod(double a, double b) {
-  if (sign(a) != sign(b)) return 0.;
-  else return sign(a)*min(abs(a), abs(b));
+  if (p3a::sign(a) != p3a::sign(b)) return 0.;
+  else return p3a::sign(a)*p3a::min(p3a::abs(a), p3a::abs(b));
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
@@ -134,27 +134,27 @@ double minmodB(
     double p_right) {
   double const dp_left = beta*(p-p_left);
   double const dp_right = beta*(p_right-p);
-  if (abs(dp) < M * dx) return dp;
+  if (std::abs(dp) < M*dx*dx) return dp;
   else return minmod(dp, dp_left, dp_right);
 }
 
 struct BorderData {
   public:
-    static_array<static_array<int, ndirs>, DIMS> border_type;
-    static_array<static_array<grid3, ndirs>, DIMS> bside_grid;
-    static_array<static_array<View<double**>, ndirs>, DIMS> avg_U;
-    static_array<static_array<View<double***>, ndirs>, DIMS> amr_avg_U;
+    p3a::static_array<p3a::static_array<int, ndirs>, DIMS> border_type;
+    p3a::static_array<p3a::static_array<p3a::grid3, ndirs>, DIMS> bside_grid;
+    p3a::static_array<p3a::static_array<View<double**>, ndirs>, DIMS> avg_U;
+    p3a::static_array<p3a::static_array<View<double***>, ndirs>, DIMS> amr_avg_U;
   public:
     BorderData(Block& block) {
       int const dim = block.dim();
-      grid3 const g = block.cell_grid();
+      p3a::grid3 const g = block.cell_grid();
       for (int axis = 0; axis < dim; ++axis) {
         for (int dir = 0; dir < ndirs; ++dir) {
           Border& border = block.border(axis, dir);
           border_type[axis][dir] = border.type();
-          subgrid3 const adj_sides = get_adj_sides(g, axis, dir);
-          bside_grid[axis][dir] = generalize(adj_sides.extents());
-          if (border_type[axis][dir] == COARSE_TO_FINE) {
+          p3a::subgrid3 const adj_sides = dgt::get_adj_sides(g, axis, dir);
+          bside_grid[axis][dir] = dgt::generalize(adj_sides.extents());
+          if (border_type[axis][dir] == dgt::COARSE_TO_FINE) {
             amr_avg_U[axis][dir] = border.amr(recv).avg_soln;
           } else {
             avg_U[axis][dir] = border.avg_soln(recv).val;
@@ -166,8 +166,8 @@ struct BorderData {
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
 bool needs_border(
-    grid3 const& cell_grid,
-    vector3<int> const& cell_ijk,
+    p3a::grid3 const& cell_grid,
+    p3a::vector3<int> const& cell_ijk,
     int axis,
     int dir) {
   int const start = 0;
@@ -178,24 +178,24 @@ bool needs_border(
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-static_vector<double, NEQ> get_adj_avg(
+p3a::static_vector<double, NEQ> get_adj_avg(
     View<double***> soln,
     BorderData const& dat,
-    grid3 const& cell_grid,
-    vector3<int> const& cell_ijk,
+    p3a::grid3 const& cell_grid,
+    p3a::vector3<int> const& cell_ijk,
     int axis,
     int dir,
     int nchild) {
-  static_vector<double, NEQ> c;
+  p3a::static_vector<double, NEQ> c;
   if (!needs_border(cell_grid, cell_ijk, axis, dir)) {
-    vector3<int> const adj_cell_ijk = get_cells_adj_cell(cell_ijk, axis, dir);
+    p3a::vector3<int> const adj_cell_ijk = dgt::get_cells_adj_cell(cell_ijk, axis, dir);
     int const adj_cell = cell_grid.index(adj_cell_ijk);
-    c = gather_avg<NEQ>(soln, adj_cell);
+    c = dgt::gather_avg<NEQ>(soln, adj_cell);
   } else {
-    vector3<int> const side_ijk = get_cells_adj_side(cell_ijk, axis, dir);
-    vector3<int> const bside_ijk = get_border_ijk(side_ijk, axis);
+    p3a::vector3<int> const side_ijk = dgt::get_cells_adj_side(cell_ijk, axis, dir);
+    p3a::vector3<int> const bside_ijk = dgt::get_border_ijk(side_ijk, axis);
     int const bside = dat.bside_grid[axis][dir].index(bside_ijk);
-    if (dat.border_type[axis][dir] != COARSE_TO_FINE) {
+    if (dat.border_type[axis][dir] != dgt::COARSE_TO_FINE) {
       c = gather_border_avg(dat.avg_U[axis][dir], bside);
     } else {
       c = gather_amr_border_avg(dat.amr_avg_U[axis][dir], nchild, bside);
@@ -208,23 +208,23 @@ void limit(State& state, Block& block, int soln_idx, View<double***> soln_lim) {
   CALI_CXX_MARK_FUNCTION;
   if (block.basis().p == 0) return;
   int const dim = block.dim();
-  grid3 const g = block.cell_grid();
-  grid3 const cell_grid = generalize(g);
-  vector3<double> const dx = block.dx();
+  p3a::grid3 const g = block.cell_grid();
+  p3a::grid3 const cell_grid = dgt::generalize(g);
+  p3a::vector3<double> const dx = block.dx();
   Basis const b = block.basis();
-  int const nchild = num_child(dim-1);
+  int const nchild = dgt::num_child(dim-1);
   BorderData dat(block);
   double const gamma = state.in.gamma;
   double const M = state.in.M;
   double const beta = state.in.beta;
   View<double***> soln = block.soln(soln_idx);
   Kokkos::deep_copy(soln_lim, soln);
-  auto f = [=] P3A_DEVICE (vector3<int> const& cell_ijk) {
-    static_vector<double, NEQ> dc, dp, dc_lim, dp_lim;
-    static_vector<double, NEQ> c[ndirs+1], p[ndirs+1];
-    static_vector<bool, NEQ> should_zero = decltype(should_zero)::zero();
+  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& cell_ijk) {
+    p3a::static_vector<double, NEQ> dc, dp, dc_lim, dp_lim;
+    p3a::static_vector<double, NEQ> c[ndirs+1], p[ndirs+1];
+    bool should_zero = false;
     int const cell = cell_grid.index(cell_ijk);
-    c[center] = gather_avg<NEQ>(soln, cell);
+    c[center] = dgt::gather_avg<NEQ>(soln, cell);
     p[center] = convert_to_primitive(c[center], gamma);
     for (int axis = 0; axis < dim; ++axis) {
       int const dg_mode = 1 + axis;
@@ -235,10 +235,9 @@ void limit(State& state, Block& block, int soln_idx, View<double***> soln_lim) {
         p[dir] = convert_to_primitive(c[dir], gamma);
       }
       for (int eq = 0; eq < NEQ; ++eq) {
-        dp_lim[eq] = minmodB(beta, M, dx[axis],
-            dp[eq], p[center][eq], p[left][eq], p[right][eq]);
+        dp_lim[eq] = minmodB(beta, M, dx[axis], dp[eq], p[center][eq], p[left][eq], p[right][eq]);
         if (dp_lim[eq] != dp[eq]) {
-          should_zero[eq] = true;
+          should_zero = true;
         }
       }
       dc_lim = convert_to_dconservative(c[center], dp_lim, gamma);
@@ -246,25 +245,25 @@ void limit(State& state, Block& block, int soln_idx, View<double***> soln_lim) {
         soln_lim(cell, eq, dg_mode) = dc_lim[eq];
       }
     }
-    for (int eq = 0; eq < NEQ; ++eq) {
-      if (should_zero[eq]) {
+    if (should_zero) {
+      for (int eq = 0; eq < NEQ; ++eq) {
         for (int m = dim+1; m < b.nmodes; ++m) {
           soln_lim(cell, eq, m) = 0.;
         }
       }
     }
   };
-  for_each(execution::par, cell_grid, f);
+  p3a::for_each(p3a::execution::par, cell_grid, f);
   Kokkos::deep_copy(soln, soln_lim);
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
 double get_min_eval(View<double***> U, Basis const& b, int cell, int eq) {
-  double min_val = maximum_value<double>();
-  int const neval_pts = num_eval_pts(b.dim, b.p);
+  double min_val = p3a::maximum_value<double>();
+  int const neval_pts = dgt::num_eval_pts(b.dim, b.p);
   for (int pt = 0; pt < neval_pts; ++pt) {
-    double const val = interp_scalar_eval(U, b, cell, pt, eq);
-    min_val = min(min_val, val);
+    double const val = dgt::interp_scalar_eval(U, b, cell, pt, eq);
+    min_val = p3a::min(min_val, val);
   }
   return min_val;
 }
@@ -277,14 +276,14 @@ double get_min_amr(
     int axis,
     int dir,
     int eq) {
-  int const nchild_sides = num_child(b.dim-1);
-  int const nside_pts = num_pts(b.dim-1, b.p);
-  double min_val = maximum_value<double>();
+  int const nchild_sides = dgt::num_child(b.dim-1);
+  int const nside_pts = dgt::num_pts(b.dim-1, b.p);
+  double min_val = p3a::maximum_value<double>();
   for (int child = 0; child < nchild_sides; ++child) {
     for (int pt = 0; pt < nside_pts; ++pt) {
-      double const val = interp_scalar_child_side(
+      double const val = dgt::interp_scalar_child_side(
           U, b, cell, axis, dir, child, pt, eq);
-      min_val = min(min_val, val);
+      min_val = p3a::min(min_val, val);
     }
   }
   return min_val;
@@ -293,62 +292,26 @@ double get_min_amr(
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
 double bound_theta(double theta) {
   double btheta = theta;
-  btheta = min(theta, 1.);
-  btheta = max(theta, 0.);
+  btheta = p3a::min(theta, 1.);
+  btheta = p3a::max(theta, 0.);
   return btheta;
-}
-
-[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-double p_residual(
-    static_vector<double, NEQ> const& U_pt,
-    static_vector<double, NEQ> const& U_avg,
-    double gamma,
-    double P_floor,
-    double theta) {
-  static_vector<double, NEQ> const U_perturb = U_pt + theta*(U_pt - U_avg);
-  double const P = get_pressure(U_perturb, gamma);
-  return P - P_floor;
-}
-
-[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-double find_p_theta(
-    static_vector<double, NEQ> const& U_pt,
-    static_vector<double, NEQ> const& U_avg,
-    double gamma,
-    double P_floor) {
-  int iter = 0;
-  bool converged = false;
-  double theta = 0;
-  double const h = 1.e-8;
-  double const eps = 1.e-8;
-  while ((!converged) && (iter < 30)) {
-    double const r = p_residual(U_pt, U_avg, gamma, P_floor, theta);
-    if (std::abs(r) < eps) { converged = true; break; }
-    double const r_h = p_residual(U_pt, U_avg, gamma, P_floor, theta+h);
-    double const dr_dtheta = (r_h-r)/h;
-    double const dtheta = -r/dr_dtheta;
-    theta += dtheta;
-    iter++;
-  }
-  if (!converged) { printf("ouch\n"); abort(); }
-  return theta;
 }
 
 void preserve_bounds(State& state, Block& block, int soln_idx) {
   CALI_CXX_MARK_FUNCTION;
   if (block.basis().p == 0) return;
-  grid3 const g = block.cell_grid();
-  grid3 const cell_grid = generalize(g);
+  p3a::grid3 const g = block.cell_grid();
+  p3a::grid3 const cell_grid = dgt::generalize(g);
   Basis const b = block.basis();
-  int const neval_pts = num_eval_pts(b.dim, b.p);
+  int const neval_pts = dgt::num_eval_pts(b.dim, b.p);
   View<double***> U = block.soln(soln_idx);
   double const gamma = state.in.gamma;
   double const rho_floor = rho_floor_val;
   double const P_floor = P_floor_val;
   double const E_floor = P_floor/(gamma-1.); // ideal gas
-  auto f = [=] P3A_DEVICE (vector3<int> const& cell_ijk) {
+  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& cell_ijk) {
     int const cell = cell_grid.index(cell_ijk);
-    static_vector<double, NEQ> U_pt;
+    p3a::static_vector<double, NEQ> U_pt;
     { // small densities
       if (U(cell, RH, 0) < rho_floor) {
         U(cell, RH, 0) = rho_floor;
@@ -374,7 +337,7 @@ void preserve_bounds(State& state, Block& block, int soln_idx) {
       }
     }
     { // small pressures
-      static_vector<double, NEQ> const U_avg = gather_avg<NEQ>(U, cell);
+      p3a::static_vector<double, NEQ> const U_avg = dgt::gather_avg<NEQ>(U, cell);
       double const P_avg = get_pressure(U_avg, gamma);
       if (P_avg < P_floor) {
         for (int eq = 0; eq < NEQ; ++eq) {
@@ -385,11 +348,11 @@ void preserve_bounds(State& state, Block& block, int soln_idx) {
       } else {
         double theta_min = 1.;
         for (int pt = 0; pt < neval_pts; ++pt) {
-          U_pt = interp_vec_eval<NEQ>(U, b, cell, pt);
+          U_pt = dgt::interp_vec_eval<NEQ>(U, b, cell, pt);
           double const P_pt = get_pressure(U_pt, gamma);
           if (P_pt < P_floor) {
-            double const theta = find_p_theta(U_pt, U_avg, gamma, P_floor);
-            theta_min = min(theta_min, theta);
+            double const theta = (P_avg-P_floor)/(P_avg-P_pt);
+            theta_min = p3a::min(theta_min, theta);
           }
           double const bounded_theta_min = bound_theta(theta_min);
           for (int eq = 0; eq < NEQ; ++eq) {
@@ -401,7 +364,7 @@ void preserve_bounds(State& state, Block& block, int soln_idx) {
       }
     }
   };
-  for_each(execution::par, cell_grid, f);
+  p3a::for_each(p3a::execution::par, cell_grid, f);
 }
 
 void preserve_bounds_amr(
@@ -412,18 +375,18 @@ void preserve_bounds_amr(
     int soln_idx) {
   CALI_CXX_MARK_FUNCTION;
   if (block.basis().p == 0) return;
-  grid3 const g = block.cell_grid();
-  grid3 const cell_grid = generalize(g);
+  p3a::grid3 const g = block.cell_grid();
+  p3a::grid3 const cell_grid = dgt::generalize(g);
   Basis const b = block.basis();
   View<double***> U = block.soln(soln_idx);
-  subgrid3 const border_cells = generalize(get_adj_cells(g, axis, dir));
+  p3a::subgrid3 const border_cells = dgt::generalize(dgt::get_adj_cells(g, axis, dir));
   double const gamma = state.in.gamma;
   double const rho_floor = rho_floor_val;
   double const P_floor = P_floor_val;
-  int const nchild_sides = num_child(b.dim-1);
-  int const nside_pts = num_pts(b.dim-1, b.p);
-  auto f = [=] P3A_DEVICE (vector3<int> const& cell_ijk) {
-    static_vector<double, NEQ> U_pt;
+  int const nchild_sides = dgt::num_child(b.dim-1);
+  int const nside_pts = dgt::num_pts(b.dim-1, b.p);
+  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& cell_ijk) {
+    p3a::static_vector<double, NEQ> U_pt;
     int const cell = cell_grid.index(cell_ijk);
     { // small densities
       double const rho_avg = U(cell, RH, 0);
@@ -440,14 +403,15 @@ void preserve_bounds_amr(
     }
     { // small pressures
       double theta_min = 1.;
-      static_vector<double, NEQ> const U_avg = gather_avg<NEQ>(U, cell);
+      p3a::static_vector<double, NEQ> const U_avg = dgt::gather_avg<NEQ>(U, cell);
+      double const P_avg = get_pressure(U_avg, gamma);
       for (int child = 0; child < nchild_sides; ++child) {
         for (int pt = 0; pt < nside_pts; ++pt) {
-          U_pt = interp_vec_child_side<NEQ>(U, b, cell, axis, dir, child, pt);
+          U_pt = dgt::interp_vec_child_side<NEQ>(U, b, cell, axis, dir, child, pt);
           double const P_pt = get_pressure(U_pt, gamma);
           if (P_pt < P_floor) {
-            double const theta = find_p_theta(U_pt, U_avg, gamma, P_floor);
-            theta_min = min(theta_min, theta);
+            double const theta = (P_avg-P_floor)/(P_avg-P_pt);
+            theta_min = p3a::min(theta_min, theta);
           }
         }
       }
@@ -459,7 +423,7 @@ void preserve_bounds_amr(
       }
     }
   };
-  for_each(execution::par, border_cells, f);
+  p3a::for_each(p3a::execution::par, border_cells, f);
 }
 
 }

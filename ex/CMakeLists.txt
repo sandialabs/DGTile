@@ -142,6 +142,13 @@ configure_file(advect_2D_amr.in advect_2D_amr_p${p} @ONLY)
 set(p 1)
 configure_file(rt.in rt @ONLY)
 
+# ----------------
+# -- 2D sod amr --
+# ----------------
+
+set(p 1)
+configure_file(sod.in sod @ONLY)
+
 # --
 # -- Regression tests
 # --

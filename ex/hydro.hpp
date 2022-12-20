@@ -13,12 +13,26 @@
 
 namespace hydro {
 
-using namespace dgt;
-
 enum {RH=0,MM=1,MX=1,MY=2,MZ=3,EN=4,NEQ=5};
 enum {VE=1,VX=1,VY=2,VZ=3,PR=4};
 
 struct State;
+
+using dgt::left;
+using dgt::right;
+using dgt::send;
+using dgt::recv;
+using dgt::X;
+using dgt::Y;
+using dgt::Z;
+using dgt::ndirs;
+using dgt::DIMS;
+using dgt::View;
+using dgt::Basis;
+using dgt::Border;
+using dgt::Block;
+using dgt::Node;
+using dgt::Mesh;
 
 using Exact = std::function<void(State&, Block&, View<double***>)>;
 
@@ -27,11 +41,11 @@ struct Input {
   mpicpp::comm* comm;
   int p = -1;
   bool tensor = true;
-  vector3<double> xmin;
-  vector3<double> xmax;
-  vector3<int> block_grid;
-  vector3<int> cell_grid;
-  vector3<bool> periodic;
+  p3a::vector3<double> xmin;
+  p3a::vector3<double> xmax;
+  p3a::vector3<int> block_grid;
+  p3a::vector3<int> cell_grid;
+  p3a::vector3<bool> periodic;
   std::string init_amr = "";
   std::string ics = "";
   std::string amr = "";
@@ -56,30 +70,30 @@ struct State {
   double t;
   int step;
   int ssp_rk_stages;
-  device_array<std::int8_t> error_code;
+  p3a::device_array<std::int8_t> error_code;
   std::vector<double> out_times;
   View<double***> scratch;
 };
 
 template <class T>
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-vector3<T> get_vec3(static_vector<T, NEQ> U, int eq) {
-  return vector3<T>(U[eq + X], U[eq + Y], U[eq + Z]);
+p3a::vector3<T> get_vec3(p3a::static_vector<T, NEQ> U, int eq) {
+  return p3a::vector3<T>(U[eq + X], U[eq + Y], U[eq + Z]);
 }
 
 template <class T>
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-T get_eint(static_vector<T, NEQ> U) {
+T get_eint(p3a::static_vector<T, NEQ> U) {
   T const E = U[EN];
   T const rho = U[RH];
-  vector3<T> const v = get_vec3(U, MM)/rho;
+  p3a::vector3<T> const v = get_vec3(U, MM)/rho;
   T const half_v2 = 0.5 * dot_product(v, v);
   return E/rho - half_v2;
 }
 
 template <class T>
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-T get_pressure(static_vector<T, NEQ> U, double gamma) {
+T get_pressure(p3a::static_vector<T, NEQ> U, double gamma) {
   T const rho = U[RH];
   T const eint = get_eint(U);
   return rho * eint * (gamma - 1.);
@@ -87,22 +101,23 @@ T get_pressure(static_vector<T, NEQ> U, double gamma) {
 
 template <class T>
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-T get_wave_speed(static_vector<T, NEQ> U, double gamma) {
+T get_wave_speed(p3a::static_vector<T, NEQ> U, double gamma) {
   T const rho = U[RH];
   T const P = get_pressure(U, gamma);
-  return sqrt(gamma * P / rho);
+  T const c2 = (gamma * P) / rho;
+  return p3a::sqrt(c2);
 }
 
 template <class T>
-[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-static_vector<T, NEQ> get_flux(
-    static_vector<T, NEQ> const& U,
+[[nodiscard]] P3A_HOST_DEVICE inline
+p3a::static_vector<T, NEQ> get_flux(
+    p3a::static_vector<T, NEQ> const& U,
     T const& P,
     int j) {
-  static_vector<T, NEQ> Fj;
+  p3a::static_vector<T, NEQ> Fj;
   T const rho = U[RH];
   T const en = U[EN];
-  vector3<T> const v = get_vec3(U, MM) / rho;
+  p3a::vector3<T> const v = get_vec3(U, MM) / rho;
   Fj[RH] = rho * v[j];
   Fj[MX] = rho * v[j] * v[X];
   Fj[MY] = rho * v[j] * v[Y];
@@ -113,15 +128,15 @@ static_vector<T, NEQ> get_flux(
 }
 
 template <class T>
-[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE
-static_vector<T, NEQ> get_hllc_flux(
-    static_vector<T, NEQ> U[ndirs],
-    static_vector<T, NEQ> F[ndirs],
+[[nodiscard]] P3A_HOST_DEVICE inline
+p3a::static_vector<T, NEQ> get_hllc_flux(
+    p3a::static_vector<T, NEQ> U[ndirs],
+    p3a::static_vector<T, NEQ> F[ndirs],
     T P[ndirs],
     T c[ndirs],
     int j) {
   T rho[ndirs], v[ndirs], cs[ndirs], qs[ndirs], s[ndirs];
-  static_vector<T, NEQ> U_star[ndirs], F_star[ndirs], F_hllc;
+  p3a::static_vector<T, NEQ> U_star[ndirs], F_star[ndirs], F_hllc;
   int const mparr = MM + permute(X, j);
   int const mperp1 = MM + permute(Y, j);
   int const mperp2 = MM + permute(Z, j);
@@ -133,8 +148,8 @@ static_vector<T, NEQ> get_hllc_flux(
   cs[right] = v[right] + c[right];
   qs[left]  = v[right] - c[right];
   qs[right] = v[left]  + c[left];
-  s[left]  = min(cs[left],  qs[left]);
-  s[right] = max(cs[right], qs[right]);
+  s[left]  = p3a::min(cs[left],  qs[left]);
+  s[right] = p3a::max(cs[right], qs[right]);
   T const s_m_num =
     (rho[right] * v[right] * (s[right] - v[right]) -
      rho[left]  * v[left]  * (s[left]  - v[left])) +
@@ -142,7 +157,7 @@ static_vector<T, NEQ> get_hllc_flux(
   T const s_m_den =
     rho[right] * (s[right] - v[right]) -
     rho[left]  * (s[left]  - v[left]);
-  T const s_m = condition(
+  T const s_m = p3a::condition(
       s_m_den != 0.,
       s_m_num / s_m_den,
       v[right] - v[left]);
@@ -161,10 +176,10 @@ static_vector<T, NEQ> get_hllc_flux(
   }
   for (int eq = 0; eq < NEQ; ++eq) {
     F_hllc[eq] =
-      condition(s[left] > 0.,                     F[left][eq],
-      condition((s[left] <= 0.) && (s_m > 0.),    F_star[left][eq],
-      condition((s_m <= 0.) && (s[right] >= 0.),  F_star[right][eq],
-      condition(s[right] < 0.,                    F[right][eq],
+      p3a::condition(s[left] > 0.,                     F[left][eq],
+      p3a::condition((s[left] <= 0.) && (s_m > 0.),    F_star[left][eq],
+      p3a::condition((s_m <= 0.) && (s[right] >= 0.),  F_star[right][eq],
+      p3a::condition(s[right] < 0.,                    F[right][eq],
       T(0.)))));
   }
   return F_hllc;

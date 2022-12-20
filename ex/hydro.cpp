@@ -1,3 +1,5 @@
+#include <iomanip>
+#include <iostream>
 #include <stdexcept>
 
 #include "caliper/cali.h"
@@ -10,8 +12,6 @@
 #include "dgt_views.hpp"
 
 #include "hydro.hpp"
-
-using namespace dgt;
 
 namespace hydro {
 
@@ -27,7 +27,7 @@ static std::vector<std::string> cons_var_names = {
 
 static void allocate_scratch(State& state) {
   Mesh const& mesh = state.mesh;
-  int const ncells = generalize(mesh.cell_grid()).size();
+  int const ncells = dgt::generalize(mesh.cell_grid()).size();
   int const nmodes = mesh.basis().nmodes;
   Kokkos::resize(state.scratch, ncells, NEQ, nmodes);
 }
@@ -35,13 +35,16 @@ static void allocate_scratch(State& state) {
 static void setup(State& state) {
   CALI_CXX_MARK_FUNCTION;
   Input const in = state.in;
+  int const dim = dgt::get_dim(in.cell_grid);
   Mesh& mesh = state.mesh;
   mesh.set_comm(in.comm);
-  mesh.set_domain(box3<double>(in.xmin, in.xmax));
+  mesh.set_domain(p3a::box3<double>(in.xmin, in.xmax));
   mesh.set_periodic(in.periodic);
   mesh.set_cell_grid(in.cell_grid);
-  mesh.set_nsoln(min(in.p+1, 2));
-  mesh.set_neq(NEQ);
+  mesh.set_nsoln(p3a::min(in.p+1, 2));
+  mesh.set_nmodal_eq(NEQ);
+  mesh.set_nflux_eq(NEQ);
+  mesh.add_field("test", dim-1, 1);
   mesh.init(in.block_grid, in.p, in.tensor);
   mesh.rebuild();
   do_initial_amr(state);
@@ -57,14 +60,14 @@ static void setup(State& state) {
 
 static double compute_stable_time_step(State& state) {
   CALI_CXX_MARK_FUNCTION;
-  double dt = maximum_value<double>();
+  double dt = p3a::maximum_value<double>();
   for (Node* leaf : state.mesh.owned_leaves()) {
-    dt = min(dt, compute_stable_time_step(state, leaf->block));
+    dt = p3a::min(dt, compute_stable_time_step(state, leaf->block));
   }
   mpicpp::comm* comm = state.mesh.comm();
   mpicpp::request req = comm->iallreduce(&dt, 1, mpicpp::op::min());
   req.wait();
-  dt = min(state.in.tfinal - state.t, state.in.CFL * dt);
+  dt = p3a::min(state.in.tfinal - state.t, state.in.CFL * dt);
   return dt;
 }
 
@@ -79,7 +82,7 @@ static void compute_fluxes(State& state, int soln_idx) {
     for (int axis = 0; axis < dim; ++axis) {
       for (int dir = 0; dir < ndirs; ++dir) {
         Border const& border = block.border(axis, dir);
-        if (border.type() == COARSE_TO_FINE) {
+        if (border.type() == dgt::COARSE_TO_FINE) {
           compute_amr_border_fluxes(state, block, axis, dir);
         } else {
           compute_border_fluxes(state, block, axis, dir);
@@ -114,7 +117,7 @@ static void compute_side_integral(State& state) {
     for (int axis = 0; axis < dim; ++axis) {
       for (int dir = 0; dir < ndirs; ++dir) {
         Border const& border = block.border(axis, dir);
-        if (border.type() == COARSE_TO_FINE) {
+        if (border.type() == dgt::COARSE_TO_FINE) {
           compute_amr_side_integral(block, axis, dir);
         }
       }
@@ -158,7 +161,7 @@ static void reflect_boundary(State& state) {
     for (int axis = 0; axis < dim; ++axis) {
       for (int dir = 0; dir < ndirs; ++dir) {
         Border& border = block.border(axis, dir);
-        if (border.type() == BOUNDARY) {
+        if (border.type() == dgt::BOUNDARY) {
           reflect_boundary(border);
         }
       }
@@ -175,7 +178,7 @@ static void preserve_bounds(State& state, int soln_idx) {
     for (int axis = 0; axis < dim; ++axis) {
       for (int dir = 0; dir < ndirs; ++dir) {
         Border const& border = block.border(axis, dir);
-        if (border.type() == COARSE_TO_FINE) {
+        if (border.type() == dgt::COARSE_TO_FINE) {
           preserve_bounds_amr(state, block, axis, dir, soln_idx);
         }
       }
@@ -190,7 +193,7 @@ static void axpby(State& state, int r, double a, int x, double b, int y) {
     View<double***> Ur = block.soln(r);
     View<double***> Ux = block.soln(x);
     View<double***> Uy = block.soln(y);
-    dgt::axpby(Ur, a, Ux, b, Uy);
+    dgt::axpby(p3a::execution::par, Ur, a, Ux, b, Uy);
   }
 }
 
@@ -208,7 +211,7 @@ static double compute_tally(State& state, int eq) {
 }
 
 static void print_tallies(State& state) {
-  static_vector<double, NEQ> tallies;
+  p3a::static_vector<double, NEQ> tallies;
   for (int eq = 0; eq < NEQ; ++eq) {
     tallies[eq] = compute_tally(state, eq);
   }
@@ -258,8 +261,8 @@ double compute_error(int type, F const& f, State& state, int eq) {
   if (!state.in.exact_solution) return -1.;
   int const dim = state.mesh.dim();
   int const nfine_pts = state.mesh.basis().wt_fine.extent(0);
-  int const ncells = generalize(state.mesh.cell_grid()).size();
-  double const volume = get_volume(dim, state.mesh.domain().extents());
+  int const ncells = dgt::generalize(state.mesh.cell_grid()).size();
+  double const volume = dgt::get_volume(dim, state.mesh.domain().extents());
   Kokkos::resize(state.scratch, ncells, nfine_pts, NEQ);
   View<double***> U_ex = state.scratch;
   double error = 0.;
@@ -283,7 +286,7 @@ static void check_error_regression(State& state, double computed) {
   if (!state.in.exact_solution) return;
   if (state.in.error_regression == 0.) return;
   double const expected = state.in.error_regression;
-  double const absval = abs(expected - computed);
+  double const absval = std::abs(expected - computed);
   if (absval > 1.e-5) {
     throw std::runtime_error("test failed!\n");
   }
@@ -338,7 +341,7 @@ static void run(mpicpp::comm* comm, std::string const& name) {
 }
 
 int main(int argc, char** argv) {
-  Library library(argc, argv);
+  dgt::Library library(argc, argv);
   if (argc != 2) {
     std::string exe = argv[0];
     throw std::runtime_error("usage: " + exe + " input");

@@ -43,7 +43,7 @@ static bool ensure_2to1_refine(
   int const nchild = num_child(dim-1);
   bool changed = false;
   for (int which_child = 0; which_child < nchild; ++which_child) {
-    vector3<int> local = get_local(axis, which_child);
+    p3a::vector3<int> local = get_local(axis, which_child);
     local[axis] = invert_dir(dir);
     Node const* adj_node = border.adj()->child(local);
     verify_leaf(adj_node);
@@ -126,7 +126,7 @@ static void ensure_2to1_coarsen(
       }
       Node* parent = leaf->parent();
       for (int which_child = 0; which_child < num_child(dim); ++which_child) {
-        vector3<int> const local = get_local(which_child);
+        p3a::vector3<int> const local = get_local(which_child);
         Node* child = parent->child(local);
         if (!child->is_leaf()) {
           marks[id] = REMAIN;

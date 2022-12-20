@@ -8,8 +8,6 @@
 
 namespace dgt {
 
-using namespace p3a;
-
 static constexpr int max_q = 3;
 static constexpr int max_p = 2;
 
@@ -22,12 +20,13 @@ struct Basis {
   View<double*>     wt_side;          // (side_pt)
   View<double*>     wt_fine;          // (fine_pt)
   View<double**>    pt_intr;          // (intr_pt, dim)
-  View<double****>  pt_side;          // (axis, dir, intr_pt, dim)
+  View<double****>  pt_side;          // (axis, dir, side_pt, dim)
   View<double***>   pt_child_intr;    // (which_child, intr_pt, dim)
   View<double*****> pt_child_side;    // (axis, dir, which_child, side_pt, dim)
   View<double**>    pt_fine;          // (fine_intr_pt, dim)
   View<double**>    pt_viz;           // (viz_pt, dim)
   View<double**>    pt_eval;          // (all_pt, dim)
+  View<double**>    pt_corner;        // (corner_pt, dim)
   View<double**>    phi_intr;         // (intr_pt, mode)
   View<double***>   dphi_intr;        // (axis, intr_pt, mode)
   View<double****>  phi_side;         // (axis, dir, side_pt, mode)
@@ -35,14 +34,21 @@ struct Basis {
   View<double*****> phi_child_side;   // (axis, dir, which_child, side_pt, mode)
   View<double**>    phi_fine;         // (fine_pt, mode)
   View<double**>    phi_viz;          // (viz_pt, mode)
+  View<double***>   dphi_viz;         // (axis, viz_pt, mode)
   View<double**>    phi_eval;         // (eval_pt, mode)
+  View<double**>    phi_corner;       // (corner_pt, mode)
   View<double*>     mass;             // (mode)
   void init(int dim, int p, bool tensor);
 };
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE constexpr
 int ipow(int a, int b) {
-  return (b == 0) ? 1 : a * ipow(a, b-1);
+  int result = 1;
+  for (int mult = b; mult > 0; mult--) {
+    (void)mult;
+    result *= a;
+  }
+  return result;
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE constexpr
@@ -70,6 +76,11 @@ int num_pts(int dim, int p) {
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE constexpr
+int num_corner_pts(int dim) {
+  return ipow(2, dim);
+}
+
+[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE constexpr
 int num_eval_pts(int dim, int p) {
   return num_pts(dim, p) + dim*ndirs*num_pts(dim-1, p);
 }
@@ -80,7 +91,7 @@ int num_child(int dim) {
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE constexpr
-int index(vector3<int> const& ijk, vector3<int> const& b) {
+int index(p3a::vector3<int> const& ijk, p3a::vector3<int> const& b) {
   return (ijk.z()*b.y() + ijk.y())*b.x() + ijk.x();
 }
 
@@ -95,32 +106,32 @@ double legendre(int p, int deriv, double x) {
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE constexpr
-vector3<int> tensor_bounds(int dim, int p) {
-  vector3<int> b(1,1,1);
+p3a::vector3<int> tensor_bounds(int dim, int p) {
+  p3a::vector3<int> b(1,1,1);
   if (dim > 0) b.x() = p+1;
   if (dim > 1) b.y() = p+1;
   if (dim > 2) b.z() = p+1;
   return b;
 }
 
-using ModeVector = static_vector<double, num_tensor_modes(DIMS, max_p)>;
+using ModeVector = p3a::static_vector<double, num_tensor_modes(DIMS, max_p)>;
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
 ModeVector modes(
     int dim,
     int p,
     bool tensor,
-    vector3<double> const& xi) {
+    p3a::vector3<double> const& xi) {
   int m = 0;
   ModeVector phi;
-  vector3<int> const bounds = tensor_bounds(dim, p);
+  p3a::vector3<int> const bounds = tensor_bounds(dim, p);
   for (int block = 0; block < p+1; ++block) {
     for (int deg = 0; deg < dim*p + 1; ++deg) {
       for (int k = 0; k < bounds.z(); ++k) {
         for (int j = 0; j < bounds.y(); ++j) {
           for (int i = 0; i < bounds.x(); ++i) {
             int const sum = i+j+k;
-            int const idx = max(i, max(j, k));
+            int const idx = p3a::max(i, p3a::max(j, k));
             if ((!tensor) && (sum > p)) continue;
             if ((idx == block) && (sum == deg)) {
               phi[m]               = legendre(i, 0, xi.x());
@@ -141,18 +152,18 @@ ModeVector dmodes(
     int dim,
     int p,
     bool tensor,
-    vector3<int> const& d,
-    vector3<double> const& xi) {
+    p3a::vector3<int> const& d,
+    p3a::vector3<double> const& xi) {
   int m = 0;
   ModeVector dphi;
-  vector3<int> const bounds = tensor_bounds(dim, p);
+  p3a::vector3<int> const bounds = tensor_bounds(dim, p);
   for (int block = 0; block < p+1; ++block) {
     for (int deg = 0; deg < dim*p + 1; ++deg) {
       for (int k = 0; k < bounds.z(); ++k) {
         for (int j = 0; j < bounds.y(); ++j) {
           for (int i = 0; i < bounds.x(); ++i) {
             int const sum = i+j+k;
-            int const idx = max(i, max(j, k));
+            int const idx = p3a::max(i, p3a::max(j, k));
             if ((!tensor) && (sum > p)) continue;
             if ((idx == block) && (sum == deg)) {
               dphi[m]               = legendre(i, d.x(), xi.x());
@@ -169,8 +180,8 @@ ModeVector dmodes(
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-vector3<double> get_intr_pt(Basis const& b, int pt) {
-  vector3<double> xi(0,0,0);
+p3a::vector3<double> get_intr_pt(Basis const& b, int pt) {
+  p3a::vector3<double> xi(0,0,0);
   for (int d = 0; d < b.dim; ++d) {
     xi[d] = b.pt_intr(pt, d);
   }
@@ -178,10 +189,19 @@ vector3<double> get_intr_pt(Basis const& b, int pt) {
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-vector3<double> get_fine_pt(Basis const& b, int pt) {
-  vector3<double> xi(0,0,0);
+p3a::vector3<double> get_fine_pt(Basis const& b, int pt) {
+  p3a::vector3<double> xi(0,0,0);
   for (int d = 0; d < b.dim; ++d) {
     xi[d] = b.pt_fine(pt, d);
+  }
+  return xi;
+}
+
+[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
+p3a::vector3<double> get_side_pt(Basis const& b, int axis, int dir, int pt) {
+  p3a::vector3<double> xi(0,0,0);
+  for (int d = 0; d < b.dim; ++d) {
+    xi[d] = b.pt_side(axis, dir, pt, d);
   }
   return xi;
 }

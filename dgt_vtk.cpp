@@ -105,7 +105,7 @@ static void write_tree_connectivity(std::stringstream& stream, int npoints) {
   write_data_end(stream);
 }
 
-static constexpr vector3<int> vtk_corners[] = {
+static constexpr p3a::vector3<int> vtk_corners[] = {
   {0,0,0},
   {1,0,0},
   {1,1,0},
@@ -123,17 +123,17 @@ static void write_tree_coords(
     int ncorners) {
   int idx = 0;
   Point const base = mesh.tree().base();
-  box3<double> const domain = mesh.domain();
+  p3a::box3<double> const domain = mesh.domain();
   std::vector<Node*> const& leaves = mesh.leaves();
   VizView<double> coords;
   Kokkos::resize(coords, npoints, DIMS);
   for (Node* leaf : leaves) {
     Point const pt = leaf->pt();
-    box3<double> const box = get_block_domain(base, pt, domain);
-    vector3<double> const o = box.lower();
-    vector3<double> const dx = box.extents();
+    p3a::box3<double> const box = get_block_domain(base, pt, domain);
+    p3a::vector3<double> const o = box.lower();
+    p3a::vector3<double> const dx = box.extents();
     for (int c = 0; c < ncorners; ++c) {
-      vector3<double> const x = o + hadamard_product(dx, vtk_corners[c]);
+      p3a::vector3<double> const x = o + p3a::hadamard_product(dx, vtk_corners[c]);
       for (int axis = 0; axis < DIMS; ++axis) {
         coords.h_view(idx, axis) = x[axis];
       }
@@ -180,7 +180,7 @@ static void write_leaf_ijks(
   VizView<int> ijks;
   Kokkos::resize(ijks, nleaves, DIMS);
   for (int i = 0; i < nleaves; ++i) {
-    vector3<int> const ijk = leaves[i]->pt().ijk;
+    p3a::vector3<int> const ijk = leaves[i]->pt().ijk;
     for (int axis = 0; axis < DIMS; ++axis) {
       ijks.h_view(i, axis) = ijk[axis];
     }
@@ -210,20 +210,20 @@ static void write_block_connectivity(
     int ncorners) {
   VizView<int> connectivity;
   int const p = block.basis().p;
-  grid3 const cell_grid = block.cell_grid();
-  grid3 const viz_cell_grid = generalize(get_viz_cell_grid(cell_grid, p));
-  grid3 const viz_point_grid = generalize(get_viz_point_grid(cell_grid, p));
+  p3a::grid3 const cell_grid = block.cell_grid();
+  p3a::grid3 const viz_cell_grid = generalize(get_viz_cell_grid(cell_grid, p));
+  p3a::grid3 const viz_point_grid = generalize(get_viz_point_grid(cell_grid, p));
   Kokkos::resize(connectivity, viz_cell_grid.size(), ncorners);
-  auto f = [&] (vector3<int> const& viz_cell_ijk) {
+  auto f = [&] (p3a::vector3<int> const& viz_cell_ijk) {
     int const viz_cell = viz_cell_grid.index(viz_cell_ijk);
     for (int c = 0; c < ncorners; ++c) {
-      vector3<int> const offset = vtk_corners[c];
-      vector3<int> const viz_point_ijk = viz_cell_ijk + offset;
+      p3a::vector3<int> const offset = vtk_corners[c];
+      p3a::vector3<int> const viz_point_ijk = viz_cell_ijk + offset;
       int const point = viz_point_grid.index(viz_point_ijk);
       connectivity.h_view(viz_cell, c) = point;
     }
   };
-  for_each(execution::seq, viz_cell_grid, f);
+  p3a::for_each(p3a::execution::seq, viz_cell_grid, f);
   write_data_start(stream, "Int32", "connectivity", 1);
   write_data(stream, connectivity, false);
   write_data_end(stream);
@@ -234,18 +234,18 @@ static void write_block_coords(
     Block const& block) {
   VizView<double> coords;
   int const p = block.basis().p;
-  vector3<double> const dx = block.dx() / (p+1);
-  vector3<double> const origin = block.domain().lower();
-  grid3 const cell_grid = block.cell_grid();
-  grid3 const viz_point_grid = generalize(get_viz_point_grid(cell_grid, p));
+  p3a::vector3<double> const dx = block.dx() / (p+1);
+  p3a::vector3<double> const origin = block.domain().lower();
+  p3a::grid3 const cell_grid = block.cell_grid();
+  p3a::grid3 const viz_point_grid = generalize(get_viz_point_grid(cell_grid, p));
   Kokkos::resize(coords, viz_point_grid.size(), DIMS);
-  auto f = [&] (vector3<int> const& viz_point_ijk) {
+  auto f = [&] (p3a::vector3<int> const& viz_point_ijk) {
     int const point = viz_point_grid.index(viz_point_ijk);
     coords.h_view(point, X) = origin.x() + viz_point_ijk.x() * dx.x();
     coords.h_view(point, Y) = origin.y() + viz_point_ijk.y() * dx.y();
     coords.h_view(point, Z) = origin.z() + viz_point_ijk.z() * dx.z();
   };
-  for_each(execution::seq, viz_point_grid, f);
+  p3a::for_each(p3a::execution::seq, viz_point_grid, f);
   write_data_start(stream, "Float64", "coordinates", DIMS);
   write_data(stream, coords, false);
   write_data_end(stream);
@@ -296,14 +296,26 @@ void write_pvtu_start(std::stringstream& stream, int nblocks) {
   stream << "<PPoints>\n";
   write_data_start(stream, "Float64", "coordinates", DIMS, true);
   stream << "</PPoints>\n";
+}
+
+void write_pvtu_point_data_start(std::stringstream& stream) {
+  stream << "<PPointData>\n";
+}
+
+void write_pvtu_point_data_end(std::stringstream& stream) {
+  stream << "</PPointData>\n";
+}
+
+void write_pvtu_cell_data_start(std::stringstream& stream) {
   stream << "<PCellData>\n";
+}
+
+void write_pvtu_cell_data_end(std::stringstream& stream) {
+  stream << "</PCellData>\n";
 }
 
 void write_pvtu_end(std::stringstream& stream) {
   CALI_CXX_MARK_FUNCTION;
-  stream << "</PCellData>\n";
-  stream << "<PPointData>\n";
-  stream << "</PPointData>\n";
   stream << "</PUnstructuredGrid>\n";
   stream << "</VTKFile>\n";
 }
@@ -312,7 +324,7 @@ void write_vtu_start(std::stringstream& stream, Block const& block) {
   CALI_CXX_MARK_FUNCTION;
   int const dim = block.dim();
   int const p = block.basis().p;
-  grid3 const cell_grid = block.cell_grid();
+  p3a::grid3 const cell_grid = block.cell_grid();
   int const ncorners = ipow(2, dim);
   int const ncells = generalize(get_viz_cell_grid(cell_grid, p)).size();
   int const npoints = generalize(get_viz_point_grid(cell_grid, p)).size();
@@ -328,14 +340,26 @@ void write_vtu_start(std::stringstream& stream, Block const& block) {
   stream << "<Points>\n";
   write_block_coords(stream, block);
   stream << "</Points>\n";
+}
+
+void write_vtu_cell_data_start(std::stringstream& stream) {
   stream << "<CellData>\n";
+}
+
+void write_vtu_cell_data_end(std::stringstream& stream) {
+  stream << "</CellData>\n";
+}
+
+void write_vtu_point_data_start(std::stringstream& stream) {
+  stream << "<PointData>\n";
+}
+
+void write_vtu_point_data_end(std::stringstream& stream) {
+  stream << "</PointData>\n";
 }
 
 void write_vtu_end(std::stringstream& stream) {
   CALI_CXX_MARK_FUNCTION;
-  stream << "</CellData>\n";
-  stream << "<PointData>\n";
-  stream << "</PointData>\n";
   stream << "</Piece>\n";
   stream << "</UnstructuredGrid>\n";
   stream << "</VTKFile>\n";

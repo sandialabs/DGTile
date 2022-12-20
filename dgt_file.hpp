@@ -61,8 +61,17 @@ using VizView = Kokkos::DualView<T**, Kokkos::LayoutRight>;
 void write_tree(std::filesystem::path const& path, Mesh const& mesh);
 
 void write_pvtu_start(std::stringstream& stream, int nblocks);
+void write_pvtu_point_data_start(std::stringstream& stream);
+void write_pvtu_point_data_end(std::stringstream& stream);
+void write_pvtu_cell_data_start(std::stringstream& stream);
+void write_pvtu_cell_data_end(std::stringstream& stream);
 void write_pvtu_end(std::stringstream& stream);
+
 void write_vtu_start(std::stringstream& stream, Block const& block);
+void write_vtu_point_data_start(std::stringstream& stream);
+void write_vtu_point_data_end(std::stringstream& stream);
+void write_vtu_cell_data_start(std::stringstream& stream);
+void write_vtu_cell_data_end(std::stringstream& stream);
 void write_vtu_end(std::stringstream& stream);
 
 template <class T>

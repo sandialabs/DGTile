@@ -17,14 +17,14 @@ static void verify_comm(mpicpp::comm* comm) {
   }
 }
 
-static void verify_cell_grid(grid3 const& cell_grid) {
-  grid3 const gg = generalize(cell_grid);
+static void verify_cell_grid(p3a::grid3 const& cell_grid) {
+  p3a::grid3 const gg = generalize(cell_grid);
   if (gg.extents().volume() == 0) {
     throw std::runtime_error("Mesh - unset cell grid");
   }
 }
 
-static void verify_dims(grid3 const& cell_grid, grid3 const& block_grid) {
+static void verify_dims(p3a::grid3 const& cell_grid, p3a::grid3 const& block_grid) {
   int const cell_dim = get_dim(cell_grid);
   int const block_dim = get_dim(block_grid);
   if (cell_dim != block_dim) {
@@ -32,7 +32,7 @@ static void verify_dims(grid3 const& cell_grid, grid3 const& block_grid) {
   }
 }
 
-static void verify_domain(int dim, box3<double> const& domain) {
+static void verify_domain(int dim, p3a::box3<double> const& domain) {
   for (int axis = 0; axis < dim; ++axis) {
     if (domain.lower()[axis] >= domain.upper()[axis]) {
       throw std::runtime_error("Mesh - xmin >= xmax");
@@ -59,18 +59,31 @@ static void verify_initial_tree(Tree& tree) {
   }
 }
 
-static void verify_solution(int nsoln, int neq) {
+static void verify_solution(int nsoln, int nmodal_eq, int nflux_eq) {
   if (nsoln < 1) {
     throw std::runtime_error("Mesh - invalid nsoln");
   }
-  if (neq < 1) {
-    throw std::runtime_error("Mesh - invalid neq");
+  if (nmodal_eq < 1) {
+    throw std::runtime_error("Mesh - invalid nmodal_eq");
+  }
+  if (nflux_eq < 1) {
+    throw std::runtime_error("Mesh - invalid nflux_eq");
   }
 }
 
 static void verify_fine_to_coarse_node(Node* n) {
   if (!n) {
     throw std::runtime_error("Mesh - not 2to1 in FTC");
+  }
+}
+
+static void verify_no_field(
+    std::string const& name,
+    std::vector<FieldInfo> const& fields) {
+  for (FieldInfo const& f : fields) {
+    if (f.name == name) {
+      throw std::runtime_error("Mesh - field " + name + " exists");
+    }
   }
 }
 
@@ -108,15 +121,15 @@ int Mesh::dim() const {
   return m_tree.dim();
 }
 
-box3<double> Mesh::domain() const {
+p3a::box3<double> Mesh::domain() const {
   return m_domain;
 }
 
-vector3<bool> Mesh::periodic() const {
+p3a::vector3<bool> Mesh::periodic() const {
   return m_periodic;
 }
 
-grid3 Mesh::cell_grid() const {
+p3a::grid3 Mesh::cell_grid() const {
   return m_cell_grid;
 }
 
@@ -128,8 +141,12 @@ Basis const& Mesh::basis() const {
   return m_basis;
 }
 
-int Mesh::neq() const {
-  return m_neq;
+int Mesh::nmodal_eq() const {
+  return m_nmodal_eq;
+}
+
+int Mesh::nflux_eq() const {
+  return m_nflux_eq;
 }
 
 int Mesh::nsoln() const {
@@ -144,19 +161,23 @@ std::vector<Node*> const& Mesh::owned_leaves() const {
   return m_owned_leaves;
 }
 
+std::vector<FieldInfo> const& Mesh::fields() const {
+  return m_fields;
+}
+
 void Mesh::set_comm(mpicpp::comm* comm) {
   m_comm = comm;
 }
 
-void Mesh::set_domain(box3<double> const& domain) {
+void Mesh::set_domain(p3a::box3<double> const& domain) {
   m_domain = domain;
 }
 
-void Mesh::set_periodic(vector3<bool> const& periodic) {
+void Mesh::set_periodic(p3a::vector3<bool> const& periodic) {
   m_periodic = periodic;
 }
 
-void Mesh::set_cell_grid(grid3 const& cell_grid) {
+void Mesh::set_cell_grid(p3a::grid3 const& cell_grid) {
   m_cell_grid = cell_grid;
 }
 
@@ -164,15 +185,28 @@ void Mesh::set_nsoln(int nsoln) {
   m_nsoln = nsoln;
 }
 
-void Mesh::set_neq(int neq) {
-  m_neq = neq;
+void Mesh::set_nmodal_eq(int neq) {
+  m_nmodal_eq = neq;
+}
+
+void Mesh::set_nflux_eq(int neq) {
+  m_nflux_eq = neq;
 }
 
 void Mesh::set_tree(Tree& tree) {
   m_tree = std::move(tree);
 }
 
-void Mesh::init(grid3 const& block_grid, int p, bool tensor) {
+void Mesh::add_field(std::string name, int ent_dim, int ncomps) {
+  verify_no_field(name, m_fields);
+  FieldInfo info;
+  info.name = name;
+  info.ent_dim = ent_dim;
+  info.ncomps = ncomps;
+  m_fields.push_back(info);
+}
+
+void Mesh::init(p3a::grid3 const& block_grid, int p, bool tensor) {
   CALI_CXX_MARK_FUNCTION;
   verify_initial_tree(tree());
   verify_dims(m_cell_grid, block_grid);
@@ -207,7 +241,7 @@ static Point get_parent_pt(Point const& pt) {
 static void init_borders(
     Tree& tree,
     Node* leaf,
-    vector3<bool> const& periodic) {
+    p3a::vector3<bool> const& periodic) {
   CALI_CXX_MARK_FUNCTION;
   Block& block = leaf->block;
   int const dim = tree.dim();
@@ -221,7 +255,7 @@ static void init_borders(
       border.set_axis(axis);
       border.set_dir(dir);
       Point adj_pt = get_adj_pt(pt, axis, dir);
-      bool const in = contains(base.depth, subgrid3(base.ijk), adj_pt);
+      bool const in = contains(base.depth, p3a::subgrid3(base.ijk), adj_pt);
       if (!in) {
         verify_boundary_ijk(pt, base, axis, dir);
         if (periodic[axis]) {
@@ -251,16 +285,29 @@ static void init_borders(
   }
 }
 
+static void init_fields(
+    Node* leaf,
+    std::vector<FieldInfo> const& fields) {
+  Block& block = leaf->block;
+  for (FieldInfo const& info : fields) {
+    int const idx = block.field_idx(info.name);
+    if (idx == -1) {
+      leaf->block.add_field(info);
+    }
+  }
+}
+
 void init_leaves(
     Mesh* mesh,
     Tree& tree,
-    vector3<bool> const& periodic,
-    std::vector<Node*> const& owned_leaves) {
+    p3a::vector3<bool> const& periodic,
+    std::vector<Node*> const& leaves) {
   CALI_CXX_MARK_FUNCTION;
-  for (Node* leaf : owned_leaves) {
+  for (Node* leaf : leaves) {
     leaf->block.set_mesh(mesh);
     leaf->block.set_node(leaf);
     init_borders(tree, leaf, periodic);
+    init_fields(leaf, mesh->fields());
   }
 }
 
@@ -291,9 +338,9 @@ void Mesh::verify() {
 
 void Mesh::allocate() {
   CALI_CXX_MARK_FUNCTION;
-  verify_solution(m_nsoln, m_neq);
+  verify_solution(m_nsoln, m_nmodal_eq, m_nflux_eq);
   for (Node* leaf : m_owned_leaves) {
-    leaf->block.allocate(m_nsoln, m_neq);
+    leaf->block.allocate(m_nsoln, m_nmodal_eq, m_nflux_eq);
   }
 }
 
@@ -303,11 +350,11 @@ static void free_branch_node(int dim, Node* node) {
     node->block.deallocate();
     node->block.reset();
   }
-  auto f = [&] (vector3<int> const& local) {
+  auto f = [&] (p3a::vector3<int> const& local) {
     Node* child = node->child(local);
     if (child) free_branch_node(dim, child);
   };
-  for_each(execution::seq, generalize(get_child_grid(dim)), f);
+  p3a::for_each(p3a::execution::seq, generalize(get_child_grid(dim)), f);
 }
 
 void Mesh::clean() {

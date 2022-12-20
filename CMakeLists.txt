@@ -9,6 +9,8 @@ find_package(p3a REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(caliper REQUIRED)
 
+option(dgtile_WORKAROUND_GCC_FILESYSTEM "link to std++fs" OFF)
+
 if (BUILD_TESTING)
   enable_testing()
   find_package(GTest REQUIRED)
@@ -29,6 +31,7 @@ set(DGT_HEADERS
   dgt_block.hpp
   dgt_border.hpp
   dgt_defines.hpp
+  dgt_field.hpp
   dgt_file.hpp
   dgt_grid.hpp
   dgt_interp.hpp
@@ -52,6 +55,7 @@ set(DGT_SOURCES
   dgt_block.cpp
   dgt_binary.cpp
   dgt_border.cpp
+  dgt_field.cpp
   dgt_file.cpp
   dgt_grid.cpp
   dgt_library.cpp
@@ -81,6 +85,10 @@ target_link_libraries(dgtile PUBLIC mpicpp::mpicpp)
 target_link_libraries(dgtile PUBLIC p3a::p3a)
 target_link_libraries(dgtile PUBLIC ZLIB::ZLIB)
 target_link_libraries(dgtile PUBLIC caliper)
+
+if (dgtile_WORKAROUND_GCC_FILESYSTEM)
+  target_link_libraries(dgtile PUBLIC stdc++fs)
+endif()
 
 install(
   TARGETS dgtile

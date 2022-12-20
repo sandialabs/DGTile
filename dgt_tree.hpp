@@ -10,8 +10,6 @@
 
 namespace dgt {
 
-using namespace p3a;
-
 class Node {
   private:
     friend class Tree;
@@ -30,13 +28,13 @@ class Node {
     [[nodiscard]] Point pt() const;
     [[nodiscard]] Node* parent();
     [[nodiscard]] Node const* parent() const;
-    [[nodiscard]] Node* child(vector3<int> const& local);
-    [[nodiscard]] Node const* child(vector3<int> const& local) const;
+    [[nodiscard]] Node* child(p3a::vector3<int> const& local);
+    [[nodiscard]] Node const* child(p3a::vector3<int> const& local) const;
     [[nodiscard]] bool is_leaf() const;
-    void add_child(vector3<int> const& local);
-    void rm_child(vector3<int> const& local);
+    void add_child(p3a::vector3<int> const& local);
+    void rm_child(p3a::vector3<int> const& local);
   private:
-    Node(Node* parent, vector3<int> const& local);
+    Node(Node* parent, p3a::vector3<int> const& local);
     void create(int dim, Point const& base);
     void insert(int dim, Point const& pt);
 };
@@ -60,7 +58,7 @@ class Tree {
     void set_dim(int dim);
     void set_base(Point const& pt);
     void insert(Point const& pt);
-    void init(grid3 const& base);
+    void init(p3a::grid3 const& base);
 };
 
 std::vector<Node*> collect_leaves(Tree& tree);

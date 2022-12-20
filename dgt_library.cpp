@@ -10,11 +10,9 @@
 
 namespace dgt {
 
-using namespace mpicpp;
-
 class Library::impl {
   private:
-    environment m_mpi;
+    mpicpp::environment m_mpi;
     Kokkos::ScopeGuard m_kokkos;
     cali::ConfigManager m_caliper;
   public:

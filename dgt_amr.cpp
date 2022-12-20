@@ -15,26 +15,26 @@
 namespace dgt {
 
 static void verify_refine(Node* parent) {
-  auto f = [&] (vector3<int> const& local) {
+  auto f = [&] (p3a::vector3<int> const& local) {
     Node* child = parent->child(local);
     if (child) {
       throw std::runtime_error("refine - invalid parent");
     }
   };
-  for_each(execution::seq, get_child_grid(DIMS), f);
+  p3a::for_each(p3a::execution::seq, get_child_grid(DIMS), f);
 }
 
 static void verify_coarsen(int dim, Node* parent) {
   if (parent->is_leaf()) {
     throw std::runtime_error("coarsen - invalid parent");
   }
-  auto f = [&] (vector3<int> const& local) {
+  auto f = [&] (p3a::vector3<int> const& local) {
     Node* child = parent->child(local);
     if (!child->is_leaf()) {
       throw std::runtime_error("coarsen - invalid parent");
     }
   };
-  for_each(execution::seq, generalize(get_child_grid(dim)), f);
+  p3a::for_each(p3a::execution::seq, generalize(get_child_grid(dim)), f);
 }
 
 static void verify_marks(Mesh const& mesh, std::vector<int8_t> const& marks) {
@@ -45,7 +45,7 @@ static void verify_marks(Mesh const& mesh, std::vector<int8_t> const& marks) {
 
 static void verify_mesh(Mesh const& mesh) {
   int const dim = mesh.dim();
-  vector3<int> const ncells = mesh.cell_grid().extents();
+  p3a::vector3<int> const ncells = mesh.cell_grid().extents();
   for (int axis = 0; axis < dim; ++axis) {
     if ((ncells[axis] % 2) != 0) {
       throw std::runtime_error("modify - invalid cell grid");
@@ -65,15 +65,15 @@ static void verify_leaf(Node const* leaf) {
 static void verify_insertion(
     View<double***> from,
     View<double***> to,
-    grid3 const& from_grid,
-    grid3 const& to_grid,
-    subgrid3 const& from_subgrid,
-    subgrid3 const& to_subgrid) {
+    p3a::grid3 const& from_grid,
+    p3a::grid3 const& to_grid,
+    p3a::subgrid3 const& from_subgrid,
+    p3a::subgrid3 const& to_subgrid) {
   bool valid = true;
-  grid3 const fg = generalize(from_grid);
-  grid3 const tg = generalize(to_grid);
-  subgrid3 const fsg = generalize(from_subgrid);
-  subgrid3 const tsg = generalize(to_subgrid);
+  p3a::grid3 const fg = generalize(from_grid);
+  p3a::grid3 const tg = generalize(to_grid);
+  p3a::subgrid3 const fsg = generalize(from_subgrid);
+  p3a::subgrid3 const tsg = generalize(to_subgrid);
   if (int(from.extent(0)) != fg.size()) valid = false;
   if (int(to.extent(0)) != tg.size()) valid = false;
   if (from.extent(1) != to.extent(1)) valid = false;
@@ -88,13 +88,13 @@ static void verify_transfer(
     Basis const& b,
     View<double***> from,
     View<double***> to,
-    grid3 const& from_grid,
-    grid3 const& to_grid,
-    subgrid3 const& coarse_subgrid,
-    subgrid3 const& fine_subgrid) {
+    p3a::grid3 const& from_grid,
+    p3a::grid3 const& to_grid,
+    p3a::subgrid3 const& coarse_subgrid,
+    p3a::subgrid3 const& fine_subgrid) {
   bool valid = true;
-  subgrid3 const csg = generalize(coarse_subgrid);
-  subgrid3 const fsg = generalize(fine_subgrid);
+  p3a::subgrid3 const csg = generalize(coarse_subgrid);
+  p3a::subgrid3 const fsg = generalize(fine_subgrid);
   if (int(from.extent(0)) != generalize(from_grid).size()) valid = false;
   if (int(to.extent(0)) != generalize(to_grid).size()) valid = false;
   if (int(from.extent(1)) != int(to.extent(1))) valid = false;
@@ -108,36 +108,36 @@ static void verify_transfer(
 
 void refine(int dim, Node* parent) {
   verify_refine(parent);
-  auto f = [&] (vector3<int> const& local) {
+  auto f = [&] (p3a::vector3<int> const& local) {
     parent->add_child(local);
   };
-  for_each(execution::seq, generalize(get_child_grid(dim)), f);
+  p3a::for_each(p3a::execution::seq, generalize(get_child_grid(dim)), f);
 }
 
 void coarsen(int dim, Node* parent) {
   verify_coarsen(dim, parent);
-  auto f = [&] (vector3<int> const& local) {
+  auto f = [&] (p3a::vector3<int> const& local) {
     parent->rm_child(local);
   };
-  for_each(execution::seq, generalize(get_child_grid(dim)), f);
+  p3a::for_each(p3a::execution::seq, generalize(get_child_grid(dim)), f);
 }
 
 void do_insertion(
     View<double***> from,
     View<double***> to,
-    grid3 const& from_grid,
-    grid3 const& to_grid,
-    subgrid3 const& from_subgrid,
-    subgrid3 const& to_subgrid) {
+    p3a::grid3 const& from_grid,
+    p3a::grid3 const& to_grid,
+    p3a::subgrid3 const& from_subgrid,
+    p3a::subgrid3 const& to_subgrid) {
   CALI_CXX_MARK_FUNCTION;
   verify_insertion(from, to, from_grid, to_grid, from_subgrid, to_subgrid);
   int const extent1 = from.extent(1);
   int const extent2 = from.extent(2);
-  grid3 const general_from_grid = generalize(from_grid);
-  grid3 const general_to_grid = generalize(to_grid);
-  auto f = [=] P3A_DEVICE (vector3<int> const& from_cell_ijk) {
-    vector3<int> const offset = from_cell_ijk - from_subgrid.lower();
-    vector3<int> const to_cell_ijk = offset + to_subgrid.lower();
+  p3a::grid3 const general_from_grid = generalize(from_grid);
+  p3a::grid3 const general_to_grid = generalize(to_grid);
+  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& from_cell_ijk) {
+    p3a::vector3<int> const offset = from_cell_ijk - from_subgrid.lower();
+    p3a::vector3<int> const to_cell_ijk = offset + to_subgrid.lower();
     int const from_cell = general_from_grid.index(from_cell_ijk);
     int const to_cell = general_to_grid.index(to_cell_ijk);
     for (int i = 0; i < extent1; ++i) {
@@ -146,31 +146,31 @@ void do_insertion(
       }
     }
   };
-  for_each(execution::par, generalize(from_subgrid), f);
+  p3a::for_each(p3a::execution::par, generalize(from_subgrid), f);
 }
 
 void do_prolongation(
     Basis const& b,
     View<double***> from,
     View<double***> to,
-    grid3 const& from_grid,
-    grid3 const& to_grid,
-    subgrid3 const& from_subgrid,
-    subgrid3 const& to_subgrid) {
+    p3a::grid3 const& from_grid,
+    p3a::grid3 const& to_grid,
+    p3a::subgrid3 const& from_subgrid,
+    p3a::subgrid3 const& to_subgrid) {
   CALI_CXX_MARK_FUNCTION;
   verify_transfer(b, from, to, from_grid, to_grid, from_subgrid, to_subgrid);
   int const neq = from.extent(1);
   int const nchild = num_child(b.dim);
   int const nintr_pts = num_pts(b.dim, b.p);
-  grid3 const general_from_grid = generalize(from_grid);
-  grid3 const general_to_grid = generalize(to_grid);
-  auto f = [=] P3A_DEVICE (vector3<int> const& from_cell_ijk) {
+  p3a::grid3 const general_from_grid = generalize(from_grid);
+  p3a::grid3 const general_to_grid = generalize(to_grid);
+  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& from_cell_ijk) {
     int const from_cell = general_from_grid.index(from_cell_ijk);
-    vector3<int> const coarse_offset = from_cell_ijk - from_subgrid.lower();
+    p3a::vector3<int> const coarse_offset = from_cell_ijk - from_subgrid.lower();
     for (int child = 0; child < nchild; ++child) {
-      vector3<int> const local = get_local(child);
-      vector3<int> const fine_offset = get_fine_ijk(coarse_offset, local);
-      vector3<int> const to_cell_ijk = to_subgrid.lower() + fine_offset;
+      p3a::vector3<int> const local = get_local(child);
+      p3a::vector3<int> const fine_offset = get_fine_ijk(coarse_offset, local);
+      p3a::vector3<int> const to_cell_ijk = to_subgrid.lower() + fine_offset;
       int const to_cell = general_to_grid.index(to_cell_ijk);
       for (int pt = 0; pt < nintr_pts; ++pt) {
         double const wt = b.wt_intr(pt);
@@ -186,32 +186,32 @@ void do_prolongation(
       }
     }
   };
-  for_each(execution::par, generalize(from_subgrid), f);
+  p3a::for_each(p3a::execution::par, generalize(from_subgrid), f);
 }
 
 void do_restriction(
     Basis const& b,
     View<double***> from,
     View<double***> to,
-    grid3 const& from_grid,
-    grid3 const& to_grid,
-    subgrid3 const& from_subgrid,
-    subgrid3 const& to_subgrid) {
+    p3a::grid3 const& from_grid,
+    p3a::grid3 const& to_grid,
+    p3a::subgrid3 const& from_subgrid,
+    p3a::subgrid3 const& to_subgrid) {
   CALI_CXX_MARK_FUNCTION;
   verify_transfer(b, from, to, from_grid, to_grid, to_subgrid, from_subgrid);
   int const neq = from.extent(1);
   int const nchild = num_child(b.dim);
   int const nintr_pts = num_pts(b.dim, b.p);
-  grid3 const general_from_grid = generalize(from_grid);
-  grid3 const general_to_grid = generalize(to_grid);
+  p3a::grid3 const general_from_grid = generalize(from_grid);
+  p3a::grid3 const general_to_grid = generalize(to_grid);
   double const factor = std::pow(0.5, b.dim);
-  auto f = [=] P3A_DEVICE (vector3<int> const& to_cell_ijk) {
+  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& to_cell_ijk) {
     int const to_cell = general_to_grid.index(to_cell_ijk);
-    vector3<int> const coarse_offset = to_cell_ijk - to_subgrid.lower();
+    p3a::vector3<int> const coarse_offset = to_cell_ijk - to_subgrid.lower();
     for (int child = 0; child < nchild; ++child) {
-      vector3<int> const local = get_local(child);
-      vector3<int> const fine_offset = get_fine_ijk(coarse_offset, local);
-      vector3<int> const from_cell_ijk = from_subgrid.lower() + fine_offset;
+      p3a::vector3<int> const local = get_local(child);
+      p3a::vector3<int> const fine_offset = get_fine_ijk(coarse_offset, local);
+      p3a::vector3<int> const from_cell_ijk = from_subgrid.lower() + fine_offset;
       int const from_cell = general_from_grid.index(from_cell_ijk);
       for (int pt = 0; pt < nintr_pts; ++pt) {
         double const wt = b.wt_intr(pt);
@@ -227,7 +227,7 @@ void do_restriction(
       }
     }
   };
-  for_each(execution::par, generalize(to_subgrid), f);
+  p3a::for_each(p3a::execution::par, generalize(to_subgrid), f);
 }
 
 static Tree copy_tree(
@@ -293,8 +293,8 @@ struct Transfer {
   public:
     int op;
     Node* leaf[2];
-    vector3<int> local = {0, 0, 0};
-    Message<View<double***>> msg;
+    p3a::vector3<int> local = {0, 0, 0};
+    Message<double***> msg;
   public:
     Transfer(int op_in, Node* original_leaf, Node* modified_leaf) {
       op = op_in;
@@ -307,7 +307,7 @@ struct Transfer {
       if (op == REMAIN) return;
       int type = (op == REFINE) ? MODIFIED : ORIGINAL;
       Node* child = leaf[type];
-      vector3<int> const child_ijk = child->pt().ijk;
+      p3a::vector3<int> const child_ijk = child->pt().ijk;
       local = get_local_from_fine_ijk(child_ijk);
     }
 
@@ -347,12 +347,12 @@ void collect_children(
   int const dim = leaf->block.dim();
   Node* leaves[2] = {nullptr};
   leaves[type] = leaf;
-  auto f = [&] (vector3<int> const& local) {
+  auto f = [&] (p3a::vector3<int> const& local) {
     Point const pt = get_child_point(leaf->pt(), local);
     leaves[itype] = tree.find(pt);
     collect(op, mark, leaves[ORIGINAL], leaves[MODIFIED], xfers);
   };
-  for_each(execution::seq, generalize(get_child_grid(dim)), f);
+  p3a::for_each(p3a::execution::seq, generalize(get_child_grid(dim)), f);
 }
 
 template <class OP>
@@ -440,40 +440,45 @@ static void collect_recvs(
   }
 }
 
-static void allocate_block(Block& block, int nsoln, int neq) {
+static void allocate_block(
+    Block& block,
+    int nsoln,
+    int nmodal_eq,
+    int nflux_eq) {
   if (block.nsoln() == 0) {
-    block.allocate(nsoln, neq);
+    block.allocate(nsoln, nmodal_eq, nflux_eq);
   }
 }
 
 static void allocate_msg(
     Transfer& xfer,
-    grid3 const& g,
+    p3a::grid3 const& g,
     int nmodes,
-    int neq) {
+    int nmodal_eq) {
   int ncells = 0;
   int const dim = xfer.leaf[ORIGINAL]->block.dim();
   int const nall_cells = generalize(g).size();
   int const nhalf_cells = nall_cells / ipow(2, dim);
   if (xfer.op == REMAIN) ncells = nall_cells;
   else ncells = nhalf_cells;
-  Kokkos::resize(xfer.msg.val, ncells, neq, nmodes);
+  Kokkos::resize(xfer.msg.val, ncells, nmodal_eq, nmodes);
 }
 
 static void allocate(Mesh const& mesh, Transfers& xfers) {
   Block const& block0 = mesh.owned_leaves()[0]->block;
   int const nsoln = block0.nsoln();
-  int const neq = block0.soln(0).extent(1);
+  int const nmodal_eq = mesh.nmodal_eq();
+  int const nflux_eq = mesh.nflux_eq();
   int const nmodes = mesh.basis().nmodes;
   for (Transfer& xfer : xfers.on_rank) {
-    allocate_block(xfer.leaf[MODIFIED]->block, nsoln, neq);
+    allocate_block(xfer.leaf[MODIFIED]->block, nsoln, nmodal_eq, nflux_eq);
   }
   for (Transfer& xfer : xfers.send) {
-    allocate_msg(xfer, mesh.cell_grid(), nmodes, neq);
+    allocate_msg(xfer, mesh.cell_grid(), nmodes, nmodal_eq);
   }
   for (Transfer& xfer : xfers.recv) {
-    allocate_block(xfer.leaf[MODIFIED]->block, nsoln, neq);
-    allocate_msg(xfer, mesh.cell_grid(), nmodes, neq);
+    allocate_block(xfer.leaf[MODIFIED]->block, nsoln, nmodal_eq, nflux_eq);
+    allocate_msg(xfer, mesh.cell_grid(), nmodes, nmodal_eq);
   }
 }
 
@@ -485,10 +490,10 @@ static void extract_for_refine(Transfer& xfer) {
   Block& parent = xfer.leaf[ORIGINAL]->block;
   View<double***> U_from = parent.soln(0);
   View<double***> U_to = xfer.msg.val;
-  grid3 const from_grid = parent.cell_grid();
-  subgrid3 const from_subgrid = get_local_subgrid(from_grid, xfer.local);
-  grid3 const to_grid(from_subgrid.extents());
-  subgrid3 const to_subgrid(to_grid);
+  p3a::grid3 const from_grid = parent.cell_grid();
+  p3a::subgrid3 const from_subgrid = get_local_subgrid(from_grid, xfer.local);
+  p3a::grid3 const to_grid(from_subgrid.extents());
+  p3a::subgrid3 const to_subgrid(to_grid);
   do_insertion(
       U_from, U_to,
       from_grid, to_grid,
@@ -499,11 +504,11 @@ static void extract_for_coarsen(Transfer& xfer) {
   Block& child = xfer.leaf[ORIGINAL]->block;
   View<double***> U_from = child.soln(0);
   View<double***> U_to = xfer.msg.val;
-  grid3 const from_grid = child.cell_grid();
-  subgrid3 const from_subgrid(from_grid);
-  subgrid3 const local_subgrid = get_local_subgrid(from_grid, xfer.local);
-  grid3 const to_grid(local_subgrid.extents());
-  subgrid3 const to_subgrid(to_grid);
+  p3a::grid3 const from_grid = child.cell_grid();
+  p3a::subgrid3 const from_subgrid(from_grid);
+  p3a::subgrid3 const local_subgrid = get_local_subgrid(from_grid, xfer.local);
+  p3a::grid3 const to_grid(local_subgrid.extents());
+  p3a::subgrid3 const to_subgrid(to_grid);
   do_restriction(
       child.basis(),
       U_from, U_to,
@@ -550,11 +555,11 @@ static void begin_msgs(mpicpp::comm* comm, Transfers& xfers) {
 static void prolong_on_rank(Transfer& xfer) {
   Block const& parent = xfer.leaf[ORIGINAL]->block;
   Block& child = xfer.leaf[MODIFIED]->block;
-  vector3<int> const local = xfer.local;
-  grid3 const from_grid = parent.cell_grid();
-  grid3 const to_grid = child.cell_grid();
-  subgrid3 const from_subgrid = get_local_subgrid(from_grid, local);
-  subgrid3 const to_subgrid(to_grid);
+  p3a::vector3<int> const local = xfer.local;
+  p3a::grid3 const from_grid = parent.cell_grid();
+  p3a::grid3 const to_grid = child.cell_grid();
+  p3a::subgrid3 const from_subgrid = get_local_subgrid(from_grid, local);
+  p3a::subgrid3 const to_subgrid(to_grid);
   do_prolongation(
       parent.basis(),
       parent.soln(0), child.soln(0),
@@ -565,11 +570,11 @@ static void prolong_on_rank(Transfer& xfer) {
 static void restrict_on_rank(Transfer& xfer) {
   Block& parent = xfer.leaf[MODIFIED]->block;
   Block const& child = xfer.leaf[ORIGINAL]->block;
-  vector3<int> const local = xfer.local;
-  grid3 const from_grid = child.cell_grid();
-  grid3 const to_grid = parent.cell_grid();
-  subgrid3 const from_subgrid(from_grid);
-  subgrid3 const to_subgrid = get_local_subgrid(from_grid, local);
+  p3a::vector3<int> const local = xfer.local;
+  p3a::grid3 const from_grid = child.cell_grid();
+  p3a::grid3 const to_grid = parent.cell_grid();
+  p3a::subgrid3 const from_subgrid(from_grid);
+  p3a::subgrid3 const to_subgrid = get_local_subgrid(from_grid, local);
   do_restriction(
       child.basis(),
       child.soln(0), parent.soln(0),
@@ -597,11 +602,11 @@ static void inject_for_refine(Transfer& xfer) {
   Block& child = xfer.leaf[MODIFIED]->block;
   View<double***> U_from = xfer.msg.val;
   View<double***> U_to = child.soln(0);
-  grid3 const to_grid = child.cell_grid();
-  subgrid3 const to_subgrid(to_grid);
-  subgrid3 const local_subgrid = get_local_subgrid(to_grid, xfer.local);
-  grid3 const from_grid(local_subgrid.extents());
-  subgrid3 const from_subgrid(from_grid);
+  p3a::grid3 const to_grid = child.cell_grid();
+  p3a::subgrid3 const to_subgrid(to_grid);
+  p3a::subgrid3 const local_subgrid = get_local_subgrid(to_grid, xfer.local);
+  p3a::grid3 const from_grid(local_subgrid.extents());
+  p3a::subgrid3 const from_subgrid(from_grid);
   do_prolongation(
       child.basis(),
       U_from, U_to,
@@ -613,10 +618,10 @@ static void inject_for_coarsen(Transfer& xfer) {
   Block& parent = xfer.leaf[MODIFIED]->block;
   View<double***> U_from = xfer.msg.val;
   View<double***> U_to = parent.soln(0);
-  grid3 const to_grid = parent.cell_grid();
-  subgrid3 const to_subgrid = get_local_subgrid(to_grid, xfer.local);
-  grid3 const from_grid(to_subgrid.extents());
-  subgrid3 const from_subgrid(from_grid);
+  p3a::grid3 const to_grid = parent.cell_grid();
+  p3a::subgrid3 const to_subgrid = get_local_subgrid(to_grid, xfer.local);
+  p3a::grid3 const from_grid(to_subgrid.extents());
+  p3a::subgrid3 const from_subgrid(from_grid);
   do_insertion(
       U_from, U_to,
       from_grid, to_grid,
@@ -641,7 +646,7 @@ static void transfer_data(
   collect_recvs(mesh, new_owned_leaves, xfers.recv);
   allocate(mesh, xfers);
   extract_msg_vals(xfers);
-  execution::par.synchronize();
+  p3a::execution::par.synchronize();
   begin_msgs(mesh.comm(), xfers);
   transfer_on_rank(xfers.on_rank);
   end_msgs(xfers);
@@ -652,13 +657,14 @@ static void cleanup(Mesh& mesh) {
   for (Node* leaf : mesh.owned_leaves()) {
     Block& block = leaf->block;
     Kokkos::deep_copy(block.resid(), 0.);
-    int const neq = block.soln(0).extent(1);
+    int const nmodal_eq = mesh.nmodal_eq();
+    int const nflux_eq = mesh.nflux_eq();
     for (int axis = 0; axis < mesh.dim(); ++axis) {
       Kokkos::deep_copy(block.flux(axis), 0.);
       for (int dir = 0; dir < ndirs; ++dir) {
         Border& border = block.border(axis, dir);
         border.deallocate();
-        border.allocate(neq);
+        border.allocate(nmodal_eq, nflux_eq);
       }
     }
   }
