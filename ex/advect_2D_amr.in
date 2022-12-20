@@ -1,0 +1,17 @@
+# 2D obliquely advected sine wave
+p: @p@
+xmin: 0,0,0
+xmax: 1,1,0
+cell_grid: 4,4,0
+block_grid: 2,2,0
+periodic: true,true,false
+ics: advect
+gamma: 1.4
+tfinal: 0.7071067811865475
+CFL: 0.9
+init_amr: first_block
+amr: clockwise
+amr_frequency: 0.17677669529663687
+step_frequency: 10
+out_frequency: 0.17677669529663687
+error_regression: @e@
