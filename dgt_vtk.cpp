@@ -10,6 +10,8 @@
 #include "dgt_grid.hpp"
 #include "dgt_spatial.hpp"
 
+#include "dgt_print.hpp" // debug
+
 namespace dgt {
 
 namespace vtk {
@@ -94,7 +96,7 @@ static void write_offsets(std::stringstream& stream, int num, int nents) {
   write_data_end(stream);
 }
 
-static void write_tree_connectivity(std::stringstream& stream, int npoints) {
+static void write_connectivity(std::stringstream& stream, int npoints) {
   VizView<int> connectivity;
   Kokkos::resize(connectivity, npoints, 1);
   for (int i = 0; i < npoints; ++i) {
@@ -115,6 +117,8 @@ static constexpr p3a::vector3<int> vtk_corners[] = {
   {1,1,1},
   {0,1,1}
 };
+
+static constexpr int flexo_2_vtk_corners[] = {0,1,3,2,4,5,7,6};
 
 static void write_tree_coords(
     std::stringstream& stream,
@@ -204,48 +208,36 @@ static void write_leaf_owners(
   write_data_end(stream);
 }
 
-static void write_block_connectivity(
+static void write_block_coords(
     std::stringstream& stream,
     Block const& block,
     int ncorners) {
-  VizView<int> connectivity;
-  int const p = block.basis().p;
-  p3a::grid3 const cell_grid = block.cell_grid();
-  p3a::grid3 const viz_cell_grid = generalize(get_viz_cell_grid(cell_grid, p));
-  p3a::grid3 const viz_point_grid = generalize(get_viz_point_grid(cell_grid, p));
-  Kokkos::resize(connectivity, viz_cell_grid.size(), ncorners);
-  auto f = [&] (p3a::vector3<int> const& viz_cell_ijk) {
-    int const viz_cell = viz_cell_grid.index(viz_cell_ijk);
-    for (int c = 0; c < ncorners; ++c) {
-      p3a::vector3<int> const offset = vtk_corners[c];
-      p3a::vector3<int> const viz_point_ijk = viz_cell_ijk + offset;
-      int const point = viz_point_grid.index(viz_point_ijk);
-      connectivity.h_view(viz_cell, c) = point;
+  VizView<double> coords;
+  Basis const b = block.basis();
+  int const nintr_pts = num_pts(b.dim, b.p);
+  p3a::vector3<double> const dx = block.dx();
+  p3a::vector3<double> const half_dx = 0.5*dx;
+  p3a::vector3<double> const origin = block.domain().lower();
+  p3a::grid3 const cell_grid = generalize(block.cell_grid());
+  int const nviz_points = cell_grid.size()*nintr_pts*ncorners;
+  Kokkos::resize(coords, nviz_points, DIMS);
+  auto f = [&] (p3a::vector3<int> const& cell_ijk) {
+    int const cell = cell_grid.index(cell_ijk);
+    p3a::vector3<double> const x_center = get_cell_center(cell_ijk, origin, dx);
+    for (int pt = 0;  pt < nintr_pts; ++pt) {
+      int const viz_cell = cell*nintr_pts + pt;
+      for (int c = 0;  c < ncorners; ++c) {
+        int const vtk_c = flexo_2_vtk_corners[c];
+        int const viz_point = viz_cell*ncorners + vtk_c;
+        p3a::vector3<double> const xi = get_viz_corner_pt(b, pt, c);
+        p3a::vector3<double> const x = x_center + p3a::hadamard_product(half_dx, xi);
+        coords.d_view(viz_point, X) = x.x();
+        coords.d_view(viz_point, Y) = x.y();
+        coords.d_view(viz_point, Z) = x.z();
+      }
     }
   };
-  p3a::for_each(p3a::execution::seq, viz_cell_grid, f);
-  write_data_start(stream, "Int32", "connectivity", 1);
-  write_data(stream, connectivity, false);
-  write_data_end(stream);
-}
-
-static void write_block_coords(
-    std::stringstream& stream,
-    Block const& block) {
-  VizView<double> coords;
-  int const p = block.basis().p;
-  p3a::vector3<double> const dx = block.dx() / (p+1);
-  p3a::vector3<double> const origin = block.domain().lower();
-  p3a::grid3 const cell_grid = block.cell_grid();
-  p3a::grid3 const viz_point_grid = generalize(get_viz_point_grid(cell_grid, p));
-  Kokkos::resize(coords, viz_point_grid.size(), DIMS);
-  auto f = [&] (p3a::vector3<int> const& viz_point_ijk) {
-    int const point = viz_point_grid.index(viz_point_ijk);
-    coords.h_view(point, X) = origin.x() + viz_point_ijk.x() * dx.x();
-    coords.h_view(point, Y) = origin.y() + viz_point_ijk.y() * dx.y();
-    coords.h_view(point, Z) = origin.z() + viz_point_ijk.z() * dx.z();
-  };
-  p3a::for_each(p3a::execution::seq, viz_point_grid, f);
+  p3a::for_each(p3a::execution::seq, cell_grid, f);
   write_data_start(stream, "Float64", "coordinates", DIMS);
   write_data(stream, coords, false);
   write_data_end(stream);
@@ -265,7 +257,7 @@ void write_tree(std::filesystem::path const& path, Mesh const& mesh) {
   stream << "<Cells>\n";
   write_types(stream, dim, nleaves);
   write_offsets(stream, nleaves, ncorners);
-  write_tree_connectivity(stream, npoints);
+  write_connectivity(stream, npoints);
   stream << "</Cells>\n";
   stream << "<Points>\n";
   write_tree_coords(stream, mesh, npoints, ncorners);
@@ -322,23 +314,23 @@ void write_pvtu_end(std::stringstream& stream) {
 
 void write_vtu_start(std::stringstream& stream, Block const& block) {
   CALI_CXX_MARK_FUNCTION;
-  int const dim = block.dim();
-  int const p = block.basis().p;
+  Basis const b = block.basis();
   p3a::grid3 const cell_grid = block.cell_grid();
-  int const ncorners = ipow(2, dim);
-  int const ncells = generalize(get_viz_cell_grid(cell_grid, p)).size();
-  int const npoints = generalize(get_viz_point_grid(cell_grid, p)).size();
+  int const nintr_pts = num_pts(b.dim, b.p);
+  int const ncorners = ipow(2, b.dim);
+  int const ncells = generalize(cell_grid).size()*nintr_pts;
+  int const npoints = ncorners*ncells;
   write_vtu_header(stream);
   stream << "<UnstructuredGrid>\n";
   stream << "<Piece NumberOfPoints=\"" << npoints << "\" ";
   stream << "NumberOfCells=\"" << ncells << "\">\n";
   stream << "<Cells>\n";
-  write_types(stream, dim, ncells);
+  write_types(stream, b.dim, ncells);
   write_offsets(stream, ncells, ncorners);
-  write_block_connectivity(stream, block, ncorners);
+  write_connectivity(stream, npoints);
   stream << "</Cells>\n";
   stream << "<Points>\n";
-  write_block_coords(stream, block);
+  write_block_coords(stream, block, ncorners);
   stream << "</Points>\n";
 }
 

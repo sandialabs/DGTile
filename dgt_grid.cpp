@@ -44,6 +44,15 @@ p3a::grid3 get_child_grid(int dim) {
   throw std::runtime_error("get_child_grid");
 }
 
+p3a::grid3 get_node_grid(p3a::grid3 const& cells) {
+  int const dim = get_dim(cells);
+  p3a::vector3<int> nodes = cells.extents();
+  for (int axis = 0; axis < dim; ++axis) {
+    nodes[axis] += 1;
+  }
+  return p3a::grid3(nodes);
+}
+
 p3a::grid3 get_side_grid(p3a::grid3 const& cells, int axis) {
   return p3a::grid3(cells.extents() + p3a::vector3<int>::axis(axis));
 }
@@ -73,20 +82,6 @@ p3a::subgrid3 get_adj_cells(p3a::grid3 const& cells, int axis, int dir) {
   if (dir == left) end[axis] = 1;
   if (dir == right) start[axis] = ncells[axis] - 1;
   return p3a::subgrid3(start, end);
-}
-
-p3a::grid3 get_viz_cell_grid(p3a::grid3 const& cells, int p) {
-  p3a::vector3<int> const ncells = (p+1)*cells.extents();
-  return p3a::grid3(ncells);
-}
-
-p3a::grid3 get_viz_point_grid(p3a::grid3 const& cells, int p) {
-  int const dim = get_dim(cells);
-  p3a::vector3<int> npoints = get_viz_cell_grid(cells, p).extents();
-  for (int axis = 0; axis < dim; ++axis) {
-    npoints[axis] += 1;
-  }
-  return p3a::grid3(npoints);
 }
 
 static p3a::vector3<int> map_to_fine(Point const& pt, int fine_depth) {

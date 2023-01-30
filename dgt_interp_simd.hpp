@@ -76,18 +76,6 @@ p3a::device_simd<double> interp_scalar_fine(
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-p3a::device_simd<double> interp_scalar_viz(
-    p3a::simd_view<double***> U, Basis const& b,
-    int cell, int pt, int eq,
-    p3a::device_simd_mask<double> const& mask) {
-  p3a::device_simd<double> val = U.load(cell, eq, 0, mask) * b.phi_viz(pt, 0);
-  for (int m = 1; m < b.nmodes; ++m) {
-    val += U.load(cell, eq, m, mask) * b.phi_viz(pt, m);
-  }
-  return val;
-}
-
-[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
 p3a::device_simd<double> interp_scalar_eval(
     p3a::simd_view<double***> U, Basis const& b,
     int cell, int pt, int eq,
@@ -167,18 +155,6 @@ p3a::vector3<p3a::device_simd<double>> interp_vec3_fine(
   p3a::vector3<p3a::device_simd<double>> val;
   for (int d = 0; d < DIMS; ++d) {
     val[d] = interp_scalar_fine(U, b, cell, pt, eq + d, mask);
-  }
-  return val;
-}
-
-[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-p3a::vector3<p3a::device_simd<double>> interp_vec3_viz(
-    p3a::simd_view<double***> U, Basis const& b,
-    int cell, int pt, int eq,
-    p3a::device_simd_mask<double> const& mask) {
-  p3a::vector3<p3a::device_simd<double>> val;
-  for (int d = 0; d < DIMS; ++d) {
-    val[d] = interp_scalar_viz(U, b, cell, pt, eq + d, mask);
   }
   return val;
 }
@@ -268,19 +244,6 @@ p3a::static_vector<p3a::device_simd<double>, neq> interp_vec_fine(
   p3a::static_vector<p3a::device_simd<double>, neq> val;
   for (int eq = 0; eq < neq; ++eq) {
     val[eq] = interp_scalar_fine(U, b, cell, pt, eq, mask);
-  }
-  return val;
-}
-
-template <int neq>
-[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-p3a::static_vector<p3a::device_simd<double>, neq> interp_vec_viz(
-    p3a::simd_view<double***> U, Basis const& b,
-    int cell, int pt,
-    p3a::device_simd_mask<double> const& mask) {
-  p3a::static_vector<p3a::device_simd<double>, neq> val;
-  for (int eq = 0; eq < neq; ++eq) {
-    val[eq] = interp_scalar_viz(U, b, cell, pt, eq, mask);
   }
   return val;
 }

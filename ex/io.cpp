@@ -141,23 +141,20 @@ void verify_input(Input const& in) {
 static dgt::vtk::VizView<double> get_density(Block const& block, int soln_idx) {
   CALI_CXX_MARK_FUNCTION;
   Basis const b = block.basis();
+  int const nintr_pts = dgt::num_pts(b.dim, b.p);
   p3a::grid3 const g = block.cell_grid();
   p3a::grid3 const cell_grid = dgt::generalize(g);
-  p3a::grid3 const viz_cell_grid = dgt::generalize(dgt::get_viz_cell_grid(g, b.p));
-  p3a::grid3 const inner_grid = dgt::tensor_bounds(b.dim, b.p);
+  int const nviz_cells = cell_grid.size()*nintr_pts;
   View<double***> U = block.soln(soln_idx);
   dgt::vtk::VizView<double> rho;
-  Kokkos::resize(rho, viz_cell_grid.size(), 1);
+  Kokkos::resize(rho, nviz_cells, 1);
   auto f = [=] P3A_HOST_DEVICE (p3a::vector3<int> const& cell_ijk) {
     int const cell = cell_grid.index(cell_ijk);
-    p3a::for_each(p3a::execution::hot, inner_grid,
-    [&] (p3a::vector3<int> const& inner_ijk) P3A_ALWAYS_INLINE {
-      int const pt = inner_grid.index(inner_ijk);
-      p3a::vector3<int> const viz_cell_ijk = (b.p+1)*cell_ijk + inner_ijk;
-      int const viz_cell = viz_cell_grid.index(viz_cell_ijk);
-      double const val = interp_scalar_viz(U, b, cell, pt, RH);
+    for (int pt = 0; pt < nintr_pts; ++pt) {
+      int const viz_cell = cell*nintr_pts + pt;
+      double const val = interp_scalar_intr(U, b, cell, pt, RH);
       rho.d_view(viz_cell, 0) = val;
-    });
+    }
   };
   p3a::for_each(p3a::execution::par, cell_grid, f);
   return rho;
@@ -166,27 +163,24 @@ static dgt::vtk::VizView<double> get_density(Block const& block, int soln_idx) {
 static dgt::vtk::VizView<double> get_velocity(Block const& block, int soln_idx) {
   CALI_CXX_MARK_FUNCTION;
   Basis const b = block.basis();
+  int const nintr_pts = dgt::num_pts(b.dim, b.p);
   p3a::grid3 const g = block.cell_grid();
   p3a::grid3 const cell_grid = dgt::generalize(g);
-  p3a::grid3 const viz_cell_grid = dgt::generalize(dgt::get_viz_cell_grid(g, b.p));
-  p3a::grid3 const inner_grid = dgt::tensor_bounds(b.dim, b.p);
+  int const nviz_cells = cell_grid.size()*nintr_pts;
   View<double***> U = block.soln(soln_idx);
   dgt::vtk::VizView<double> v;
-  Kokkos::resize(v, viz_cell_grid.size(), DIMS);
+  Kokkos::resize(v, nviz_cells, DIMS);
   auto f = [=] P3A_HOST_DEVICE (p3a::vector3<int> const& cell_ijk) {
     int const cell = cell_grid.index(cell_ijk);
-    p3a::for_each(p3a::execution::hot, inner_grid,
-    [&] (p3a::vector3<int> const& inner_ijk) P3A_ALWAYS_INLINE {
-      int const pt = inner_grid.index(inner_ijk);
-      p3a::vector3<int> const viz_cell_ijk = (b.p+1)*cell_ijk + inner_ijk;
-      int const viz_cell = viz_cell_grid.index(viz_cell_ijk);
-      double const rho = interp_scalar_viz(U, b, cell, pt, RH);
-      p3a::vector3<double> const m = interp_vec3_viz(U, b, cell, pt, MM);
+    for (int pt = 0; pt < nintr_pts; ++pt) {
+      int const viz_cell = cell*nintr_pts + pt;
+      double const rho = interp_scalar_intr(U, b, cell, pt, RH);
+      p3a::vector3<double> const m = interp_vec3_intr(U, b, cell, pt, MM);
       p3a::vector3<double> const val = m/rho;
       for (int d = 0; d < DIMS; ++d) {
         v.d_view(viz_cell, d) = val[d];
       }
-    });
+    }
   };
   p3a::for_each(p3a::execution::par, cell_grid, f);
   return v;
@@ -198,24 +192,21 @@ static dgt::vtk::VizView<double> get_pressure(
     double gamma) {
   CALI_CXX_MARK_FUNCTION;
   Basis const b = block.basis();
+  int const nintr_pts = dgt::num_pts(b.dim, b.p);
   p3a::grid3 const g = block.cell_grid();
   p3a::grid3 const cell_grid = dgt::generalize(g);
-  p3a::grid3 const viz_cell_grid = dgt::generalize(dgt::get_viz_cell_grid(g, b.p));
-  p3a::grid3 const inner_grid = dgt::tensor_bounds(b.dim, b.p);
+  int const nviz_cells = cell_grid.size()*nintr_pts;
   View<double***> U = block.soln(soln_idx);
   dgt::vtk::VizView<double> P;
-  Kokkos::resize(P, viz_cell_grid.size(), 1);
+  Kokkos::resize(P, nviz_cells, 1);
   auto f = [=] P3A_HOST_DEVICE (p3a::vector3<int> const& cell_ijk) {
     int const cell = cell_grid.index(cell_ijk);
-    p3a::for_each(p3a::execution::hot, inner_grid,
-    [&] (p3a::vector3<int> const& inner_ijk) P3A_ALWAYS_INLINE {
-      int const pt = inner_grid.index(inner_ijk);
-      p3a::vector3<int> const viz_cell_ijk = (b.p+1)*cell_ijk + inner_ijk;
-      int const viz_cell = viz_cell_grid.index(viz_cell_ijk);
-      p3a::static_vector<double, NEQ> const U_pt = dgt::interp_vec_viz<NEQ>(U, b, cell, pt);
+    for (int pt = 0; pt < nintr_pts; ++pt) {
+      int const viz_cell = cell*nintr_pts + pt;
+      p3a::static_vector<double, NEQ> const U_pt = dgt::interp_vec_intr<NEQ>(U, b, cell, pt);
       double const val = get_pressure(U_pt, gamma);
       P.d_view(viz_cell, 0) = val;
-    });
+    }
   };
   p3a::for_each(p3a::execution::par, cell_grid, f);
   return P;

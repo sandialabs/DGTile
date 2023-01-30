@@ -24,17 +24,15 @@ struct Basis {
   View<double***>   pt_child_intr;    // (which_child, intr_pt, dim)
   View<double*****> pt_child_side;    // (axis, dir, which_child, side_pt, dim)
   View<double**>    pt_fine;          // (fine_intr_pt, dim)
-  View<double**>    pt_viz;           // (viz_pt, dim)
   View<double**>    pt_eval;          // (all_pt, dim)
   View<double**>    pt_corner;        // (corner_pt, dim)
+  View<double***>   pt_viz_corner;    // (intr_pt, corner_pt, dim)
   View<double**>    phi_intr;         // (intr_pt, mode)
   View<double***>   dphi_intr;        // (axis, intr_pt, mode)
   View<double****>  phi_side;         // (axis, dir, side_pt, mode)
   View<double***>   phi_child_intr;   // (which_child, intr_pt, mode)
   View<double*****> phi_child_side;   // (axis, dir, which_child, side_pt, mode)
   View<double**>    phi_fine;         // (fine_pt, mode)
-  View<double**>    phi_viz;          // (viz_pt, mode)
-  View<double***>   dphi_viz;         // (axis, viz_pt, mode)
   View<double**>    phi_eval;         // (eval_pt, mode)
   View<double**>    phi_corner;       // (corner_pt, mode)
   View<double*>     mass;             // (mode)
@@ -202,6 +200,15 @@ p3a::vector3<double> get_side_pt(Basis const& b, int axis, int dir, int pt) {
   p3a::vector3<double> xi(0,0,0);
   for (int d = 0; d < b.dim; ++d) {
     xi[d] = b.pt_side(axis, dir, pt, d);
+  }
+  return xi;
+}
+
+[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
+p3a::vector3<double> get_viz_corner_pt(Basis const& b, int intr_pt, int corner_pt) {
+  p3a::vector3<double> xi(0,0,0);
+  for (int d = 0; d < b.dim; ++d) {
+    xi[d] = b.pt_viz_corner(intr_pt, corner_pt, d);
   }
   return xi;
 }

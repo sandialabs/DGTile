@@ -38,7 +38,6 @@ TEST(basis, pt_sums_tensor) {
       test_sum(basis.pt_side, 0.);
       test_sum(basis.pt_child_intr, 0.);
       test_sum(basis.pt_fine, 0.);
-      test_sum(basis.pt_viz, 0.);
       test_sum(basis.pt_corner, 0.);
     }
   }
@@ -56,7 +55,6 @@ TEST(basis, pt_sums_non_tensor) {
       test_sum(basis.pt_side, 0.);
       test_sum(basis.pt_child_intr, 0.);
       test_sum(basis.pt_fine, 0.);
-      test_sum(basis.pt_viz, 0.);
       test_sum(basis.pt_corner, 0.);
     }
   }

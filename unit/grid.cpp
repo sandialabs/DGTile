@@ -54,30 +54,6 @@ TEST(grid, intr_sides) {
   ASSERT_EQ(dgt::get_intr_sides(p3a::grid3(10,10,10), dgt::Z).upper(), p3a::vector3<int>(10,10,10));
 }
 
-TEST(grid, viz_cell_grid) {
-  ASSERT_EQ(dgt::get_viz_cell_grid({2,0,0}, 0).extents(), p3a::vector3<int>(2,0,0));
-  ASSERT_EQ(dgt::get_viz_cell_grid({2,0,0}, 1).extents(), p3a::vector3<int>(4,0,0));
-  ASSERT_EQ(dgt::get_viz_cell_grid({2,0,0}, 2).extents(), p3a::vector3<int>(6,0,0));
-  ASSERT_EQ(dgt::get_viz_cell_grid({2,2,0}, 0).extents(), p3a::vector3<int>(2,2,0));
-  ASSERT_EQ(dgt::get_viz_cell_grid({2,2,0}, 1).extents(), p3a::vector3<int>(4,4,0));
-  ASSERT_EQ(dgt::get_viz_cell_grid({2,2,0}, 2).extents(), p3a::vector3<int>(6,6,0));
-  ASSERT_EQ(dgt::get_viz_cell_grid({2,2,2}, 0).extents(), p3a::vector3<int>(2,2,2));
-  ASSERT_EQ(dgt::get_viz_cell_grid({2,2,2}, 1).extents(), p3a::vector3<int>(4,4,4));
-  ASSERT_EQ(dgt::get_viz_cell_grid({2,2,2}, 2).extents(), p3a::vector3<int>(6,6,6));
-}
-
-TEST(grid, viz_point_grid) {
-  ASSERT_EQ(dgt::get_viz_point_grid({2,0,0}, 0).extents(), p3a::vector3<int>(3,0,0));
-  ASSERT_EQ(dgt::get_viz_point_grid({2,0,0}, 1).extents(), p3a::vector3<int>(5,0,0));
-  ASSERT_EQ(dgt::get_viz_point_grid({2,0,0}, 2).extents(), p3a::vector3<int>(7,0,0));
-  ASSERT_EQ(dgt::get_viz_point_grid({2,2,0}, 0).extents(), p3a::vector3<int>(3,3,0));
-  ASSERT_EQ(dgt::get_viz_point_grid({2,2,0}, 1).extents(), p3a::vector3<int>(5,5,0));
-  ASSERT_EQ(dgt::get_viz_point_grid({2,2,0}, 2).extents(), p3a::vector3<int>(7,7,0));
-  ASSERT_EQ(dgt::get_viz_point_grid({2,2,2}, 0).extents(), p3a::vector3<int>(3,3,3));
-  ASSERT_EQ(dgt::get_viz_point_grid({2,2,2}, 1).extents(), p3a::vector3<int>(5,5,5));
-  ASSERT_EQ(dgt::get_viz_point_grid({2,2,2}, 2).extents(), p3a::vector3<int>(7,7,7));
-}
-
 TEST(grid, contains_subgrid) {
   ASSERT_EQ(dgt::contains(p3a::grid3(4,4,4), p3a::subgrid3({0,0,0}, {2,2,2})), true);
 }

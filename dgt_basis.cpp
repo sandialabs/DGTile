@@ -55,16 +55,6 @@ static double corner_pt(int pt) {
   return table[pt];
 }
 
-static double viz_pt(int p, int pt) {
-  static constexpr int np = max_p + 1;
-  static double table[np][np] = {
-    {0., nan, nan},
-    {-0.5, 0.5, nan},
-    {-2./3., 0., 2./3.}
-  };
-  return table[p][pt];
-}
-
 static double shift(double xi, double x0, double x1) {
   return 0.5*x0*(1.-xi) + 0.5*x1*(1.+xi);
 }
@@ -139,6 +129,37 @@ static HView<double**> get_pt_corner(int dim) {
   return pts;
 }
 
+static double viz_intervals(int p, int idx) {
+  static constexpr int np = max_p + 1;
+  static constexpr int nq = max_q + 1;
+  static double table[np][nq] = {
+    {-1., 1., nan, nan},
+    {-1., 0., 1., nan},
+    {-1., -5./9., 5./9., 1.}
+  };
+  return table[p][idx];
+}
+
+static HView<double***> get_pt_viz_corner(int dim, int p) {
+  HView<double***> pts("", num_pts(dim, p), num_corner_pts(dim), dim);
+  p3a::vector3<int> const intr_bounds = tensor_bounds(dim, p);
+  p3a::vector3<int> const corner_bounds = tensor_bounds(dim, 1);
+  auto f = [&] (p3a::vector3<int> const& intr_ijk) {
+    int const intr_pt = index(intr_ijk, intr_bounds);
+    auto g = [&] (p3a::vector3<int> const& corner_ijk) {
+      int const corner_pt = index(corner_ijk, corner_bounds);
+      for (int axis = 0; axis < dim; ++axis) {
+        int const offset = (corner_ijk[axis] == left) ? 0 : 1;
+        int const idx = intr_ijk[axis] + offset;
+        pts(intr_pt, corner_pt, axis) = viz_intervals(p, idx);
+      }
+    };
+    p3a::for_each(p3a::execution::hot, corner_bounds, g);
+  };
+  p3a::for_each(p3a::execution::seq, intr_bounds, f);
+  return pts;
+}
+
 static HView<double****> get_pt_side(int dim, int p) {
   HView<double****> pts("", dim, ndirs, num_pts(dim-1, p), dim);
   p3a::vector3<int> const bounds = tensor_bounds(dim-1, p);
@@ -210,22 +231,9 @@ static HView<double**> get_pt_fine(int dim, int p) {
   return get_pt_intr(dim, 3);
 }
 
-static HView<double**> get_pt_viz(int dim, int p) {
-  HView<double**> pts("", num_pts(dim, p), dim);
-  p3a::vector3<int> const bounds = tensor_bounds(dim, p);
-  auto f = [&] (p3a::vector3<int> const& ijk) {
-    int const pt = index(ijk, bounds);
-    for (int axis = 0; axis < dim; ++axis) {
-      pts(pt, axis) = viz_pt(p, ijk[axis]);
-    }
-  };
-  p3a::for_each(p3a::execution::seq, bounds, f);
-  return pts;
-}
-
 static HView<double**> get_pt_eval(int dim, int p) {
   int const neval_pts = num_eval_pts(dim, p);
-  HView<double**> const intr_pts = get_pt_viz(dim, p);
+  HView<double**> const intr_pts = get_pt_intr(dim, p);
   HView<double****> const side_pts = get_pt_side(dim, p);
   HView<double**> pts("", neval_pts, dim);
   int eval_pt = 0;
@@ -373,16 +381,6 @@ static HView<double**> get_phi_fine(int dim, int p, bool tensor) {
   return get_phi(dim, p, tensor, pts);
 }
 
-static HView<double**> get_phi_viz(int dim, int p, bool tensor) {
-  HView<double**> const pts = get_pt_viz(dim, p);
-  return get_phi(dim, p, tensor, pts);
-}
-
-static HView<double***> get_dphi_viz(int dim, int p, bool tensor) {
-  HView<double**> const pts = get_pt_viz(dim, p);
-  return get_dphi(dim, p, tensor, pts);
-}
-
 static HView<double**> get_phi_eval(int dim, int p, bool tensor) {
   HView<double**> const pts = get_pt_eval(dim, p);
   return get_phi(dim, p, tensor, pts);
@@ -419,17 +417,15 @@ void Basis::init(int in_dim, int in_p, bool tensor_in) {
   copy(get_pt_child_intr(dim, p), pt_child_intr);
   copy(get_pt_child_side(dim, p), pt_child_side);
   copy(get_pt_fine(dim, p), pt_fine);
-  copy(get_pt_viz(dim, p), pt_viz);
   copy(get_pt_eval(dim, p), pt_eval);
   copy(get_pt_corner(dim), pt_corner);
+  copy(get_pt_viz_corner(dim, p), pt_viz_corner);
   copy(get_phi_intr(dim, p, tensor), phi_intr);
   copy(get_dphi_intr(dim, p, tensor), dphi_intr);
   copy(get_phi_side(dim, p, tensor), phi_side);
   copy(get_phi_child_intr(dim, p, tensor), phi_child_intr);
   copy(get_phi_child_side(dim, p, tensor), phi_child_side);
   copy(get_phi_fine(dim, p, tensor), phi_fine);
-  copy(get_phi_viz(dim, p, tensor), phi_viz);
-  copy(get_dphi_viz(dim, p, tensor), dphi_viz);
   copy(get_phi_eval(dim, p, tensor), phi_eval);
   copy(get_phi_corner(dim, p, tensor), phi_corner);
   copy(get_mass(dim, p, tensor), mass);

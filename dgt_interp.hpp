@@ -73,17 +73,6 @@ double interp_scalar_fine(
 }
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-double interp_scalar_viz(
-    View<double***> U, Basis const& b,
-    int cell, int pt, int eq) {
-  double val = U(cell, eq, 0) * b.phi_viz(pt, 0);
-  for (int m = 1; m < b.nmodes; ++m) {
-    val += U(cell, eq, m) * b.phi_viz(pt, m);
-  }
-  return val;
-}
-
-[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
 double interp_scalar_eval(
     View<double***> U, Basis const& b,
     int cell, int pt, int eq) {
@@ -145,17 +134,6 @@ p3a::vector3<double> interp_vec3_fine(
   p3a::vector3<double> val;
   for (int d = 0; d < DIMS; ++d) {
     val[d] = interp_scalar_fine(U, b, cell, pt, eq + d);
-  }
-  return val;
-}
-
-[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-p3a::vector3<double> interp_vec3_viz(
-    View<double***> U, Basis const& b,
-    int cell, int pt, int eq) {
-  p3a::vector3<double> val;
-  for (int d = 0; d < DIMS; ++d) {
-    val[d] = interp_scalar_viz(U, b, cell, pt, eq + d);
   }
   return val;
 }
@@ -228,18 +206,6 @@ p3a::static_vector<double, neq> interp_vec_fine(
   for (int eq = 0; eq < neq; ++eq) {
     val[eq] = interp_scalar_fine(U, b, cell, pt, eq);
   }
-}
-
-template <int neq>
-[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-p3a::static_vector<double, neq> interp_vec_viz(
-    View<double***> U, Basis const& b,
-    int cell, int pt) {
-  p3a::static_vector<double, neq> val;
-  for (int eq = 0; eq < neq; ++eq) {
-    val[eq] = interp_scalar_viz(U, b, cell, pt, eq);
-  }
-  return val;
 }
 
 template <int neq>
