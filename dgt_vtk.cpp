@@ -10,8 +10,6 @@
 #include "dgt_grid.hpp"
 #include "dgt_spatial.hpp"
 
-#include "dgt_print.hpp" // debug
-
 namespace dgt {
 
 namespace vtk {
@@ -118,7 +116,6 @@ static constexpr p3a::vector3<int> vtk_corners[] = {
   {0,1,1}
 };
 
-static constexpr int flexo_2_vtk_corners[] = {0,1,3,2,4,5,7,6};
 
 static void write_tree_coords(
     std::stringstream& stream,
@@ -220,14 +217,15 @@ static void write_block_coords(
   p3a::vector3<double> const origin = block.domain().lower();
   p3a::grid3 const cell_grid = generalize(block.cell_grid());
   int const nviz_points = cell_grid.size()*nintr_pts*ncorners;
+  int const dgt_2_vtk_corners[] = {0,1,3,2,4,5,7,6};
   Kokkos::resize(coords, nviz_points, DIMS);
-  auto f = [&] (p3a::vector3<int> const& cell_ijk) {
+  auto f = [=] P3A_HOST_DEVICE (p3a::vector3<int> const& cell_ijk) P3A_ALWAYS_INLINE {
     int const cell = cell_grid.index(cell_ijk);
     p3a::vector3<double> const x_center = get_cell_center(cell_ijk, origin, dx);
     for (int pt = 0;  pt < nintr_pts; ++pt) {
       int const viz_cell = cell*nintr_pts + pt;
       for (int c = 0;  c < ncorners; ++c) {
-        int const vtk_c = flexo_2_vtk_corners[c];
+        int const vtk_c = dgt_2_vtk_corners[c];
         int const viz_point = viz_cell*ncorners + vtk_c;
         p3a::vector3<double> const xi = get_viz_corner_pt(b, pt, c);
         p3a::vector3<double> const x = x_center + p3a::hadamard_product(half_dx, xi);
@@ -237,9 +235,9 @@ static void write_block_coords(
       }
     }
   };
-  p3a::for_each(p3a::execution::seq, cell_grid, f);
+  p3a::for_each(p3a::execution::par, cell_grid, f);
   write_data_start(stream, "Float64", "coordinates", DIMS);
-  write_data(stream, coords, false);
+  write_data(stream, coords, true);
   write_data_end(stream);
 }
 
