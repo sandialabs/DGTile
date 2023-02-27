@@ -39,6 +39,34 @@ struct Basis {
   void init(int dim, int p, bool tensor);
 };
 
+struct HostBasis {
+  int dim = -1;
+  int p = -1;
+  int nmodes = -1;
+  bool tensor = true;
+  HView<double*>     wt_intr;         // (intr_pt)
+  HView<double*>     wt_side;         // (side_pt)
+  HView<double*>     wt_fine;         // (fine_pt)
+  HView<double**>    pt_intr;         // (intr_pt, dim)
+  HView<double****>  pt_side;         // (axis, dir, side_pt, dim)
+  HView<double***>   pt_child_intr;   // (which_child, intr_pt, dim)
+  HView<double*****> pt_child_side;   // (axis, dir, which_child, side_pt, dim)
+  HView<double**>    pt_fine;         // (fine_intr_pt, dim)
+  HView<double**>    pt_eval;         // (all_pt, dim)
+  HView<double**>    pt_corner;       // (corner_pt, dim)
+  HView<double***>   pt_viz_corner;   // (intr_pt, corner_pt, dim)
+  HView<double**>    phi_intr;        // (intr_pt, mode)
+  HView<double***>   dphi_intr;       // (axis, intr_pt, mode)
+  HView<double****>  phi_side;        // (axis, dir, side_pt, mode)
+  HView<double***>   phi_child_intr;  // (which_child, intr_pt, mode)
+  HView<double*****> phi_child_side;  // (axis, dir, which_child, side_pt, mode)
+  HView<double**>    phi_fine;        // (fine_pt, mode)
+  HView<double**>    phi_eval;        // (eval_pt, mode)
+  HView<double**>    phi_corner;      // (corner_pt, mode)
+  HView<double*>     mass;            // (mode)
+  void init(int dim, int p, bool tensor);
+};
+
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE constexpr
 int ipow(int a, int b) {
   int result = 1;
@@ -177,8 +205,9 @@ ModeVector dmodes(
   return dphi;
 }
 
+template <class BasisT>
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-p3a::vector3<double> get_intr_pt(Basis const& b, int pt) {
+p3a::vector3<double> get_intr_pt(BasisT const& b, int pt) {
   p3a::vector3<double> xi(0,0,0);
   for (int d = 0; d < b.dim; ++d) {
     xi[d] = b.pt_intr(pt, d);
@@ -186,8 +215,9 @@ p3a::vector3<double> get_intr_pt(Basis const& b, int pt) {
   return xi;
 }
 
+template <class BasisT>
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-p3a::vector3<double> get_fine_pt(Basis const& b, int pt) {
+p3a::vector3<double> get_fine_pt(BasisT const& b, int pt) {
   p3a::vector3<double> xi(0,0,0);
   for (int d = 0; d < b.dim; ++d) {
     xi[d] = b.pt_fine(pt, d);
@@ -195,8 +225,9 @@ p3a::vector3<double> get_fine_pt(Basis const& b, int pt) {
   return xi;
 }
 
+template <class BasisT>
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-p3a::vector3<double> get_side_pt(Basis const& b, int axis, int dir, int pt) {
+p3a::vector3<double> get_side_pt(BasisT const& b, int axis, int dir, int pt) {
   p3a::vector3<double> xi(0,0,0);
   for (int d = 0; d < b.dim; ++d) {
     xi[d] = b.pt_side(axis, dir, pt, d);
@@ -204,8 +235,9 @@ p3a::vector3<double> get_side_pt(Basis const& b, int axis, int dir, int pt) {
   return xi;
 }
 
+template <class BasisT>
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-p3a::vector3<double> get_viz_corner_pt(Basis const& b, int intr_pt, int corner_pt) {
+p3a::vector3<double> get_viz_corner_pt(BasisT const& b, int intr_pt, int corner_pt) {
   p3a::vector3<double> xi(0,0,0);
   for (int d = 0; d < b.dim; ++d) {
     xi[d] = b.pt_viz_corner(intr_pt, corner_pt, d);
@@ -214,5 +246,6 @@ p3a::vector3<double> get_viz_corner_pt(Basis const& b, int intr_pt, int corner_p
 }
 
 void print_modal_ordering(int dim, int p, bool tensor);
+
 
 }

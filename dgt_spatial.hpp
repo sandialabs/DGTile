@@ -100,9 +100,10 @@ p3a::vector3<double> get_x(
       center.z() + 0.5 * xi.z() * dx.z());
 }
 
+template <class BasisT>
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
 p3a::vector3<double> get_intr_x(
-    Basis const& b,
+    BasisT const& b,
     int pt,
     p3a::vector3<int> const& cell_ijk,
     p3a::vector3<double> const& origin,
@@ -111,9 +112,10 @@ p3a::vector3<double> get_intr_x(
   return get_x(cell_ijk, origin, dx, xi);
 }
 
+template <class BasisT>
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
 p3a::vector3<double> get_fine_x(
-    Basis const& b,
+    BasisT const& b,
     int pt,
     p3a::vector3<int> const& cell_ijk,
     p3a::vector3<double> const& origin,
@@ -122,9 +124,10 @@ p3a::vector3<double> get_fine_x(
   return get_x(cell_ijk, origin, dx, xi);
 }
 
+template <class BasisT>
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
 p3a::vector3<double> get_side_x(
-    Basis const& b,
+    BasisT const& b,
     int axis,
     int pt,
     p3a::vector3<int> const& side_ijk,

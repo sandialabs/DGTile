@@ -431,6 +431,37 @@ void Basis::init(int in_dim, int in_p, bool tensor_in) {
   copy(get_mass(dim, p, tensor), mass);
 }
 
+void HostBasis::init(int in_dim, int in_p, bool tensor_in) {
+  CALI_CXX_MARK_FUNCTION;
+  verify_dim(in_dim);
+  verify_p(in_p);
+  dim = in_dim;
+  p = in_p;
+  tensor = tensor_in;
+  if (tensor) nmodes = num_tensor_modes(dim, p);
+  else nmodes = num_non_tensor_modes(dim, p);
+  wt_intr = get_wt_intr(dim, p);
+  wt_side = get_wt_side(dim, p);
+  wt_fine = get_wt_fine(dim, p);
+  pt_intr = get_pt_intr(dim, p);
+  pt_side = get_pt_side(dim, p);
+  pt_child_intr = get_pt_child_intr(dim, p);
+  pt_child_side = get_pt_child_side(dim, p);
+  pt_fine = get_pt_fine(dim, p);
+  pt_eval = get_pt_eval(dim, p);
+  pt_corner = get_pt_corner(dim);
+  pt_viz_corner = get_pt_viz_corner(dim, p);
+  phi_intr = get_phi_intr(dim, p, tensor);
+  dphi_intr = get_dphi_intr(dim, p, tensor);
+  phi_side = get_phi_side(dim, p, tensor);
+  phi_child_intr = get_phi_child_intr(dim, p, tensor);
+  phi_child_side = get_phi_child_side(dim, p, tensor);
+  phi_fine = get_phi_fine(dim, p, tensor);
+  phi_eval = get_phi_eval(dim, p, tensor);
+  phi_corner = get_phi_corner(dim, p, tensor);
+  mass = get_mass(dim, p, tensor);
+}
+
 static std::string mode_comp_name(int axis, int p) {
   if (p == 0) return "1";
   std::string c = "xi_" + std::to_string(axis);
