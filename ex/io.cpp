@@ -138,79 +138,79 @@ void verify_input(Input const& in) {
   if (in.out_frequency <= 0) throw std::runtime_error("input - invalid out frequency");
 }
 
-static dgt::vtk::VizView<double> get_density(Block const& block, int soln_idx) {
-  CALI_CXX_MARK_FUNCTION;
-  Basis const b = block.basis();
-  int const nintr_pts = dgt::num_pts(b.dim, b.p);
-  p3a::grid3 const g = block.cell_grid();
-  p3a::grid3 const cell_grid = dgt::generalize(g);
-  int const nviz_cells = cell_grid.size()*nintr_pts;
-  View<double***> U = block.soln(soln_idx);
-  dgt::vtk::VizView<double> rho;
-  Kokkos::resize(rho, nviz_cells, 1);
-  auto f = [=] P3A_HOST_DEVICE (p3a::vector3<int> const& cell_ijk) {
-    int const cell = cell_grid.index(cell_ijk);
-    for (int pt = 0; pt < nintr_pts; ++pt) {
-      int const viz_cell = cell*nintr_pts + pt;
-      double const val = interp_scalar_intr(U, b, cell, pt, RH);
-      rho.d_view(viz_cell, 0) = val;
-    }
-  };
-  p3a::for_each(p3a::execution::par, cell_grid, f);
-  return rho;
+template <class T>
+P3A_HOST_DEVICE void assign_variable(
+    dgt::vtk::VizView<double> v, int idx, T const& val);
+
+template <>
+P3A_HOST_DEVICE void assign_variable(
+    dgt::vtk::VizView<double> v, int idx, double const& val) {
+  v.d_view(idx, 0) = val;
 }
 
-static dgt::vtk::VizView<double> get_velocity(Block const& block, int soln_idx) {
-  CALI_CXX_MARK_FUNCTION;
-  Basis const b = block.basis();
-  int const nintr_pts = dgt::num_pts(b.dim, b.p);
-  p3a::grid3 const g = block.cell_grid();
-  p3a::grid3 const cell_grid = dgt::generalize(g);
-  int const nviz_cells = cell_grid.size()*nintr_pts;
-  View<double***> U = block.soln(soln_idx);
-  dgt::vtk::VizView<double> v;
-  Kokkos::resize(v, nviz_cells, DIMS);
-  auto f = [=] P3A_HOST_DEVICE (p3a::vector3<int> const& cell_ijk) {
-    int const cell = cell_grid.index(cell_ijk);
-    for (int pt = 0; pt < nintr_pts; ++pt) {
-      int const viz_cell = cell*nintr_pts + pt;
-      double const rho = interp_scalar_intr(U, b, cell, pt, RH);
-      p3a::vector3<double> const m = interp_vec3_intr(U, b, cell, pt, MM);
-      p3a::vector3<double> const val = m/rho;
-      for (int d = 0; d < DIMS; ++d) {
-        v.d_view(viz_cell, d) = val[d];
-      }
-    }
-  };
-  p3a::for_each(p3a::execution::par, cell_grid, f);
-  return v;
+template <>
+P3A_HOST_DEVICE void assign_variable(
+    dgt::vtk::VizView<double> v, int idx, p3a::vector3<double> const& val) {
+  v.d_view(idx, X) = val.x();
+  v.d_view(idx, Y) = val.y();
+  v.d_view(idx, Z) = val.z();
 }
 
-static dgt::vtk::VizView<double> get_pressure(
+template <class Function>
+dgt::vtk::VizView<double> get_variable(
+    Function const& function,
     Block const& block,
+    int num_comps,
     int soln_idx,
-    double gamma) {
-  CALI_CXX_MARK_FUNCTION;
+    double gamma = 0.) {
   Basis const b = block.basis();
-  int const nintr_pts = dgt::num_pts(b.dim, b.p);
   p3a::grid3 const g = block.cell_grid();
   p3a::grid3 const cell_grid = dgt::generalize(g);
-  int const nviz_cells = cell_grid.size()*nintr_pts;
+  p3a::grid3 const inner_grid = dgt::tensor_bounds(b.dim, b.p);
+  p3a::grid3 const viz_cell_grid = dgt::generalize(dgt::get_viz_cell_grid(g, b.p));
   View<double***> U = block.soln(soln_idx);
-  dgt::vtk::VizView<double> P;
-  Kokkos::resize(P, nviz_cells, 1);
+  dgt::vtk::VizView<double> var;
+  Kokkos::resize(var, viz_cell_grid.size(), num_comps);
   auto f = [=] P3A_HOST_DEVICE (p3a::vector3<int> const& cell_ijk) {
     int const cell = cell_grid.index(cell_ijk);
-    for (int pt = 0; pt < nintr_pts; ++pt) {
-      int const viz_cell = cell*nintr_pts + pt;
-      p3a::static_vector<double, NEQ> const U_pt = dgt::interp_vec_intr<NEQ>(U, b, cell, pt);
-      double const val = get_pressure(U_pt, gamma);
-      P.d_view(viz_cell, 0) = val;
-    }
+    p3a::for_each(p3a::execution::hot, inner_grid,
+      [&] (p3a::vector3<int> const& inner_ijk) P3A_ALWAYS_INLINE {
+        int const pt = inner_grid.index(inner_ijk);
+        p3a::vector3<int> const viz_cell_ijk = (b.p+1)*cell_ijk + inner_ijk;
+        int const viz_cell = viz_cell_grid.index(viz_cell_ijk);
+        auto const val = function(U, b, cell, pt, gamma);
+        assign_variable(var, viz_cell, val);
+      }
+    );
   };
   p3a::for_each(p3a::execution::par, cell_grid, f);
-  return P;
+  return var;
 }
+
+struct density {
+  P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline double operator()(
+      View<double***> U, dgt::Basis const& b, int cell, int pt, double) const {
+    return interp_scalar_intr(U, b, cell, pt, RH);
+  }
+};
+
+struct velocity {
+  P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline p3a::vector3<double> operator()(
+      View<double***> U, dgt::Basis const& b, int cell, int pt, double) const {
+    double const rho = interp_scalar_intr(U, b, cell, pt, RH);
+    p3a::vector3<double> const m = interp_vec3_intr(U, b, cell, pt, MM);
+    return m/rho;
+  }
+};
+
+struct pressure {
+  P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline double operator()(
+      View<double***> U, dgt::Basis const& b, int cell, int pt, double gamma) const {
+    p3a::static_vector<double, NEQ> const U_pt = dgt::interp_vec_intr<NEQ>(U, b, cell, pt);
+    double const val = get_pressure(U_pt, gamma);
+    return val;
+  }
+};
 
 void write_mesh(
     std::filesystem::path const& path,
@@ -220,37 +220,28 @@ void write_mesh(
   Input const& in = state.in;
   Mesh const& mesh = state.mesh;
   std::filesystem::create_directory(path);
-  if (mesh.comm()->rank() == 0) {
-    std::stringstream stream;
-    std::filesystem::path const tree_path = path / "tree";
-    std::filesystem::path const pvtu_path = path / "blocks.pvtu";
-    dgt::vtk::write_tree(tree_path, mesh);
-    dgt::vtk::write_pvtu_start(stream, mesh.leaves().size());
-    dgt::vtk::write_pvtu_point_data_start(stream);
-    dgt::vtk::write_pvtu_point_data_end(stream);
-    dgt::vtk::write_pvtu_cell_data_start(stream);
-    dgt::vtk::write_pvtu_cell_field<double>(stream, "density", 1);
-    dgt::vtk::write_pvtu_cell_field<double>(stream, "velocity", DIMS);
-    dgt::vtk::write_pvtu_cell_field<double>(stream, "pressure", 1);
-    dgt::vtk::write_pvtu_cell_data_end(stream);
-    dgt::vtk::write_pvtu_end(stream);
-    dgt::write_stream(pvtu_path, stream);
-  }
+  density f_rho;
+  velocity f_vel;
+  pressure f_press;
+  double const gamma = in.gamma;
   for (Node* leaf : mesh.owned_leaves()) {
     std::stringstream stream;
     Block const& block = leaf->block;
     std::filesystem::path block_path = path;
-    block_path /= std::to_string(block.id()) + ".vtu";
-    dgt::vtk::write_vtu_start(stream, block);
-    dgt::vtk::write_vtu_point_data_start(stream);
-    dgt::vtk::write_vtu_point_data_end(stream);
-    dgt::vtk::write_vtu_cell_data_start(stream);
-    dgt::vtk::write_vtu_cell_field(stream, "density", get_density(block, soln_idx));
-    dgt::vtk::write_vtu_cell_field(stream, "velocity", get_velocity(block, soln_idx));
-    dgt::vtk::write_vtu_cell_field(stream, "pressure", get_pressure(block, soln_idx, in.gamma));
-    dgt::vtk::write_vtu_cell_data_end(stream);
-    dgt::vtk::write_vtu_end(stream);
+    block_path /= std::to_string(block.id()) + ".vtr";
+    dgt::vtk::write_vtr_start(stream, block, state.t, state.step);
+    dgt::vtk::write_field(stream, "density", get_variable(f_rho, block, 1, soln_idx));
+    dgt::vtk::write_field(stream, "velocity", get_variable(f_vel, block, DIMS, soln_idx));
+    dgt::vtk::write_field(stream, "pressure", get_variable(f_press, block, 1, soln_idx, gamma));
+    dgt::vtk::write_vtr_end(stream);
     dgt::write_stream(block_path, stream);
+  }
+  if (state.mesh.comm()->rank() == 0) {
+    std::filesystem::path vtm_path = path;
+    vtm_path /= "blocks.vtm";
+    std::stringstream stream;
+    dgt::vtk::write_vtm(stream, "", mesh.leaves().size());
+    dgt::write_stream(vtm_path, stream);
   }
 }
 
@@ -283,19 +274,16 @@ static void write_pvd_impl(
   stream << "<VTKFile type=\"Collection\" version=\"0.1\">\n<Collection>\n";
   for (int i = 0; i < nout; ++i) {
     stream << "<DataSet timestep=\"" << state.out_times[i] << "\" part=\"0\" ";
-    std::string pvtu_path = "out" + std::to_string(i) + "/" + parts_name;
-    stream << "file=\"" << pvtu_path << "\"/>\n";
+    std::string vtm_path = "out" + std::to_string(i) + "/" + parts_name;
+    stream << "file=\"" << vtm_path << "\"/>\n";
   }
   stream << "</Collection>\n</VTKFile>\n";
   dgt::write_stream(path, stream);
 }
 
 void write_pvd(State& state) {
-  write_pvd_impl(state, "collection.pvd", "blocks.pvtu");
-}
-
-void write_tree_pvd(State& state) {
-  write_pvd_impl(state, "tree_collection.pvd", "tree.vtu");
+  std::string const name = state.in.name + ".pvd";
+  write_pvd_impl(state, name, "blocks.vtm");
 }
 
 }

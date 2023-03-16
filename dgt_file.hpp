@@ -58,29 +58,12 @@ namespace vtk {
 template <class T>
 using VizView = Kokkos::DualView<T**, Kokkos::LayoutRight>;
 
-void write_tree(std::filesystem::path const& path, Mesh const& mesh);
-
-void write_pvtu_start(std::stringstream& stream, int nblocks);
-void write_pvtu_point_data_start(std::stringstream& stream);
-void write_pvtu_point_data_end(std::stringstream& stream);
-void write_pvtu_cell_data_start(std::stringstream& stream);
-void write_pvtu_cell_data_end(std::stringstream& stream);
-void write_pvtu_end(std::stringstream& stream);
-
-void write_vtu_start(std::stringstream& stream, Block const& block);
-void write_vtu_point_data_start(std::stringstream& stream);
-void write_vtu_point_data_end(std::stringstream& stream);
-void write_vtu_cell_data_start(std::stringstream& stream);
-void write_vtu_cell_data_end(std::stringstream& stream);
-void write_vtu_end(std::stringstream& stream);
-
+void write_vtr_start(
+    std::stringstream& stream, Block const& block, double time, int step);
 template <class T>
-void write_vtu_cell_field(
-    std::stringstream& stream, std::string const& name, VizView<T> f);
-
-template <class T>
-void write_pvtu_cell_field(
-    std::stringstream& stream, std::string const& name, int ncomps);
+void write_field(std::stringstream& stream, std::string const& name, VizView<T> f);
+void write_vtr_end(std::stringstream& stream);
+void write_vtm(std::stringstream& stream, std::string const& prefix, int nblocks);
 
 }
 

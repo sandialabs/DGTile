@@ -20,6 +20,8 @@ struct Point;
 [[nodiscard]] p3a::subgrid3 get_adj_sides(p3a::grid3 const& cells, int axis, int dir);
 [[nodiscard]] p3a::subgrid3 get_adj_cells(p3a::grid3 const& cells, int axis, int dir);
 
+[[nodiscard]] p3a::grid3 get_viz_cell_grid(p3a::grid3 const& g, int p);
+
 [[nodiscard]] bool contains(p3a::grid3 const& g, p3a::subgrid3 const& s);
 [[nodiscard]] bool contains(int depth, p3a::subgrid3 const& s, Point const& pt);
 

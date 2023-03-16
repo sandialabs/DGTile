@@ -331,7 +331,6 @@ static void run(mpicpp::comm* comm, std::string const& name) {
   print_step(comm, 1, state.step, state.t, state.dt);
   print_tallies(state);
   write_pvd(state);
-  write_tree_pvd(state);
   double const L1_error = compute_error(L1, compute_L1_error, state, RH);
   double const L2_error = compute_error(L2, compute_L2_error, state, RH);
   check_error_regression(state, L2_error);

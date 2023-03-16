@@ -84,6 +84,11 @@ p3a::subgrid3 get_adj_cells(p3a::grid3 const& cells, int axis, int dir) {
   return p3a::subgrid3(start, end);
 }
 
+p3a::grid3 get_viz_cell_grid(p3a::grid3 const& cells, int p) {
+  p3a::vector3<int> const ncells = (p+1)*cells.extents();
+  return p3a::grid3(ncells);
+}
+
 static p3a::vector3<int> map_to_fine(Point const& pt, int fine_depth) {
   int const diff = fine_depth - pt.depth;
   return p3a::vector3<int>(

@@ -44,30 +44,6 @@ static void init_test_mesh(int dim, dgt::Mesh& m) {
   m.rebuild();
 }
 
-TEST(file, vtk_write_tree_1D) {
-  dgt::Mesh mesh;
-  mpicpp::comm world = mpicpp::comm::world();
-  mesh.set_comm(&world);
-  init_test_mesh(1, mesh);
-  dgt::vtk::write_tree("tree1D", mesh);
-}
-
-TEST(file, vtk_write_tree_2D) {
-  dgt::Mesh mesh;
-  mpicpp::comm world = mpicpp::comm::world();
-  mesh.set_comm(&world);
-  init_test_mesh(2, mesh);
-  dgt::vtk::write_tree("tree2D", mesh);
-}
-
-TEST(file, vtk_write_tree_3D) {
-  dgt::Mesh mesh;
-  mpicpp::comm world = mpicpp::comm::world();
-  mesh.set_comm(&world);
-  init_test_mesh(3, mesh);
-  dgt::vtk::write_tree("tree3D", mesh);
-}
-
 TEST(file, vtk_write_ascii_2D) {
   dgt::Mesh mesh;
   mpicpp::comm world = mpicpp::comm::world();

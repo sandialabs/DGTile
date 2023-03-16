@@ -26,7 +26,6 @@ struct Basis {
   View<double**>    pt_fine;          // (fine_intr_pt, dim)
   View<double**>    pt_eval;          // (all_pt, dim)
   View<double**>    pt_corner;        // (corner_pt, dim)
-  View<double***>   pt_viz_corner;    // (intr_pt, corner_pt, dim)
   View<double**>    phi_intr;         // (intr_pt, mode)
   View<double***>   dphi_intr;        // (axis, intr_pt, mode)
   View<double****>  phi_side;         // (axis, dir, side_pt, mode)
@@ -54,7 +53,6 @@ struct HostBasis {
   HView<double**>    pt_fine;         // (fine_intr_pt, dim)
   HView<double**>    pt_eval;         // (all_pt, dim)
   HView<double**>    pt_corner;       // (corner_pt, dim)
-  HView<double***>   pt_viz_corner;   // (intr_pt, corner_pt, dim)
   HView<double**>    phi_intr;        // (intr_pt, mode)
   HView<double***>   dphi_intr;       // (axis, intr_pt, mode)
   HView<double****>  phi_side;        // (axis, dir, side_pt, mode)
@@ -235,17 +233,6 @@ p3a::vector3<double> get_side_pt(BasisT const& b, int axis, int dir, int pt) {
   return xi;
 }
 
-template <class BasisT>
-[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
-p3a::vector3<double> get_viz_corner_pt(BasisT const& b, int intr_pt, int corner_pt) {
-  p3a::vector3<double> xi(0,0,0);
-  for (int d = 0; d < b.dim; ++d) {
-    xi[d] = b.pt_viz_corner(intr_pt, corner_pt, d);
-  }
-  return xi;
-}
-
 void print_modal_ordering(int dim, int p, bool tensor);
-
 
 }

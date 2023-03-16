@@ -216,6 +216,5 @@ double compute_L2_error(Block& block, View<double***> U_ex, int eq);
 void write_mesh(std::filesystem::path const& path, State const& state, int soln_idx);
 void write_out(State& state, int soln_idx = 0);
 void write_pvd(State& state);
-void write_tree_pvd(State& state);
 
 }
