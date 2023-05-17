@@ -66,7 +66,7 @@ static void verify_solution(int nsoln, int nmodal_eq, int nflux_eq) {
   if (nmodal_eq < 1) {
     throw std::runtime_error("Mesh - invalid nmodal_eq");
   }
-  if (nflux_eq < 1) {
+  if (nflux_eq < 0) {
     throw std::runtime_error("Mesh - invalid nflux_eq");
   }
 }
