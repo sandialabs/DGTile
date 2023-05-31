@@ -15,9 +15,8 @@ static void verify_info(FieldInfo& info) {
 }
 
 static void verify_ent_dim(int ent_dim, int mesh_dim) {
-  if (ent_dim != mesh_dim-1) {
-    throw std::runtime_error("Field - only side fields supported");
-  }
+  if ((ent_dim == mesh_dim) || (ent_dim == (mesh_dim-1))) return;
+  else throw std::runtime_error("Field - only side or cell fields supported");
 }
 
 void Field::set_info(FieldInfo const& info) {
@@ -53,9 +52,15 @@ void Field::allocate(p3a::grid3 const& cell_grid) {
   int const ncomps = m_info.ncomps;
   verify_ent_dim(ent_dim, mesh_dim);
   p3a::grid3 const cgrid = generalize(cell_grid);
-  for (int axis = 0; axis < mesh_dim; ++axis) {
-    int const nsides = get_side_grid(cgrid, axis).size();
-    m_data[axis] = View<double**>(view_name(m_info, axis), nsides, ncomps);
+  if (ent_dim == mesh_dim) {
+    int const ncells = cgrid.size();
+    m_data[0] = View<double**>(view_name(m_info, 0), ncells, ncomps);
+  }
+  if (ent_dim == mesh_dim-1) {
+    for (int axis = 0; axis < mesh_dim; ++axis) {
+      int const nsides = get_side_grid(cgrid, axis).size();
+      m_data[axis] = View<double**>(view_name(m_info, axis), nsides, ncomps);
+    }
   }
 }
 
