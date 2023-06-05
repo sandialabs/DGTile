@@ -388,35 +388,36 @@ void collect_same(
 
 static void collect_on_rank(
     Mesh const& mesh,
-    std::vector<int8_t> const& marks,
-    Tree& mod_tree,
+    Tree& modified_tree,
     std::vector<Transfer>& xfers) {
   auto is_same_rank = [](int a, int b) { return a == b; };
   for (Node* leaf : mesh.owned_leaves()) {
-    int const id = leaf->block.id();
-    if (marks[id] == REFINE) {
-      collect_children(is_same_rank, REFINE, ORIGINAL, leaf, mod_tree, xfers);
-    }
-    if (marks[id] == COARSEN) {
-      collect_parent(is_same_rank, COARSEN, ORIGINAL, leaf, mod_tree, xfers);
+    Point const pt = leaf->pt();
+    Node* modified_node = modified_tree.find(pt);
+    if (!modified_node) {
+      collect_parent(is_same_rank, COARSEN, ORIGINAL, leaf, modified_tree, xfers);
+    } else if (!(modified_node->is_leaf())) {
+      collect_children(is_same_rank, REFINE, ORIGINAL, leaf, modified_tree, xfers);
+    } else {
+      continue;
     }
   }
 }
 
 static void collect_sends(
     Mesh const& mesh,
-    std::vector<int8_t> const& marks,
-    Tree& mod_tree,
+    Tree& modified_tree,
     std::vector<Transfer>& xfers) {
   auto is_diff_rank = [](int a, int b) { return a != b; };
   for (Node* leaf : mesh.owned_leaves()) {
-    int const id = leaf->block.id();
-    if (marks[id] == REMAIN) {
-      collect_same(is_diff_rank, ORIGINAL, leaf, mod_tree, xfers);
-    } else if (marks[id] == REFINE) {
-      collect_children(is_diff_rank, REFINE, ORIGINAL, leaf, mod_tree, xfers);
-    } else if (marks[id] == COARSEN) {
-      collect_parent(is_diff_rank, COARSEN, ORIGINAL, leaf, mod_tree, xfers);
+    Point const pt = leaf->pt();
+    Node* modified_node = modified_tree.find(pt);
+    if (!modified_node) {
+      collect_parent(is_diff_rank, COARSEN, ORIGINAL, leaf, modified_tree, xfers);
+    } else if (!(modified_node->is_leaf())) {
+      collect_children(is_diff_rank, REFINE, ORIGINAL, leaf, modified_tree, xfers);
+    } else {
+      collect_same(is_diff_rank, ORIGINAL, leaf, modified_tree, xfers);
     }
   }
 }
@@ -429,10 +430,10 @@ static void collect_recvs(
   Tree& tree = mesh.tree();
   for (Node* leaf : new_owned_leaves) {
     Point const pt = leaf->pt();
-    Node* orig_node = tree.find(pt);
-    if (!orig_node) {
+    Node* original_node = tree.find(pt);
+    if (!original_node) {
       collect_parent(is_diff_rank, REFINE, MODIFIED, leaf, tree, xfers);
-    } else if (!orig_node->is_leaf()) {
+    } else if (!original_node->is_leaf()) {
       collect_children(is_diff_rank, COARSEN, MODIFIED, leaf, tree, xfers);
     } else {
       collect_same(is_diff_rank, MODIFIED, leaf, tree, xfers);
@@ -637,12 +638,11 @@ static void inject_msg_vals(std::vector<Transfer>& xfers) {
 
 static void transfer_data(
     Mesh& mesh,
-    std::vector<int8_t> const& marks,
     std::vector<Node*> const& new_owned_leaves,
     Tree& modified_tree) {
   Transfers xfers;
-  collect_on_rank(mesh, marks, modified_tree, xfers.on_rank);
-  collect_sends(mesh, marks, modified_tree, xfers.send);
+  collect_on_rank(mesh, modified_tree, xfers.on_rank);
+  collect_sends(mesh, modified_tree, xfers.send);
   collect_recvs(mesh, new_owned_leaves, xfers.recv);
   allocate(mesh, xfers);
   extract_msg_vals(xfers);
@@ -686,7 +686,7 @@ void modify(Mesh& mesh, std::vector<int8_t> const& in_marks) {
   partition_leaves(comm, leaves);
   init_leaves(&mesh, copy, mesh.periodic(), leaves);
   std::vector<Node*> owned_leaves = collect_owned_leaves(comm, leaves);
-  transfer_data(mesh, marks, owned_leaves, copy);
+  transfer_data(mesh, owned_leaves, copy);
   mesh.set_tree(copy);
   mesh.rebuild();
   mesh.clean();
