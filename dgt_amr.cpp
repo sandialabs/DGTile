@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <list>
 #include <stdexcept>
 
@@ -15,6 +16,9 @@
 namespace dgt {
 
 static void verify_refine(Node* parent) {
+  if (!parent->is_leaf()) {
+    throw std::runtime_error("refine - invalid parent");
+  }
   auto f = [&] (p3a::vector3<int> const& local) {
     Node* child = parent->child(local);
     if (child) {
@@ -24,17 +28,10 @@ static void verify_refine(Node* parent) {
   p3a::for_each(p3a::execution::seq, get_child_grid(DIMS), f);
 }
 
-static void verify_coarsen(int dim, Node* parent) {
+static void verify_coarsen(Node* parent) {
   if (parent->is_leaf()) {
-    throw std::runtime_error("coarsen - invalid parent");
+    throw std::runtime_error("coarsen - invalid parent, not leaf");
   }
-  auto f = [&] (p3a::vector3<int> const& local) {
-    Node* child = parent->child(local);
-    if (!child->is_leaf()) {
-      throw std::runtime_error("coarsen - invalid parent");
-    }
-  };
-  p3a::for_each(p3a::execution::seq, generalize(get_child_grid(dim)), f);
 }
 
 static void verify_marks(Mesh const& mesh, std::vector<int8_t> const& marks) {
@@ -59,6 +56,23 @@ static void verify_leaf(Node const* leaf) {
   }
   if (!leaf->is_leaf()) {
     throw std::runtime_error("modify - not a leaf");
+  }
+}
+
+static void verify_2to1_parent(Node const* leaf) {
+  if (!leaf) {
+    throw std::runtime_error("ensure2to1 - leaf doesn't exist");
+  }
+  if (!leaf->is_leaf()) {
+    throw std::runtime_error("ensure2to1 - something crazy happened");
+  }
+}
+
+static void verify_marks(
+    std::vector<int8_t> const& marks,
+    std::vector<Node*> const& leaves) {
+  if (marks.size() != leaves.size()) {
+    throw std::runtime_error("modify - invalid marks");
   }
 }
 
@@ -115,7 +129,7 @@ void refine(int dim, Node* parent) {
 }
 
 void coarsen(int dim, Node* parent) {
-  verify_coarsen(dim, parent);
+  verify_coarsen(parent);
   auto f = [&] (p3a::vector3<int> const& local) {
     parent->rm_child(local);
   };
@@ -242,48 +256,159 @@ static Tree copy_tree(
   return copy;
 }
 
-static void copy_blocks(
-    std::vector<Node*> const& leaves,
-    std::vector<Node*>& copy_leaves) {
-  if (leaves.size() != copy_leaves.size()) {
-    throw std::runtime_error("copy_tree - failure");
-  }
-  for (int i = 0; i < int(leaves.size()); ++i) {
-    if (copy_leaves[i]->pt() != leaves[i]->pt()) {
-      throw std::runtime_error("copy_tree - not 1-1");
+static Point get_adj_pt(Point const& pt, int axis, int dir) {
+  Point adj_pt = pt;
+  std::array<int, 2> offset = {-1,1};
+  adj_pt.ijk[axis] += offset[dir];
+  return adj_pt;
+}
+
+static int get_max_ijk(Point const& pt, Point const& base, int axis) {
+  int const nblocks = base.ijk[axis];
+  int const diff = pt.depth - base.depth;
+  int const max_ijk = int(std::pow(2, diff)*nblocks) - 1;
+  return max_ijk;
+}
+
+static Point make_adj_periodic(
+    Point const& pt, Point const& base, int axis, int dir) {
+  Point periodic = pt;
+  int const min_ijk = 0;
+  int const max_ijk = get_max_ijk(pt, base, axis);
+  if (dir == left) periodic.ijk[axis] = max_ijk;
+  if (dir == right) periodic.ijk[axis] = min_ijk;
+  return periodic;
+}
+
+static std::vector<bool> get_2to1_refines(
+    Tree& tree,
+    p3a::vector3<bool> const& periodic,
+    std::vector<Node*> const& leaves) {
+  std::vector<bool> refines(leaves.size(), false);
+  int const dim = tree.dim();
+  Point const base = tree.base();
+  for (Node* leaf : leaves) {
+    Point const pt = leaf->pt();
+    for (int axis = 0; axis < dim; ++axis) {
+      for (int dir = 0; dir < ndirs; ++dir) {
+        Point adj_pt = get_adj_pt(pt, axis, dir);
+        bool const in = contains(base.depth, p3a::subgrid3(base.ijk), adj_pt);
+        if ((!in) && (periodic[axis])) {
+          adj_pt = make_adj_periodic(adj_pt, base, axis, dir);
+        }
+        Node* adj = tree.find(adj_pt);
+        if (!adj){
+          Point const adj_parent_pt = get_parent_point(adj_pt);
+          Node* adj_parent = tree.find(adj_parent_pt);
+          if (!adj_parent) {
+            Point const adj_parent_parent_pt = get_parent_point(adj_parent_pt);
+            Node* adj_parent_parent = tree.find(adj_parent_parent_pt);
+            verify_2to1_parent(adj_parent_parent);
+            int const id = adj_parent_parent->block.id();
+            refines[id] = true;
+          }
+        }
+      }
     }
-    copy_leaves[i]->block = leaves[i]->block;
   }
+  return refines;
+}
+
+static void ensure_tree_is_2to1(
+    mpicpp::comm* comm,
+    Tree& tree,
+    p3a::vector3<bool> const& periodic) {
+  bool modified = true;
+  while (modified) {
+    modified = false;
+    std::vector<Node*> const leaves = collect_leaves(tree);
+    partition_leaves(comm, leaves); // this is to assign ids to leaves;
+    std::vector<bool> const refines = get_2to1_refines(tree, periodic, leaves);
+    for (size_t id = 0; id < refines.size(); ++id) {
+      bool const should_refine = refines[id];
+      if (should_refine) {
+        Node* leaf = leaves[id];
+        refine(tree.dim(), leaf);
+        modified = true;
+      }
+    }
+  }
+}
+
+std::vector<Point> collect_refine_pts(
+    std::vector<int8_t> const& marks,
+    std::vector<Node*> const& leaves) {
+  verify_marks(marks, leaves);
+  std::vector<Point> refine_pts;
+  for (size_t i = 0; i < marks.size(); ++i) {
+    if (marks[i] == REFINE) {
+      Node* node = leaves[i];
+      Point const pt = node->pt();
+      refine_pts.push_back(pt);
+    }
+  }
+  return refine_pts;
+}
+
+std::vector<Point> collect_coarsen_pts(
+    std::vector<int8_t> const& marks,
+    std::vector<Node*> const& leaves) {
+  verify_marks(marks, leaves);
+  std::vector<Point> coarsen_pts;
+  for (size_t i = 0; i < marks.size(); ++i) {
+    if (marks[i] == COARSEN) {
+      Node* node = leaves[i];
+      Point const pt = node->pt();
+      coarsen_pts.push_back(pt);
+    }
+  }
+  return coarsen_pts;
 }
 
 static void refine_tree(
     Tree& tree,
-    std::vector<int8_t> const& marks,
-    std::vector<Node*> const& leaves) {
+    std::vector<Point> const& refine_pts) {
   int const dim = tree.dim();
-  for (size_t i = 0; i < leaves.size(); ++i) {
-    Node* leaf = leaves[i];
-    int8_t const mark = marks[i];
-    if (mark == REFINE) refine(dim, leaf);
+  for (Point const pt : refine_pts) {
+    Node* node = tree.find(pt);
+    refine(dim, node);
   }
+}
+
+static bool can_coarsen(int dim, Node* parent) {
+  bool can = true;
+  auto f = [&] (p3a::vector3<int> const& local) {
+    Node* child = parent->child(local);
+    if (!child->is_leaf()) can = false;
+  };
+  p3a::for_each(p3a::execution::seq, generalize(get_child_grid(dim)), f);
+  return can;
 }
 
 static void coarsen_tree(
     Tree& tree,
-    std::vector<int8_t> const& marks,
-    std::vector<Node*> const& leaves) {
+    std::vector<Point> const& coarsen_pts) {
   int const dim = tree.dim();
-  std::list<Node*> parents;
-  for (size_t i = 0; i < leaves.size(); ++i) {
-    Node* leaf = leaves[i];
-    Node* parent = leaf->parent();
-    int8_t const mark = marks[i];
-    if (mark == COARSEN) parents.push_back(parent);
+  int const nchild = num_child(dim);
+  std::list<Node*> unique_parents;
+  std::list<Node*> sorted_parents;
+  for (Point const pt : coarsen_pts) {
+    Node* node = tree.find(pt);
+    Node* parent = node->parent();
+    unique_parents.push_back(parent);
   }
-  parents.sort();
-  parents.unique();
-  for (Node* parent : parents) {
-    coarsen(dim, parent);
+  unique_parents.sort();
+  sorted_parents = unique_parents;
+  unique_parents.unique();
+  for (Node* parent :  unique_parents) {
+    // we can only coarsen if every single child was marked for
+    // coarsening AND if ensuring 2-1 interfaces at the refinement
+    // step didn't make the children non-leaves. (Additionally, ensuring 2-1
+    // interfaces after this step may just undo this coarsening as well)
+    int const count = std::count(sorted_parents.begin(), sorted_parents.end(), parent);
+    if ((count == nchild) && (can_coarsen(dim, parent))) {
+      coarsen(dim, parent);
+    }
   }
 }
 
@@ -399,6 +524,7 @@ static void collect_on_rank(
     } else if (!(modified_node->is_leaf())) {
       collect_children(is_same_rank, REFINE, ORIGINAL, leaf, modified_tree, xfers);
     } else {
+      collect_same(is_same_rank, ORIGINAL, leaf, modified_tree, xfers);
       continue;
     }
   }
@@ -553,6 +679,12 @@ static void begin_msgs(mpicpp::comm* comm, Transfers& xfers) {
   }
 }
 
+static void copy_on_rank(Transfer& xfer) {
+  // this is trivial copy for POD and assigns views (shared pointers)
+  // to the new blocks as well
+  xfer.leaf[MODIFIED]->block = xfer.leaf[ORIGINAL]->block;
+}
+
 static void prolong_on_rank(Transfer& xfer) {
   Block const& parent = xfer.leaf[ORIGINAL]->block;
   Block& child = xfer.leaf[MODIFIED]->block;
@@ -585,6 +717,7 @@ static void restrict_on_rank(Transfer& xfer) {
 
 static void transfer_on_rank(std::vector<Transfer>& xfers) {
   for (Transfer& xfer : xfers) {
+    if (xfer.op == REMAIN) copy_on_rank(xfer);
     if (xfer.op == REFINE) prolong_on_rank(xfer);
     if (xfer.op == COARSEN) restrict_on_rank(xfer);
   }
@@ -676,12 +809,14 @@ void modify(Mesh& mesh, std::vector<int8_t> const& in_marks) {
   verify_mesh(mesh);
   mpicpp::comm* comm = mesh.comm();
   std::vector<int8_t> marks = reduce_marks(mesh, in_marks);
-  ensure_2to1(mesh, marks);
   Tree copy = copy_tree(mesh.tree(), mesh.leaves());
   std::vector<Node*> leaves = collect_leaves(copy);
-  copy_blocks(mesh.leaves(), leaves);
-  refine_tree(copy, marks, leaves);
-  coarsen_tree(copy, marks, leaves);
+  std::vector<Point> refine_pts = collect_refine_pts(marks, leaves);
+  std::vector<Point> coarsen_pts = collect_coarsen_pts(marks, leaves);
+  refine_tree(copy, refine_pts);
+  ensure_tree_is_2to1(comm, copy, mesh.periodic());
+  coarsen_tree(copy, coarsen_pts);
+  ensure_tree_is_2to1(comm, copy, mesh.periodic());
   leaves = collect_leaves(copy);
   partition_leaves(comm, leaves);
   init_leaves(&mesh, copy, mesh.periodic(), leaves);
