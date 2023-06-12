@@ -12,6 +12,7 @@ namespace dgt {
 
 class Block;
 class Mesh;
+class Tree;
 
 template <class T>
 T string_to_type(std::string const& s);
@@ -64,6 +65,11 @@ template <class T>
 void write_field(std::stringstream& stream, std::string const& name, VizView<T> f);
 void write_vtr_end(std::stringstream& stream);
 void write_vtm(std::stringstream& stream, std::string const& prefix, int nblocks);
+
+void write_tree(
+    std::filesystem::path const& path,
+    Tree& tree,
+    p3a::box3<double> const& domain);
 
 }
 

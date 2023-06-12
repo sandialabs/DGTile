@@ -231,13 +231,6 @@ static Point make_adj_periodic(
   return periodic;
 }
 
-static Point get_parent_pt(Point const& pt) {
-  Point parent_pt;
-  parent_pt.depth = pt.depth - 1;
-  parent_pt.ijk = get_coarse_ijk(pt.ijk);
-  return parent_pt;
-}
-
 static void init_borders(
     Tree& tree,
     Node* leaf,
@@ -275,7 +268,7 @@ static void init_borders(
           border.set_adj(adj);
         }
       } else {
-        Point const adj_parent_pt = get_parent_pt(adj_pt);
+        Point const adj_parent_pt = get_parent_point(adj_pt);
         Node* adj_parent = tree.find(adj_parent_pt);
         verify_fine_to_coarse_node(adj_parent);
         border.set_type(FINE_TO_COARSE);
