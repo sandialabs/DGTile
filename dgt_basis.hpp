@@ -8,7 +8,7 @@
 
 namespace dgt {
 
-static constexpr int max_q = 3;
+static constexpr int max_q = 7;
 static constexpr int max_p = 2;
 
 struct Basis {
