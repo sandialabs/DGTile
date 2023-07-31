@@ -164,10 +164,10 @@ static void test_solution(dgt::Block const& block) {
   auto g = [&] (p3a::vector3<int> const& cell_ijk) {
     int const cell = cell_grid.index(cell_ijk);
     for (int pt = 0; pt < nintr_pts; ++pt) {
-      p3a::vector3<double> const xi(
-          hpt_intr(pt, 0),
-          hpt_intr(pt, 1),
-          hpt_intr(pt, 2));
+      p3a::vector3<double> xi(0.,0.,0.);
+      if (b.dim > 0) xi[dgt::X] = hpt_intr(pt, dgt::X);
+      if (b.dim > 1) xi[dgt::Y] = hpt_intr(pt, dgt::Y);
+      if (b.dim > 2) xi[dgt::Z] = hpt_intr(pt, dgt::Z);
       p3a::vector3<double> const x = dgt::get_x(cell_ijk, origin, dx, xi);
       double const ex = exact_solution(x, b.p);
       double const val = hinterped(cell, pt);
