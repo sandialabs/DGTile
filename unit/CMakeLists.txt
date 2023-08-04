@@ -1,4 +1,5 @@
 set(UNIT_TEST_SOURCES
+  cartesian.cpp
   defines.cpp
   main.cpp
   vec3.cpp
