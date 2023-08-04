@@ -1,17 +1,15 @@
-set(DG_UNIT_TEST_SOURCES
-  grid.cpp
-  spatial.cpp
-  amr.cpp
-  basis.cpp
-  tree.cpp
-  mesh.cpp
-  file.cpp
-  unit_tests.cpp
+set(UNIT_TEST_SOURCES
+  defines.cpp
+  main.cpp
 )
 
-set_source_files_properties(${DG_UNIT_TEST_SOURCES} PROPERTIES LANGUAGE ${p3a_LANGUAGE})
-add_executable(dgt-unit-tests ${DG_UNIT_TEST_SOURCES})
-set_target_properties(dgt-unit-tests PROPERTIES ${p3a_LANGUAGE}_ARCHITECTURES "${p3a_ARCHITECTURES}")
+set_source_files_properties(${UNIT_TEST_SOURCES} PROPERTIES LANGUAGE ${DGT_LANGUAGE})
+
+add_executable(dgt-unit-tests ${UNIT_TEST_SOURCES})
+target_compile_features(dgt-unit-tests PUBLIC cxx_std_17)
+set_target_properties(dgt-unit-tests PROPERTIES ${DGT_LANGUAGE}_ARCHITECTURES "${DGT_ARCHITECTURES}")
+target_link_libraries(dgt-unit-tests PRIVATE GTest::gtest)
 target_link_libraries(dgt-unit-tests PRIVATE dgtile)
-target_link_libraries(dgt-unit-tests PRIVATE GTest::gtest_main)
-add_test(NAME unit-tests COMMAND dgt-unit-tests)
+
+add_test(NAME unit_tests COMMAND "./dgt-unit-tests")
+set_tests_properties(unit_tests PROPERTIES ENVIRONMENT "DATA_DIR=${CMAKE_CURRENT_SOURCE_DIR}")

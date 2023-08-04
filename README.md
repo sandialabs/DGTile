@@ -20,7 +20,6 @@ DGTile has required dependencies on:
   * [p3a](https://github.com/sandialabs/p3a) - structured grid support
     * [kokkos](https://github.com/kokkos/kokkos) - parallel algorithms
     * [mpicpp](https://github.com/sandialabs/mpicpp) - MPI interface
-  * [caliper](https://github.com/LLNL/Caliper) - performance profiling
   * [zlib](https://github.com/zlib-ng/zlib-ng) - data compression
 
 DGTile has an optional dependency on:
