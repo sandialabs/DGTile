@@ -2,6 +2,7 @@ set(DGT_HEADERS
   dgt_defines.hpp
   dgt_macros.hpp
   dgt_initialize.hpp
+  dgt_vec3.hpp
 )
 
 set(DGT_SOURCES

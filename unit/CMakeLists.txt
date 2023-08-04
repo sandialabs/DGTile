@@ -1,6 +1,7 @@
 set(UNIT_TEST_SOURCES
   defines.cpp
   main.cpp
+  vec3.cpp
 )
 
 set_source_files_properties(${UNIT_TEST_SOURCES} PROPERTIES LANGUAGE ${DGT_LANGUAGE})
