@@ -52,6 +52,29 @@ struct Basis
 template <template <class> class ViewT>
 Basis<ViewT> build_basis();
 
+DGT_METHOD constexpr real get_legendre(
+    int const n,
+    double const x)
+{
+  if (n == 0) return 1;
+  if (n == 1) return x;
+  real const term1 = (2.*real(n)-1.) * x * get_legendre(n-1, x);
+  real const term2 = (real(n)-1.) * get_legendre(n-2, x);
+  return (term1 - term2) / real(n);
+}
+
+DGT_METHOD constexpr real get_dlegendre(
+    int const n,
+    double const x)
+{
+  if (n == 0) return 0.;
+  if (n == 1) return 1.;
+  real const term1 = (2.*real(n)-1.) * get_legendre(n-1, x);
+  real const term2 = (2.*real(n)-1.) * x * get_dlegendre(n-1, x);
+  real const term3 = (real(n)-1.) * get_dlegendre(n-2, x);
+  return (term1 + term2 - term3) / real(n);
+}
+
 template <class ModalT, class BasisT>
 DGT_METHOD inline real eval(
     ModalT const U,
@@ -62,7 +85,7 @@ DGT_METHOD inline real eval(
     int const pt) {
   real val = U(cell, eq, 0) * B.modes[location](pt, 0);
   for (int mode = 1; mode < B.num_modes; ++mode) {
-    val += U(cell, eq, mode) * phi(pt, mode);
+    val += U(cell, eq, mode) * B.modes[location](pt, mode);
   }
 }
 

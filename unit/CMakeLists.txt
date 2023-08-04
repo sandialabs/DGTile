@@ -2,6 +2,7 @@ set(UNIT_TEST_SOURCES
   bounds.cpp
   cartesian.cpp
   defines.cpp
+  dg.cpp
   main.cpp
   vec3.cpp
 )
