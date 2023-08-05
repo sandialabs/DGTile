@@ -5,11 +5,13 @@ set(DGT_HEADERS
   dgt_macros.hpp
   dgt_initialize.hpp
   dgt_vec3.hpp
+  dgt_when.hpp
 )
 
 set(DGT_SOURCES
   dgt_dg.cpp
   dgt_initialize.cpp
+  dgt_when.cpp
 )
 
 set_source_files_properties(${DGT_SOURCES} PROPERTIES LANGUAGE ${DGT_LANGUAGE})

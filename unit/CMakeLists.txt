@@ -5,6 +5,7 @@ set(UNIT_TEST_SOURCES
   dg.cpp
   main.cpp
   vec3.cpp
+  when.cpp
 )
 
 set_source_files_properties(${UNIT_TEST_SOURCES} PROPERTIES LANGUAGE ${DGT_LANGUAGE})
