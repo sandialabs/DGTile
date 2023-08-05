@@ -4,6 +4,39 @@
 
 using namespace dgt;
 
+TEST(basis, tabulated_locations)
+{
+  EXPECT_EQ(basis::INTERIOR, 0);
+  EXPECT_EQ(basis::VERTICES, 1);
+  EXPECT_EQ(basis::XMIN_FACE, 2);
+  EXPECT_EQ(basis::XMAX_FACE, 3);
+  EXPECT_EQ(basis::YMIN_FACE, 4);
+  EXPECT_EQ(basis::YMAX_FACE, 5);
+  EXPECT_EQ(basis::ZMIN_FACE, 6);
+  EXPECT_EQ(basis::ZMAX_FACE, 7);
+  EXPECT_EQ(basis::EVALUATION, 8);
+  EXPECT_EQ(basis::LOCATIONS, 9);
+}
+
+TEST(basis, ipow)
+{
+  EXPECT_EQ(ipow(1, 1), 1);
+  EXPECT_EQ(ipow(1, 2), 1);
+  EXPECT_EQ(ipow(1, 3), 1);
+  EXPECT_EQ(ipow(2, 1), 2);
+  EXPECT_EQ(ipow(2, 2), 4);
+  EXPECT_EQ(ipow(2, 3), 8);
+  EXPECT_EQ(ipow(3, 1), 3);
+  EXPECT_EQ(ipow(3, 2), 9);
+  EXPECT_EQ(ipow(3, 3), 27);
+  EXPECT_EQ(ipow(4, 1), 4);
+  EXPECT_EQ(ipow(4, 2), 16);
+  EXPECT_EQ(ipow(4, 3), 64);
+  EXPECT_EQ(ipow(5, 1), 5);
+  EXPECT_EQ(ipow(5, 2), 25);
+  EXPECT_EQ(ipow(5, 3), 125);
+}
+
 static real Pn(int const n, real const x)
 {
   if (n == 0) return 1.;

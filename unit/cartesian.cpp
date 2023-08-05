@@ -18,10 +18,10 @@ TEST(cartesian, invert_dir)
 
 TEST(cartesian, get_cells_adj_face)
 {
-  EXPECT_EQ(get_cells_adj_face({2,2,2}, X, LEFT), vec3<int>(2,2,2));
-  EXPECT_EQ(get_cells_adj_face({2,2,2}, X, RIGHT), vec3<int>(3,2,2));
-  EXPECT_EQ(get_cells_adj_face({2,2,2}, Y, LEFT), vec3<int>(2,2,2));
-  EXPECT_EQ(get_cells_adj_face({2,2,2}, Y, RIGHT), vec3<int>(2,3,2));
-  EXPECT_EQ(get_cells_adj_face({2,2,2}, Z, LEFT), vec3<int>(2,2,2));
-  EXPECT_EQ(get_cells_adj_face({2,2,2}, Z, RIGHT), vec3<int>(2,2,3));
+  EXPECT_EQ(get_cells_adj_face({2,2,2}, X, LEFT), Vec3<int>(2,2,2));
+  EXPECT_EQ(get_cells_adj_face({2,2,2}, X, RIGHT), Vec3<int>(3,2,2));
+  EXPECT_EQ(get_cells_adj_face({2,2,2}, Y, LEFT), Vec3<int>(2,2,2));
+  EXPECT_EQ(get_cells_adj_face({2,2,2}, Y, RIGHT), Vec3<int>(2,3,2));
+  EXPECT_EQ(get_cells_adj_face({2,2,2}, Z, LEFT), Vec3<int>(2,2,2));
+  EXPECT_EQ(get_cells_adj_face({2,2,2}, Z, RIGHT), Vec3<int>(2,2,3));
 }

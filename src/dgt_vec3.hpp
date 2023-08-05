@@ -8,7 +8,7 @@
 namespace dgt {
 
 template <class T>
-class vec3
+class Vec3
 {
 
   private:
@@ -22,16 +22,16 @@ class vec3
     using reference = T&;
     using const_reference = T const&;
 
-    DGT_METHOD vec3() = default;
+    DGT_METHOD Vec3() = default;
 
-    DGT_VOID_METHOD constexpr vec3(T const& a, T const& b, T const& c)
+    DGT_VOID_METHOD constexpr Vec3(T const& a, T const& b, T const& c)
       :m_x(a)
       ,m_y(b)
       ,m_z(c)
     {
     }
 
-    DGT_VOID_METHOD constexpr vec3(vec3<T> const& other)
+    DGT_VOID_METHOD constexpr Vec3(Vec3<T> const& other)
       :m_x(other.x())
       ,m_y(other.y())
       ,m_z(other.z())
@@ -60,25 +60,25 @@ class vec3
       return m_z;
     }
 
-    DGT_METHOD static constexpr vec3 zero()
+    DGT_METHOD static constexpr Vec3 zero()
     { 
-      return vec3<T>(T(0), T(0), T(0));
+      return Vec3<T>(T(0), T(0), T(0));
     }
 
-    DGT_METHOD static constexpr vec3 ones()
+    DGT_METHOD static constexpr Vec3 ones()
     {
-      vec3<T> result(T(1), T(1), T(1));
+      Vec3<T> result(T(1), T(1), T(1));
       return result;
     }
 
-    DGT_METHOD static constexpr vec3 axis(int const axis)
+    DGT_METHOD static constexpr Vec3 axis(int const axis)
     {
-      if (axis == X) return vec3(T(1), T(0), T(0));
-      if (axis == Y) return vec3(T(0), T(1), T(0));
-      return vec3(T(0), T(0), T(1));
+      if (axis == X) return Vec3(T(1), T(0), T(0));
+      if (axis == Y) return Vec3(T(0), T(1), T(0));
+      return Vec3(T(0), T(0), T(1));
     }
 
-    DGT_VOID_METHOD constexpr vec3& operator=(vec3 const& other)
+    DGT_VOID_METHOD constexpr Vec3& operator=(Vec3 const& other)
     {
       m_x = other.x();
       m_y = other.y();
@@ -86,7 +86,7 @@ class vec3
       return *this;
     }
 
-    DGT_METHOD constexpr bool operator==(vec3 const& other) const
+    DGT_METHOD constexpr bool operator==(Vec3 const& other) const
     {
       return 
         (m_x == other.m_x) &&
@@ -94,7 +94,7 @@ class vec3
         (m_z == other.m_z);
     }
 
-    DGT_METHOD constexpr bool operator!=(vec3 const& other) const
+    DGT_METHOD constexpr bool operator!=(Vec3 const& other) const
     {
       return
         (m_x != other.m_x) ||
@@ -102,14 +102,14 @@ class vec3
         (m_z != other.m_z);
     }
 
-    DGT_VOID_METHOD constexpr void operator+=(vec3 const& other)
+    DGT_VOID_METHOD constexpr void operator+=(Vec3 const& other)
     {
       m_x += other.m_x;
       m_y += other.m_y;
       m_z += other.m_z;
     }
 
-    DGT_VOID_METHOD constexpr void operator-=(vec3 const& other)
+    DGT_VOID_METHOD constexpr void operator-=(Vec3 const& other)
     {
       m_x -= other.m_x;
       m_y -= other.m_y;
@@ -130,24 +130,24 @@ class vec3
       m_z /= scalar;
     }
 
-    DGT_METHOD constexpr vec3 operator+(vec3 const& other) const
+    DGT_METHOD constexpr Vec3 operator+(Vec3 const& other) const
     {
-      return vec3(m_x + other.m_x, m_y + other.m_y, m_z + other.m_z);
+      return Vec3(m_x + other.m_x, m_y + other.m_y, m_z + other.m_z);
     }
 
-    DGT_METHOD constexpr vec3 operator-(vec3 const& other) const
+    DGT_METHOD constexpr Vec3 operator-(Vec3 const& other) const
     {
-      return vec3(m_x - other.m_x, m_y - other.m_y, m_z - other.m_z);
+      return Vec3(m_x - other.m_x, m_y - other.m_y, m_z - other.m_z);
     }
 
-    DGT_METHOD constexpr vec3 operator/(T const& scalar) const
+    DGT_METHOD constexpr Vec3 operator/(T const& scalar) const
     {
-      return vec3(m_x / scalar, m_y / scalar, m_z / scalar);
+      return Vec3(m_x / scalar, m_y / scalar, m_z / scalar);
     }
 
-    DGT_METHOD constexpr vec3 operator*(T const& scalar) const
+    DGT_METHOD constexpr Vec3 operator*(T const& scalar) const
     {
-      return vec3(m_x * scalar, m_y * scalar, m_z * scalar);
+      return Vec3(m_x * scalar, m_y * scalar, m_z * scalar);
     }
 
     DGT_METHOD constexpr T size() const
@@ -158,43 +158,43 @@ class vec3
 };
 
 template <class T>
-DGT_METHOD constexpr vec3<T> operator-(vec3<T> const& v)
+DGT_METHOD constexpr Vec3<T> operator-(Vec3<T> const& v)
 {
-  return vec3<T>(-v.x(), -v.y(), -v.z());
+  return Vec3<T>(-v.x(), -v.y(), -v.z());
 }
 
 template <class T>
-DGT_METHOD constexpr vec3<T> operator*(T const& scalar, vec3<T> const& v)
+DGT_METHOD constexpr Vec3<T> operator*(T const& scalar, Vec3<T> const& v)
 {
   return v * scalar;
 }
 
 template <class T>
-DGT_METHOD constexpr vec3<T> comp_product(vec3<T> const& a, vec3<T> const& b)
+DGT_METHOD constexpr Vec3<T> comp_product(Vec3<T> const& a, Vec3<T> const& b)
 {
-  return vec3<T>(a.x() * b.x(), a.y() * b.y(), a.z() * b.z());
+  return Vec3<T>(a.x() * b.x(), a.y() * b.y(), a.z() * b.z());
 }
 
 template <class T>
-DGT_METHOD constexpr vec3<T> comp_division(vec3<T> const& a, vec3<T> const& b)
+DGT_METHOD constexpr Vec3<T> comp_division(Vec3<T> const& a, Vec3<T> const& b)
 {
-  return vec3<T>(a.x() / b.x(), a.y() / b.y(), a.z() / b.z());
+  return Vec3<T>(a.x() / b.x(), a.y() / b.y(), a.z() / b.z());
 }
 
 template <class T>
-DGT_METHOD constexpr vec3<T> abs(vec3<T> const& v)
+DGT_METHOD constexpr Vec3<T> abs(Vec3<T> const& v)
 {
-  return vec3<T>(std::abs(v.x()), std::abs(v.y()), std::abs(v.z()));
+  return Vec3<T>(std::abs(v.x()), std::abs(v.y()), std::abs(v.z()));
 }
 
 template <class T>
-DGT_METHOD constexpr T min(vec3<T> const& v)
+DGT_METHOD constexpr T min(Vec3<T> const& v)
 {
   return std::min(v.x(), std::min(v.y(), v.z()));
 }
 
 template <class T>
-DGT_METHOD constexpr T max(vec3<T> const& v)
+DGT_METHOD constexpr T max(Vec3<T> const& v)
 {
   return std::max(v.x(), std::max(v.y(), v.z()));
 }

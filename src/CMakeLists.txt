@@ -1,13 +1,14 @@
 set(DGT_HEADERS
-  dgt_basis.hpp
   dgt_bounds.hpp
   dgt_defines.hpp
+  dgt_dg.hpp
   dgt_macros.hpp
   dgt_initialize.hpp
   dgt_vec3.hpp
 )
 
 set(DGT_SOURCES
+  dgt_dg.cpp
   dgt_initialize.cpp
 )
 

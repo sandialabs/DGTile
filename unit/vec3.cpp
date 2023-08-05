@@ -7,29 +7,29 @@ using namespace dgt;
 template <class T>
 void test_construct()
 {
-  vec3<T> a(T(1), T(1), T(1));
-  EXPECT_EQ(a, vec3<T>::ones());
+  Vec3<T> a(T(1), T(1), T(1));
+  EXPECT_EQ(a, Vec3<T>::ones());
 }
 
 template <class T>
 void test_construct_list()
 {
-  vec3<T> a = {T(1), T(1), T(1)};
-  EXPECT_EQ(a, vec3<T>::ones());
+  Vec3<T> a = {T(1), T(1), T(1)};
+  EXPECT_EQ(a, Vec3<T>::ones());
 }
 
 template <class T>
 void test_construct_copy()
 {
-  vec3<T> const a = {T(1), T(1), T(1)};
-  vec3<T> const b(a);
+  Vec3<T> const a = {T(1), T(1), T(1)};
+  Vec3<T> const b(a);
   EXPECT_EQ(a, b);
 }
 
 template <class T>
 void test_zero()
 {
-  vec3<T> const a = vec3<T>::zero();
+  Vec3<T> const a = Vec3<T>::zero();
   EXPECT_EQ(a.x(), T(0));
   EXPECT_EQ(a.y(), T(0));
   EXPECT_EQ(a.z(), T(0));
@@ -38,7 +38,7 @@ void test_zero()
 template <class T>
 void test_ones()
 {
-  vec3<T> const a = vec3<T>::ones();
+  Vec3<T> const a = Vec3<T>::ones();
   EXPECT_EQ(a.x(), T(1));
   EXPECT_EQ(a.y(), T(1));
   EXPECT_EQ(a.z(), T(1));
@@ -47,60 +47,60 @@ void test_ones()
 template <class T>
 void test_axis()
 {
-  vec3<T> const x = vec3<T>::axis(X);
-  vec3<T> const y = vec3<T>::axis(Y);
-  vec3<T> const z = vec3<T>::axis(Z);
-  EXPECT_EQ(x, vec3<T>(T(1), T(0), T(0)));
-  EXPECT_EQ(y, vec3<T>(T(0), T(1), T(0)));
-  EXPECT_EQ(z, vec3<T>(T(0), T(0), T(1)));
+  Vec3<T> const x = Vec3<T>::axis(X);
+  Vec3<T> const y = Vec3<T>::axis(Y);
+  Vec3<T> const z = Vec3<T>::axis(Z);
+  EXPECT_EQ(x, Vec3<T>(T(1), T(0), T(0)));
+  EXPECT_EQ(y, Vec3<T>(T(0), T(1), T(0)));
+  EXPECT_EQ(z, Vec3<T>(T(0), T(0), T(1)));
 }
 
 template <class T>
 void test_assignment()
 {
-  vec3<T> const a = vec3<T>::ones();
-  vec3<T> const b = a;
+  Vec3<T> const a = Vec3<T>::ones();
+  Vec3<T> const b = a;
   EXPECT_EQ(a, b);
 }
 
 template <class T>
 void test_unary_addition()
 {
-  vec3<T> a = vec3<T>::ones();
-  a += vec3<T>::zero();
-  EXPECT_EQ(a, vec3<T>::ones());
+  Vec3<T> a = Vec3<T>::ones();
+  a += Vec3<T>::zero();
+  EXPECT_EQ(a, Vec3<T>::ones());
 }
 
 template <class T>
 void test_unary_subtraction()
 {
-  vec3<T> a = vec3<T>::ones();
-  a -= vec3<T>::zero();
-  EXPECT_EQ(a, vec3<T>::ones());
+  Vec3<T> a = Vec3<T>::ones();
+  a -= Vec3<T>::zero();
+  EXPECT_EQ(a, Vec3<T>::ones());
 }
 
 template <class T>
 void test_unary_multiplication()
 {
-  vec3<T> a = vec3<T>::ones();
+  Vec3<T> a = Vec3<T>::ones();
   a *= T(1);
-  EXPECT_EQ(a, vec3<T>::ones());
+  EXPECT_EQ(a, Vec3<T>::ones());
 }
 
 template <class T>
 void test_unary_division()
 {
-  vec3<T> a = vec3<T>::ones();
+  Vec3<T> a = Vec3<T>::ones();
   a /= T(1);
-  EXPECT_EQ(a, vec3<T>::ones());
+  EXPECT_EQ(a, Vec3<T>::ones());
 }
 
 template <class T>
 void test_binary_addition()
 {
-  vec3<T> const a = vec3<T>::ones();
-  vec3<T> const b = vec3<T>::ones();
-  vec3<T> const c = a + b;
+  Vec3<T> const a = Vec3<T>::ones();
+  Vec3<T> const b = Vec3<T>::ones();
+  Vec3<T> const c = a + b;
   EXPECT_EQ(c.x(), T(2));
   EXPECT_EQ(c.y(), T(2));
   EXPECT_EQ(c.z(), T(2));
@@ -109,64 +109,64 @@ void test_binary_addition()
 template <class T>
 void test_binary_subtraction()
 {
-  vec3<T> const a = vec3<T>::ones();
-  vec3<T> const b = vec3<T>::ones();
-  vec3<T> const c = a - b;
-  EXPECT_EQ(c, vec3<T>::zero());
+  Vec3<T> const a = Vec3<T>::ones();
+  Vec3<T> const b = Vec3<T>::ones();
+  Vec3<T> const c = a - b;
+  EXPECT_EQ(c, Vec3<T>::zero());
 }
 
 template <class T>
 void test_binary_multiplication()
 {
-  vec3<T> const a = vec3<T>::ones();
+  Vec3<T> const a = Vec3<T>::ones();
   T const b = T(1);
-  vec3<T> const c = a * b;
-  EXPECT_EQ(c, vec3<T>::ones());
+  Vec3<T> const c = a * b;
+  EXPECT_EQ(c, Vec3<T>::ones());
 }
 
 template <class T>
 void test_binary_division()
 {
-  vec3<T> const a = vec3<T>::ones();
+  Vec3<T> const a = Vec3<T>::ones();
   T const b = T(1);
-  vec3<T> const c = a / b;
-  EXPECT_EQ(c, vec3<T>::ones());
+  Vec3<T> const c = a / b;
+  EXPECT_EQ(c, Vec3<T>::ones());
 }
 
 template <class T>
 void test_size()
 {
-  vec3<T> const a(T(1), T(2), T(3));
+  Vec3<T> const a(T(1), T(2), T(3));
   EXPECT_EQ(a.size(), T(6));
 }
 
 template <class T>
 void test_abs()
 {
-  vec3<T> const a = -vec3<T>::ones();
-  vec3<T> const b = abs(a);
-  EXPECT_EQ(b, vec3<T>::ones());
+  Vec3<T> const a = -Vec3<T>::ones();
+  Vec3<T> const b = abs(a);
+  EXPECT_EQ(b, Vec3<T>::ones());
 }
 
 template <class T>
 void test_min()
 {
-  vec3<T> const a(T(1), T(2), T(3));
+  Vec3<T> const a(T(1), T(2), T(3));
   EXPECT_EQ(min(a), T(1));
 }
 
 template <class T>
 void test_max()
 {
-  vec3<T> const a(T(1), T(2), T(3));
+  Vec3<T> const a(T(1), T(2), T(3));
   EXPECT_EQ(max(a), T(3));
 }
 
 template <class T>
 void test_negation()
 {
-  vec3<T> const a = vec3<T>::ones();
-  vec3<T> const b = -a;
+  Vec3<T> const a = Vec3<T>::ones();
+  Vec3<T> const b = -a;
   EXPECT_EQ(b.x(), T(-1));
   EXPECT_EQ(b.y(), T(-1));
   EXPECT_EQ(b.z(), T(-1));
@@ -176,25 +176,25 @@ template <class T>
 void test_left_multiply()
 {
   T const a = T(1);
-  vec3<T> const b = vec3<T>::ones();
-  vec3<T> const c = a * b;
-  EXPECT_EQ(c, vec3<T>::ones());
+  Vec3<T> const b = Vec3<T>::ones();
+  Vec3<T> const c = a * b;
+  EXPECT_EQ(c, Vec3<T>::ones());
 }
 
 template <class T>
 void test_comp_product()
 {
-  vec3<T> const a = vec3<T>(T(4), T(4), T(4));
-  vec3<T> const b = vec3<T>(T(2), T(2), T(2));
-  EXPECT_EQ(comp_product(a,b), vec3<T>(T(8), T(8), T(8)));
+  Vec3<T> const a = Vec3<T>(T(4), T(4), T(4));
+  Vec3<T> const b = Vec3<T>(T(2), T(2), T(2));
+  EXPECT_EQ(comp_product(a,b), Vec3<T>(T(8), T(8), T(8)));
 }
 
 template <class T>
 void test_comp_division()
 {
-  vec3<T> const a = vec3<T>(T(4), T(4), T(4));
-  vec3<T> const b = vec3<T>(T(2), T(2), T(2));
-  EXPECT_EQ(comp_division(a,b), vec3<T>(T(2), T(2), T(2)));
+  Vec3<T> const a = Vec3<T>(T(4), T(4), T(4));
+  Vec3<T> const b = Vec3<T>(T(2), T(2), T(2));
+  EXPECT_EQ(comp_division(a,b), Vec3<T>(T(2), T(2), T(2)));
 }
 
 TEST(vec3, construct)
