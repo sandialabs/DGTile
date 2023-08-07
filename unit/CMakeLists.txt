@@ -4,6 +4,7 @@ set(UNIT_TEST_SOURCES
   cartesian.cpp
   defines.cpp
   dg.cpp
+  grid3.cpp
   main.cpp
   vec3.cpp
   when.cpp

@@ -3,6 +3,7 @@ set(DGT_HEADERS
   dgt_bounds.hpp
   dgt_defines.hpp
   dgt_dg.hpp
+  dgt_grid3.hpp
   dgt_macros.hpp
   dgt_initialize.hpp
   dgt_vec3.hpp
