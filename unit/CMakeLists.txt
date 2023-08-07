@@ -1,4 +1,5 @@
 set(UNIT_TEST_SOURCES
+  base64.cpp
   bounds.cpp
   cartesian.cpp
   defines.cpp

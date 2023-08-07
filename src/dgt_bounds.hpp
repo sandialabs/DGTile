@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cfloat>
+
 #include "dgt_defines.hpp"
 #include "dgt_macros.hpp"
 

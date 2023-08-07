@@ -53,7 +53,7 @@ struct Basis
 template <template <class> class ViewT>
 Basis<ViewT> build_basis();
 
-DGT_METHOD constexpr int ipow(int a, int b)
+DGT_METHOD constexpr int ipow(int const a, int const b)
 {
   int result = 1;
   for (int mult = b; mult > 0; mult--) {
@@ -63,9 +63,43 @@ DGT_METHOD constexpr int ipow(int a, int b)
   return result;
 }
 
-DGT_METHOD real get_legendre(
-    int const n,
-    double const x)
+DGT_METHOD constexpr int num_tensor_modes(int const dim, int const p)
+{
+  return ipow(p+1, dim);
+}
+
+DGT_METHOD constexpr int num_non_tensor_modes(int const dim, int const p)
+{
+  if (dim == 1) return p+1;
+  if (dim == 2) return (p+1)*(p+2)/2;
+  if (dim == 3) return (p+1)*(p+2)*(p+3)/6;
+  return -1;
+}
+
+DGT_METHOD constexpr int num_modes(int const dim, int const p, bool const tensor)
+{
+  if (tensor) return num_tensor_modes(dim, p);
+  else return num_non_tensor_modes(dim, p);
+}
+
+DGT_METHOD constexpr int num_gauss_points(int const dim, int const q)
+{
+  return ipow(q, dim);
+}
+
+DGT_METHOD constexpr int num_evaluation_points(int const dim, int const q)
+{
+  return
+    num_gauss_points(dim, q) +
+    num_gauss_points(dim-1, q) * dim * DIRECTIONS;
+}
+
+DGT_METHOD constexpr int num_vertices(int const dim)
+{
+  return ipow(2, dim);
+}
+
+DGT_METHOD real get_legendre(int const n, double const x)
 {
   if (n == 0) return 1;
   if (n == 1) return x;
@@ -74,9 +108,7 @@ DGT_METHOD real get_legendre(
   return (term1 - term2) / real(n);
 }
 
-DGT_METHOD real get_dlegendre(
-    int const n,
-    double const x)
+DGT_METHOD real get_dlegendre(int const n, double const x)
 {
   if (n == 0) return 0.;
   if (n == 1) return 1.;

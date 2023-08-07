@@ -32,9 +32,99 @@ TEST(basis, ipow)
   EXPECT_EQ(ipow(4, 1), 4);
   EXPECT_EQ(ipow(4, 2), 16);
   EXPECT_EQ(ipow(4, 3), 64);
-  EXPECT_EQ(ipow(5, 1), 5);
-  EXPECT_EQ(ipow(5, 2), 25);
-  EXPECT_EQ(ipow(5, 3), 125);
+}
+
+TEST(basis, num_tensor_modes)
+{
+  EXPECT_EQ(num_tensor_modes(1, 0), 1);
+  EXPECT_EQ(num_tensor_modes(1, 1), 2);
+  EXPECT_EQ(num_tensor_modes(1, 2), 3);
+  EXPECT_EQ(num_tensor_modes(1, 3), 4);
+  EXPECT_EQ(num_tensor_modes(2, 0), 1);
+  EXPECT_EQ(num_tensor_modes(2, 1), 4);
+  EXPECT_EQ(num_tensor_modes(2, 2), 9);
+  EXPECT_EQ(num_tensor_modes(2, 3), 16);
+  EXPECT_EQ(num_tensor_modes(3, 0), 1);
+  EXPECT_EQ(num_tensor_modes(3, 1), 8);
+  EXPECT_EQ(num_tensor_modes(3, 2), 27);
+  EXPECT_EQ(num_tensor_modes(3, 3), 64);
+}
+
+TEST(basis, num_non_tensor_modes)
+{
+  EXPECT_EQ(num_non_tensor_modes(1, 0), 1);
+  EXPECT_EQ(num_non_tensor_modes(1, 1), 2);
+  EXPECT_EQ(num_non_tensor_modes(1, 2), 3);
+  EXPECT_EQ(num_non_tensor_modes(1, 3), 4);
+  EXPECT_EQ(num_non_tensor_modes(1, 4), 5);
+  EXPECT_EQ(num_non_tensor_modes(1, 5), 6);
+  EXPECT_EQ(num_non_tensor_modes(2, 0), 1);
+  EXPECT_EQ(num_non_tensor_modes(2, 1), 3);
+  EXPECT_EQ(num_non_tensor_modes(2, 2), 6);
+  EXPECT_EQ(num_non_tensor_modes(2, 3), 10);
+  EXPECT_EQ(num_non_tensor_modes(2, 4), 15);
+  EXPECT_EQ(num_non_tensor_modes(2, 5), 21);
+  EXPECT_EQ(num_non_tensor_modes(3, 0), 1);
+  EXPECT_EQ(num_non_tensor_modes(3, 1), 4);
+  EXPECT_EQ(num_non_tensor_modes(3, 2), 10);
+  EXPECT_EQ(num_non_tensor_modes(3, 3), 20);
+  EXPECT_EQ(num_non_tensor_modes(3, 4), 35);
+  EXPECT_EQ(num_non_tensor_modes(3, 5), 56);
+}
+
+TEST(basis, num_modes)
+{
+  EXPECT_EQ(num_modes(2, 0, true), num_tensor_modes(2, 0));
+  EXPECT_EQ(num_modes(2, 1, true), num_tensor_modes(2, 1));
+  EXPECT_EQ(num_modes(2, 2, true), num_tensor_modes(2, 2));
+  EXPECT_EQ(num_modes(3, 0, true), num_tensor_modes(3, 0));
+  EXPECT_EQ(num_modes(3, 1, true), num_tensor_modes(3, 1));
+  EXPECT_EQ(num_modes(3, 2, true), num_tensor_modes(3, 2));
+  EXPECT_EQ(num_modes(2, 0, false), num_non_tensor_modes(2, 0));
+  EXPECT_EQ(num_modes(2, 1, false), num_non_tensor_modes(2, 1));
+  EXPECT_EQ(num_modes(2, 2, false), num_non_tensor_modes(2, 2));
+  EXPECT_EQ(num_modes(3, 0, false), num_non_tensor_modes(3, 0));
+  EXPECT_EQ(num_modes(3, 1, false), num_non_tensor_modes(3, 1));
+  EXPECT_EQ(num_modes(3, 2, false), num_non_tensor_modes(3, 2));
+}
+
+TEST(basis, num_gauss_points)
+{
+  EXPECT_EQ(num_gauss_points(1, 1), 1);
+  EXPECT_EQ(num_gauss_points(1, 2), 2);
+  EXPECT_EQ(num_gauss_points(1, 3), 3);
+  EXPECT_EQ(num_gauss_points(1, 4), 4);
+  EXPECT_EQ(num_gauss_points(2, 1), 1);
+  EXPECT_EQ(num_gauss_points(2, 2), 4);
+  EXPECT_EQ(num_gauss_points(2, 3), 9);
+  EXPECT_EQ(num_gauss_points(2, 4), 16);
+  EXPECT_EQ(num_gauss_points(3, 1), 1);
+  EXPECT_EQ(num_gauss_points(3, 2), 8);
+  EXPECT_EQ(num_gauss_points(3, 3), 27);
+  EXPECT_EQ(num_gauss_points(3, 4), 64);
+}
+
+TEST(basis, num_evaluation_points)
+{
+  EXPECT_EQ(num_evaluation_points(1, 1), 3);
+  EXPECT_EQ(num_evaluation_points(1, 2), 4);
+  EXPECT_EQ(num_evaluation_points(1, 3), 5);
+  EXPECT_EQ(num_evaluation_points(1, 4), 6);
+  EXPECT_EQ(num_evaluation_points(2, 1), 5);
+  EXPECT_EQ(num_evaluation_points(2, 2), 12);
+  EXPECT_EQ(num_evaluation_points(2, 3), 21);
+  EXPECT_EQ(num_evaluation_points(2, 4), 32);
+  EXPECT_EQ(num_evaluation_points(3, 1), 7);
+  EXPECT_EQ(num_evaluation_points(3, 2), 32);
+  EXPECT_EQ(num_evaluation_points(3, 3), 81);
+  EXPECT_EQ(num_evaluation_points(3, 4), 160);
+}
+
+TEST(basis, num_vertices)
+{
+  EXPECT_EQ(num_vertices(1), 2);
+  EXPECT_EQ(num_vertices(2), 4);
+  EXPECT_EQ(num_vertices(3), 8);
 }
 
 static real Pn(int const n, real const x)

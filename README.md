@@ -17,16 +17,9 @@ is achieved by parallelizing functors over each block.
 
 DGTile has required dependencies on:
 
-  * [p3a](https://github.com/sandialabs/p3a) - structured grid support
-    * [kokkos](https://github.com/kokkos/kokkos) - parallel algorithms
-    * [mpicpp](https://github.com/sandialabs/mpicpp) - MPI interface
+  * [kokkos](https://github.com/kokkos/kokkos) - parallel algorithms
   * [zlib](https://github.com/zlib-ng/zlib-ng) - data compression
-
-DGTile has an optional dependency on:
-
-  * [googletest](https://github.com/google/googletest)
-
-if `-DBUILD_TESTING=ON`.
+  * [googletest](https://github.com/google/googletest) - testing
 
 ##
 

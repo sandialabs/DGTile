@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include <dgt_bounds.hpp>
+
+#include <gtest/gtest.h>
 
 using namespace dgt;
 
