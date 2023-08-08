@@ -8,6 +8,7 @@ set(DGT_HEADERS
   dgt_initialize.hpp
   dgt_vec.hpp
   dgt_vec3.hpp
+  dgt_view.hpp
   dgt_when.hpp
 )
 

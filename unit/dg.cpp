@@ -4,18 +4,24 @@
 
 using namespace dgt;
 
-TEST(basis, tabulated_locations)
+TEST(basis, maxes)
 {
-  EXPECT_EQ(basis::INTERIOR, 0);
-  EXPECT_EQ(basis::VERTICES, 1);
-  EXPECT_EQ(basis::XMIN_FACE, 2);
-  EXPECT_EQ(basis::XMAX_FACE, 3);
-  EXPECT_EQ(basis::YMIN_FACE, 4);
-  EXPECT_EQ(basis::YMAX_FACE, 5);
-  EXPECT_EQ(basis::ZMIN_FACE, 6);
-  EXPECT_EQ(basis::ZMAX_FACE, 7);
-  EXPECT_EQ(basis::EVALUATION, 8);
-  EXPECT_EQ(basis::LOCATIONS, 9);
+  EXPECT_EQ(max_polynomial_order, 3);
+  EXPECT_EQ(max_1D_quadrature_points, 5);
+}
+
+TEST(basis, basis_locations)
+{
+  EXPECT_EQ(basis_locations::CELL, 0);
+  EXPECT_EQ(basis_locations::VERTICES, 1);
+  EXPECT_EQ(basis_locations::XMIN_FACE, 2);
+  EXPECT_EQ(basis_locations::XMAX_FACE, 3);
+  EXPECT_EQ(basis_locations::YMIN_FACE, 4);
+  EXPECT_EQ(basis_locations::YMAX_FACE, 5);
+  EXPECT_EQ(basis_locations::ZMIN_FACE, 6);
+  EXPECT_EQ(basis_locations::ZMAX_FACE, 7);
+  EXPECT_EQ(basis_locations::EVALUATION, 8);
+  EXPECT_EQ(basis_locations::NUM, 9);
 }
 
 TEST(basis, ipow)
@@ -127,110 +133,24 @@ TEST(basis, num_vertices)
   EXPECT_EQ(num_vertices(3), 8);
 }
 
-static real Pn(int const n, real const x)
+TEST(basis, get_guass_weight_sums)
 {
-  if (n == 0) return 1.;
-  if (n == 1) return x;
-  if (n == 2) return 0.5*(3.*x*x-1.);
-  if (n == 3) return 0.5*(5.*x*x*x-3.*x);
-  if (n == 4) return 0.125*(35.*x*x*x*x - 30.*x*x + 3.);
-  if (n == 5) return 0.125*(63.*x*x*x*x*x -70.*x*x*x + 15.*x);
-  return 0.;
+  for (int q = 1; q <= max_1D_quadrature_points; ++q) {
+    real sum = 0.;
+    for (int pt = 0; pt < max_1D_quadrature_points; ++pt) {
+      sum += get_gauss_weight(q, pt);
+    }
+    EXPECT_NEAR(sum, 2., 1.e-15);
+  }
 }
 
-static real dPn(int const n, real const x)
+TEST(basis, get_gauss_point_sums)
 {
-  if (n == 0) return 0.;
-  if (n == 1) return 1.;
-  if (n == 2) return 3.*x;
-  if (n == 3) return 1.5*(5.*x*x - 1.);
-  if (n == 4) return 2.5*(7.*x*x*x - 3.*x);
-  if (n == 5) return 15./8.*(21.*x*x*x*x - 14.*x*x + 1.);
-  return 0.;
-}
-
-static void test_legendre(int const n, real const tol)
-{
-  EXPECT_NEAR(get_legendre(n, -1.),   Pn(n, -1.),   tol);
-  EXPECT_NEAR(get_legendre(n, -0.75), Pn(n, -0.75), tol);
-  EXPECT_NEAR(get_legendre(n, -0.5),  Pn(n, -0.5),  tol);
-  EXPECT_NEAR(get_legendre(n, -0.25), Pn(n, -0.25), tol);
-  EXPECT_NEAR(get_legendre(n,  0.),   Pn(n,  0.),   tol);
-  EXPECT_NEAR(get_legendre(n,  0.25), Pn(n,  0.25), tol);
-  EXPECT_NEAR(get_legendre(n,  0.5),  Pn(n,  0.5),  tol);
-  EXPECT_NEAR(get_legendre(n,  0.75), Pn(n,  0.75), tol);
-  EXPECT_NEAR(get_legendre(n,  1.),   Pn(n,  1.),   tol);
-}
-
-static void test_dlegendre(int const n, real const tol)
-{
-  EXPECT_NEAR(get_dlegendre(n, -1.),   dPn(n, -1.),   tol);
-  EXPECT_NEAR(get_dlegendre(n, -0.75), dPn(n, -0.75), tol);
-  EXPECT_NEAR(get_dlegendre(n, -0.5),  dPn(n, -0.5),  tol);
-  EXPECT_NEAR(get_dlegendre(n, -0.25), dPn(n, -0.25), tol);
-  EXPECT_NEAR(get_dlegendre(n,  0.),   dPn(n,  0.),   tol);
-  EXPECT_NEAR(get_dlegendre(n,  0.25), dPn(n,  0.25), tol);
-  EXPECT_NEAR(get_dlegendre(n,  0.5),  dPn(n,  0.5),  tol);
-  EXPECT_NEAR(get_dlegendre(n,  0.75), dPn(n,  0.75), tol);
-  EXPECT_NEAR(get_dlegendre(n,  1.),   dPn(n,  1.),   tol);
-}
-
-TEST(basis, get_legendre_n0)
-{
-  test_legendre(0, 0.);
-}
-
-TEST(basis, get_legendre_n1)
-{
-  test_legendre(1, 0.);
-}
-
-TEST(basis, get_legendre_n2)
-{
-  test_legendre(2, 1.e-15);
-}
-
-TEST(basis, get_legendre_n3)
-{
-  test_legendre(3, 1.e-15);
-}
-
-TEST(basis, get_legendre_n4)
-{
-  test_legendre(4, 1.e-15);
-}
-
-TEST(basis, get_legendre_n5)
-{
-  test_legendre(5, 1.e-15);
-}
-
-TEST(basis, get_dlegendre_n0)
-{
-  test_dlegendre(0, 0.);
-}
-
-TEST(basis, get_dlegendre_n1)
-{
-  test_dlegendre(1, 0.);
-}
-
-TEST(basis, get_dlegendre_n2)
-{
-  test_dlegendre(2, 1.e-15);
-}
-
-TEST(basis, get_dlegendre_n3)
-{
-  test_dlegendre(3, 1.e-15);
-}
-
-TEST(basis, get_dlegendre_n4)
-{
-  test_dlegendre(4, 1.e-15);
-}
-
-TEST(basis, get_dlegendre_n5)
-{
-  test_dlegendre(5, 1.e-15);
+  for (int q = 1; q <= max_1D_quadrature_points; ++q) {
+    real sum = 0.;
+    for (int pt = 0; pt < max_1D_quadrature_points; ++pt) {
+      sum += get_gauss_point(q, pt);
+    }
+    EXPECT_NEAR(sum, 0., 1.e-15);
+  }
 }
