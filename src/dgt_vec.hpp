@@ -76,7 +76,7 @@ class Vec
       }
     }
 
-    DGT_METHOD constexpr Vec operator+(Vec const& other)
+    DGT_METHOD constexpr Vec operator+(Vec const& other) const
     {
       Vec result;
       for (int i = 0; i < N; ++i) {
@@ -85,7 +85,7 @@ class Vec
       return result;
     }
 
-    DGT_METHOD constexpr Vec operator-(Vec const& other)
+    DGT_METHOD constexpr Vec operator-(Vec const& other) const
     {
       Vec result;
       for (int i = 0; i < N; ++i) {
@@ -94,7 +94,7 @@ class Vec
       return result;
     }
 
-    DGT_METHOD constexpr Vec operator*(T const& scalar)
+    DGT_METHOD constexpr Vec operator*(T const& scalar) const
     {
       Vec result;
       for (int i = 0; i < N; ++i) {
@@ -103,7 +103,7 @@ class Vec
       return result;
     }
 
-    DGT_METHOD constexpr Vec operator/(T const& scalar)
+    DGT_METHOD constexpr Vec operator/(T const& scalar) const
     {
       Vec result;
       for (int i = 0; i < N; ++i) {
