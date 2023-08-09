@@ -7,6 +7,7 @@ set(DGT_HEADERS
   dgt_grid3.hpp
   dgt_macros.hpp
   dgt_initialize.hpp
+  dgt_subgrid3.hpp
   dgt_vec.hpp
   dgt_vec3.hpp
   dgt_view.hpp

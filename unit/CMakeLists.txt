@@ -7,6 +7,7 @@ set(UNIT_TEST_SOURCES
   dg.cpp
   grid3.cpp
   main.cpp
+  subgrid3.cpp
   vec.cpp
   vec3.cpp
   when.cpp
