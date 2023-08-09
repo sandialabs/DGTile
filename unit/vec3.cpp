@@ -134,10 +134,13 @@ void test_binary_division()
 }
 
 template <class T>
-void test_size()
+void test_volume()
 {
-  Vec3<T> const a(T(1), T(2), T(3));
-  EXPECT_EQ(a.size(), T(6));
+  EXPECT_EQ(Vec3<T>(1,2,3).volume(), T(6));
+  EXPECT_EQ(Vec3<T>(1,2,0).volume(), T(2));
+  EXPECT_EQ(Vec3<T>(5,0,0).volume(), T(5));
+  EXPECT_EQ(Vec3<T>(-1,3,9).volume(), T(-1));
+  EXPECT_EQ(Vec3<T>(1,0,9).volume(), T(-1));
 }
 
 template <class T>
@@ -233,6 +236,16 @@ TEST(vec3, axis)
   test_axis<real>();
 }
 
+TEST(vec3, dimension)
+{
+  EXPECT_EQ(Vec3<int>(1,2,3).dimension(), 3);
+  EXPECT_EQ(Vec3<int>(5,2,0).dimension(), 2);
+  EXPECT_EQ(Vec3<int>(27,0,0).dimension(), 1);
+  EXPECT_EQ(Vec3<int>(-1,1,8).dimension(), -1);
+  EXPECT_EQ(Vec3<int>(0,1,8).dimension(), -1);
+  EXPECT_EQ(Vec3<int>(1,0,8).dimension(), -1);
+}
+
 TEST(vec3, assignment)
 {
   test_assignment<int>();
@@ -287,10 +300,10 @@ TEST(vec3, binary_division)
   test_binary_division<real>();
 }
 
-TEST(vec3, size)
+TEST(vec3, volume)
 {
-  test_size<int>();
-  test_size<real>();
+  test_volume<int>();
+  test_volume<real>();
 }
 
 TEST(vec3, negation)

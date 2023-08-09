@@ -60,6 +60,17 @@ class Vec3
       return m_z;
     }
 
+    DGT_METHOD constexpr int dimension() const
+    {
+      bool const has_x = (m_x > T(0));
+      bool const has_y = (m_y > T(0));
+      bool const has_z = (m_z > T(0));
+      if (has_x && !has_y && !has_z) return 1;
+      if (has_x && has_y && !has_z) return 2;
+      if (has_x && has_y && has_z) return 3;
+      return -1;
+    }
+
     DGT_METHOD static constexpr Vec3 zero()
     { 
       return Vec3<T>(T(0), T(0), T(0));
@@ -150,9 +161,12 @@ class Vec3
       return Vec3(m_x * scalar, m_y * scalar, m_z * scalar);
     }
 
-    DGT_METHOD constexpr T size() const
+    DGT_METHOD constexpr T volume() const
     {
-      return m_x * m_y * m_z;
+      if (dimension() == 1) return m_x;
+      if (dimension() == 2) return m_x * m_y;
+      if (dimension() == 3) return m_x * m_y * m_z;
+      return T(-1);
     }
 
 };

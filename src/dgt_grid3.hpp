@@ -32,21 +32,12 @@ class Grid3
 
   DGT_METHOD constexpr int dimension() const
   {
-    bool const x = m_extents.x() > 0;
-    bool const y = m_extents.y() > 0;
-    bool const z = m_extents.z() > 0;
-    if (x && !y && !z) return 1;
-    if (x && y && !z) return 2;
-    if (x && y && z) return 3;
-    return -1;
+    return m_extents.dimension();
   }
 
   DGT_METHOD constexpr int size() const
   {
-    if (dimension() == 1) return m_extents.x();
-    if (dimension() == 2) return m_extents.x() * m_extents.y();
-    if (dimension() == 3) return m_extents.x() * m_extents.y() * m_extents.z();
-    return -1;
+    return m_extents.volume();
   }
 
   DGT_METHOD constexpr int index(Vec3<int> const& ijk) const
@@ -81,7 +72,5 @@ class Grid3
   }
 
 };
-
-
 
 }
