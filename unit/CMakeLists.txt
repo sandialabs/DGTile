@@ -1,6 +1,7 @@
 set(UNIT_TEST_SOURCES
   base64.cpp
   bounds.cpp
+  box3.cpp
   cartesian.cpp
   defines.cpp
   dg.cpp

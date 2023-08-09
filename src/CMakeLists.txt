@@ -1,6 +1,7 @@
 set(DGT_HEADERS
   dgt_base64.hpp
   dgt_bounds.hpp
+  dgt_box3.hpp
   dgt_defines.hpp
   dgt_dg.hpp
   dgt_grid3.hpp
