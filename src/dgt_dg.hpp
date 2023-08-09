@@ -1,7 +1,6 @@
 #pragma once
 
-#include "dgt_defines.hpp"
-#include "dgt_macros.hpp"
+#include "dgt_grid3.hpp"
 
 namespace dgt {
 
@@ -22,15 +21,9 @@ static constexpr int NUM = 9;
 }
 
 template <template <class> class ViewT>
-struct GaussianQuadrature
-{
-  ViewT<real*> wt;
-  ViewT<real**> pts;
-};
-
-template <template <class> class ViewT>
 struct TabulatedBasis
 {
+  ViewT<real**> points;
   ViewT<real**> phis;
   ViewT<real***> grad_phis;
 };
@@ -48,13 +41,17 @@ struct Basis
     int num_cell_pts = -1;
     int num_face_pts = -1;
   public:
-    GaussianQuadrature<ViewT> cell_quadrature;
-    GaussianQuadrature<ViewT> face_quadrature[DIMENSIONS][DIRECTIONS];
+    ViewT<real*> cell_weights;
+    ViewT<real*> face_weights;
     TabulatedBasis<ViewT> modes[basis_locations::NUM];
 };
 
 template <template <class> class ViewT>
-Basis<ViewT> build_basis();
+Basis<ViewT> build_basis(
+    int const dim,
+    int const p,
+    int const q,
+    bool const tensor);
 
 DGT_METHOD constexpr int ipow(int const a, int const b)
 {
@@ -135,6 +132,15 @@ DGT_METHOD constexpr real get_legendre(int const p, int const deriv, real const 
     {0.5*(5.*x*x*x-3.*x), 1.5*(5.*x*x-1.),  15.*x, 15.}
   };
   return table[p][deriv];
+}
+
+DGT_METHOD constexpr Grid3 tensor_bounds(int const dim, int const p)
+{
+  Vec3<int> b = Vec3<int>::zero();
+  if (dim > 0) b.x() = p+1;
+  if (dim > 1) b.y() = p+1;
+  if (dim > 2) b.z() = p+1;
+  return Grid3(b);
 }
 
 template <class ModalT, class BasisT>

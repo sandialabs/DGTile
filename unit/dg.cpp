@@ -1,4 +1,5 @@
 #include <dgt_dg.hpp>
+#include <dgt_view.hpp>
 
 #include <gtest/gtest.h>
 
@@ -153,4 +154,32 @@ TEST(basis, get_gauss_point_sums)
     }
     EXPECT_NEAR(sum, 0., 1.e-15);
   }
+}
+
+TEST(basis, tensor_bounds)
+{
+  EXPECT_EQ(tensor_bounds(1, 0), Vec3<int>(1,0,0));
+  EXPECT_EQ(tensor_bounds(1, 1), Vec3<int>(2,0,0));
+  EXPECT_EQ(tensor_bounds(1, 2), Vec3<int>(3,0,0));
+  EXPECT_EQ(tensor_bounds(1, 3), Vec3<int>(4,0,0));
+  EXPECT_EQ(tensor_bounds(1, 4), Vec3<int>(5,0,0));
+  EXPECT_EQ(tensor_bounds(2, 0), Vec3<int>(1,1,0));
+  EXPECT_EQ(tensor_bounds(2, 1), Vec3<int>(2,2,0));
+  EXPECT_EQ(tensor_bounds(2, 2), Vec3<int>(3,3,0));
+  EXPECT_EQ(tensor_bounds(2, 3), Vec3<int>(4,4,0));
+  EXPECT_EQ(tensor_bounds(2, 4), Vec3<int>(5,5,0));
+  EXPECT_EQ(tensor_bounds(3, 0), Vec3<int>(1,1,1));
+  EXPECT_EQ(tensor_bounds(3, 1), Vec3<int>(2,2,2));
+  EXPECT_EQ(tensor_bounds(3, 2), Vec3<int>(3,3,3));
+  EXPECT_EQ(tensor_bounds(3, 3), Vec3<int>(4,4,4));
+  EXPECT_EQ(tensor_bounds(3, 4), Vec3<int>(5,5,5));
+}
+
+TEST(basis, build)
+{
+  int const dim = 3;
+  int const p = 1;
+  int const q = 2;
+  bool const tensor = true;
+  build_basis<HostView>(dim, p, q, tensor);
 }

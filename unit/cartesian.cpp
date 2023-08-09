@@ -25,3 +25,16 @@ TEST(cartesian, get_cells_adj_face)
   EXPECT_EQ(get_cells_adj_face({2,2,2}, Z, LEFT), Vec3<int>(2,2,2));
   EXPECT_EQ(get_cells_adj_face({2,2,2}, Z, RIGHT), Vec3<int>(2,2,3));
 }
+
+TEST(cartesian, permute)
+{
+  EXPECT_EQ(permute(X, X), X);
+  EXPECT_EQ(permute(X, Y), Y);
+  EXPECT_EQ(permute(X, Z), Z);
+  EXPECT_EQ(permute(Y, X), Y);
+  EXPECT_EQ(permute(Y, Y), Z);
+  EXPECT_EQ(permute(Y, Z), X);
+  EXPECT_EQ(permute(Z, X), Z);
+  EXPECT_EQ(permute(Z, Y), X);
+  EXPECT_EQ(permute(Z, Z), Y);
+}

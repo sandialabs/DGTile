@@ -13,7 +13,7 @@ using HostView = typename Kokkos::View<T, Kokkos::LayoutLeft>::HostMirror;
 template <class T>
 using UnmanagedView = typename Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
-#if definedd(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA)
 template <class T>
 using HostPinnedView = typename Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::CudaHostPinnedSpace>;
 #elif defined(KOKKOS_ENABLE_HIP)

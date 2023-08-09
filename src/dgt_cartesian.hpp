@@ -34,4 +34,13 @@ DGT_METHOD inline Vec3<int> get_faces_adj_cell(
   return face_ijk + offset[dir] * Vec3<int>::axis(axis);
 }
 
+DGT_METHOD inline int permute(int const ijk, int const axis)
+{
+  return
+    (ijk == X) ? axis :
+    (ijk == Y) ? (axis+1) % DIMENSIONS :
+    (ijk == Z) ? (axis+2) % DIMENSIONS :
+    -1;
+}
+
 }
