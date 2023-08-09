@@ -1,6 +1,5 @@
-# DGTile
-
-Portably performant discontinuous Galerkin adaptive mesh library
+# ![Alt text](logo.png?raw=true "intree logo"){width=100 height=100} DGTile
+> A portably performant discontinuous Galerkin adaptive mesh library
 
 ## What is this?
 

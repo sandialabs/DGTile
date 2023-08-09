@@ -51,7 +51,8 @@ TEST(subgrid3, size)
 {
   EXPECT_EQ(Subgrid3({1,1,1}, {5,5,5}).size(), 64);
   EXPECT_EQ(Subgrid3({1,1,0}, {5,5,0}).size(), 16);
-  EXPECT_EQ(Subgrid3({1,1,0}, {5,0,0}).size(), 4);
-  EXPECT_EQ(Subgrid3({-1,1,0}, {5,0,0}).size(), -1);
+  EXPECT_EQ(Subgrid3({1,0,0}, {5,0,0}).size(), 4);
+  EXPECT_EQ(Subgrid3({0,0,0}, {5,5,5}).size(), 125);
+  EXPECT_EQ(Subgrid3({0,0,0}, {5,5,0}).size(), 25);
   EXPECT_EQ(Subgrid3({1,1,0}, {5,0,5}).size(), -1);
 }

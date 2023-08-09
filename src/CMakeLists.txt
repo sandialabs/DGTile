@@ -4,6 +4,7 @@ set(DGT_HEADERS
   dgt_box3.hpp
   dgt_defines.hpp
   dgt_dg.hpp
+  dgt_for_each.hpp
   dgt_grid3.hpp
   dgt_macros.hpp
   dgt_initialize.hpp
