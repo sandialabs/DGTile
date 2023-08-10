@@ -1,4 +1,4 @@
-# ![Alt text](logo.png?raw=true "intree logo"){width=100 height=100} DGTile
+# <img src="logo.png" width="150"> DGTile
 > A portably performant discontinuous Galerkin adaptive mesh library
 
 ## What is this?
@@ -16,9 +16,11 @@ is achieved by parallelizing functors over each block.
 
 DGTile has required dependencies on:
 
+  * [fmt](https://github.com/fmtlib/fmt) - string formatting
   * [kokkos](https://github.com/kokkos/kokkos) - parallel algorithms
   * [zlib](https://github.com/zlib-ng/zlib-ng) - data compression
   * [googletest](https://github.com/google/googletest) - testing
+  * [spdlog](https://github.com/gabime/spdlog) - fast C++ logging
 
 ##
 

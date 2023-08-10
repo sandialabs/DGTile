@@ -200,6 +200,15 @@ void test_comp_division()
   EXPECT_EQ(comp_division(a,b), Vec3<T>(T(2), T(2), T(2)));
 }
 
+template <class T>
+void test_dimensionalize()
+{
+  Vec3<T> const a = Vec3<T>(T(8), T(8), T(8));
+  EXPECT_EQ(dimensionalize(1, a), Vec3<T>(T(8), T(0), T(0)));
+  EXPECT_EQ(dimensionalize(2, a), Vec3<T>(T(8), T(8), T(0)));
+  EXPECT_EQ(dimensionalize(3, a), Vec3<T>(T(8), T(8), T(8)));
+}
+
 TEST(vec3, construct)
 {
   test_construct<int>();
@@ -346,4 +355,10 @@ TEST(vec3, max)
 {
   test_max<int>();
   test_max<real>();
+}
+
+TEST(vec3, dimensionalize)
+{
+  test_dimensionalize<int>();
+  test_dimensionalize<real>();
 }

@@ -85,3 +85,11 @@ TEST(grid3, ijk)
   EXPECT_EQ(c.ijk(6), Vec3<int>(0,1,1));
   EXPECT_EQ(c.ijk(7), Vec3<int>(1,1,1));
 }
+
+TEST(grid3, dimensionalize)
+{
+  Grid3 const a(8,8,8);
+  EXPECT_EQ(dimensionalize(1, a), Grid3(8,0,0));
+  EXPECT_EQ(dimensionalize(2, a), Grid3(8,8,0));
+  EXPECT_EQ(dimensionalize(3, a), Grid3(8,8,8));
+}

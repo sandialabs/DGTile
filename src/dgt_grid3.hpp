@@ -73,4 +73,12 @@ class Grid3
 
 };
 
+DGT_METHOD constexpr Grid3 dimensionalize(int const dim, Grid3 const& grid)
+{
+  Vec3<int> const extents = grid.extents();
+  Vec3<int> const d_extents = dimensionalize(dim, extents);
+  Grid3 const d_grid(d_extents);
+  return d_grid;
+}
+
 }
