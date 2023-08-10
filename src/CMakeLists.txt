@@ -9,6 +9,7 @@ set(DGT_HEADERS
   dgt_macros.hpp
   dgt_initialize.hpp
   dgt_subgrid3.hpp
+  dgt_tree.hpp
   dgt_vec.hpp
   dgt_vec3.hpp
   dgt_view.hpp
@@ -19,6 +20,7 @@ set(DGT_SOURCES
   dgt_base64.cpp
   dgt_dg.cpp
   dgt_initialize.cpp
+  dgt_tree.cpp
   dgt_when.cpp
 )
 

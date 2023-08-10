@@ -9,6 +9,7 @@ set(UNIT_TEST_SOURCES
   grid3.cpp
   main.cpp
   subgrid3.cpp
+  tree.cpp
   vec.cpp
   vec3.cpp
   when.cpp

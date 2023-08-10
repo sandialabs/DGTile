@@ -217,7 +217,7 @@ template <class T>
 DGT_METHOD constexpr Vec3<T> dimensionalize(int const dim, Vec3<T> const& v)
 {
   Vec3<T> d_v = v;
-  for (int axis = dim; axis <= DIMENSIONS; ++axis) {
+  for (int axis = dim; axis < DIMENSIONS; ++axis) {
     d_v[axis] = T(0);
   }
   return d_v;
