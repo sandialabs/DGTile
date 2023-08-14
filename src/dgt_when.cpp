@@ -148,10 +148,7 @@ static void check_valid_keywords(lua::table const& in)
   for (auto pair : in) {
     check_key(pair, in);
     std::string const key = lua::string(pair.first).value();
-    if ((key != "kind") ||
-        (key != "frequency") ||
-        (key != "step") ||
-        (key != "time")) {
+    if (!((key == "kind") || (key == "frequency") || (key == "step") || (key == "time"))) {
       spdlog::error("dgt:make_when[{}]-> unknown key `{}`", in.name(), key);
       dgt::errors++;
     }
@@ -165,6 +162,8 @@ static WhenPtr make_single_when(lua::table const& in)
   std::string const kind = in.get_string("kind");
   if (kind == "at_always") {
     result = std::make_shared<AtAlways>();
+  } else if (kind == "at_never") {
+    result = std::make_shared<AtNever>();
   } else if (kind == "at_step") {
     int const step = in.get_integer("step");
     result = std::make_shared<AtStep>(step);
@@ -195,7 +194,7 @@ WhenPtr make_when(lua::table const& in)
   WhenPtr result = std::make_shared<AtNever>();
   in.check_type(LUA_TTABLE);
   if (in.size() < 1) {
-    spdlog::error("dgt:make_when -> invalid lua table");
+    spdlog::error("dgt:make_when -> invalid table size");
     dgt::errors++;
   }
   for (lua_Integer i = 1; i <= in.size(); ++i) {
