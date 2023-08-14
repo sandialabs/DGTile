@@ -17,10 +17,12 @@ is achieved by parallelizing functors over each block.
 DGTile has required dependencies on:
 
   * [fmt](https://github.com/fmtlib/fmt) - string formatting
-  * [kokkos](https://github.com/kokkos/kokkos) - parallel algorithms
-  * [zlib](https://github.com/zlib-ng/zlib-ng) - data compression
+  * [kokkos](https://github.com/kokkos/kokkos) - shared memory parallelism
   * [googletest](https://github.com/google/googletest) - testing
-  * [spdlog](https://github.com/gabime/spdlog) - fast C++ logging
+  * [lua](https://gitlab.com/codelibre/lua/lua-cmake) - interfacing
+  * [mpi](https://www.open-mpi.org/) - distributed memory parallelism
+  * [spdlog](https://github.com/gabime/spdlog) - logging
+  * [zlib](https://github.com/zlib-ng/zlib-ng) - data compression
 
 ##
 

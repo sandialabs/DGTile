@@ -11,6 +11,8 @@ set(DGT_ARCHITECTURES "" CACHE STRING "GPU architecture")
 find_package(fmt REQUIRED)
 find_package(GTest REQUIRED)
 find_package(Kokkos REQUIRED COMPONENTS separable_compilation)
+find_package(Lua REQUIRED)
+find_package(MPI REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(ZLIB REQUIRED)
 

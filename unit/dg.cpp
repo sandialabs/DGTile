@@ -177,7 +177,7 @@ TEST(basis, tensor_bounds)
 
 TEST(basis, build)
 {
-  int const dim = 3;
+  int const dim = 2;
   int const p = 1;
   int const q = 2;
   bool const tensor = true;

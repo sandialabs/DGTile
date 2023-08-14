@@ -21,6 +21,20 @@ static std::string base(
 
 }
 
+static HostView<real*> get_cell_weights(int const dim, int const q)
+{
+  HostView<real*> wts("", num_gauss_points(dim, q));
+  Grid3 const bounds = tensor_bounds(dim, q-1);
+  auto functor = [&] (Vec3<int> const& ijk) {
+    int const pt = bounds.index(ijk);
+    wts(pt)               = get_gauss_weight(q, ijk.x());
+    if (dim > 1) wts(pt) *= get_gauss_weight(q, ijk.y());
+    if (dim > 2) wts(pt) *= get_gauss_weight(q, ijk.z());
+  };
+  seq_for_each(bounds, functor);
+  return wts;
+}
+
 template <template <class> class ViewT>
 Basis<ViewT> build_basis(
     int const dim,
@@ -32,6 +46,8 @@ Basis<ViewT> build_basis(
   Basis<ViewT> b;
   std::string const base = names::base(dim, p, q, tensor);
   spdlog::debug("dgitle: building -> {}", base);
+
+  get_cell_weights(dim, q);
   return b;
 }
 

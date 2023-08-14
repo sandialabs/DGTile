@@ -155,6 +155,7 @@ DGT_METHOD inline real eval(
   for (int mode = 1; mode < B.num_modes; ++mode) {
     val += U(cell, eq, mode) * B.modes[location](pt, mode);
   }
+  return val;
 }
 
 }
