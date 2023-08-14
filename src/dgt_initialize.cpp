@@ -2,7 +2,10 @@
 
 #include <mpi.h>
 
+#include "dgt_defines.hpp"
 #include "dgt_initialize.hpp"
+
+int dgt::errors = 0;
 
 namespace dgt {
 

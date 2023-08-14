@@ -45,7 +45,7 @@ Basis<ViewT> build_basis(
   using fmt::format;
   Basis<ViewT> b;
   std::string const base = names::base(dim, p, q, tensor);
-  spdlog::debug("dgitle: building -> {}", base);
+  spdlog::debug("dgt: building -> {}", base);
 
   get_cell_weights(dim, q);
   return b;

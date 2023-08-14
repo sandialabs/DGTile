@@ -431,7 +431,7 @@ TEST(tree, get_max_level_uniform_3D)
   EXPECT_EQ(get_max_level(dim, z_leaves3), 5);
 }
 
-TEST(leaves, get_max_level_non_uniform_1D)
+TEST(tree, get_max_level_non_uniform_1D)
 {
   int const dim = 1;
   Leaves const leaves = get_example_refined(dim);
@@ -440,7 +440,7 @@ TEST(leaves, get_max_level_non_uniform_1D)
   EXPECT_EQ(get_max_level(dim, z_leaves), 3);
 }
 
-TEST(leaves, get_max_level_non_uniform_2D)
+TEST(tree, get_max_level_non_uniform_2D)
 {
   int const dim = 2;
   Leaves const leaves = get_example_refined(dim);
@@ -449,7 +449,7 @@ TEST(leaves, get_max_level_non_uniform_2D)
   EXPECT_EQ(get_max_level(dim, z_leaves), 3);
 }
 
-TEST(leaves, get_max_level_non_uniform_3D)
+TEST(tree, get_max_level_non_uniform_3D)
 {
   int const dim = 3;
   Leaves const leaves = get_example_refined(dim);
@@ -458,7 +458,7 @@ TEST(leaves, get_max_level_non_uniform_3D)
   EXPECT_EQ(get_max_level(dim, z_leaves), 3);
 }
 
-TEST(leaves, get_base_point_uniform_1D)
+TEST(tree, get_base_point_uniform_1D)
 {
   int const dim = 1;
   Leaves const leaves1 = create(dim, {1,0,0});
@@ -475,7 +475,7 @@ TEST(leaves, get_base_point_uniform_1D)
   EXPECT_EQ(get_base_point(dim, z_leaves3), Point(5, {22,0,0}));
 }
 
-TEST(leaves, get_base_point_uniform_2D)
+TEST(tree, get_base_point_uniform_2D)
 {
   int const dim = 2;
   Leaves const leaves1 = create(dim, {1,1,0});
@@ -492,7 +492,7 @@ TEST(leaves, get_base_point_uniform_2D)
   EXPECT_EQ(get_base_point(dim, z_leaves3), Point(5, {22,2,0}));
 }
 
-TEST(leaves, get_base_point_uniform_3D)
+TEST(tree, get_base_point_uniform_3D)
 {
   int const dim = 3;
   Leaves const leaves1 = create(dim, {1,1,1});
@@ -509,7 +509,7 @@ TEST(leaves, get_base_point_uniform_3D)
   EXPECT_EQ(get_base_point(dim, z_leaves3), Point(5, {22,2,1}));
 }
 
-TEST(leaves, get_base_point_non_uniform_1D)
+TEST(tree, get_base_point_non_uniform_1D)
 {
   int const dim = 1;
   Leaves const leaves = get_example_refined(dim);
@@ -518,7 +518,7 @@ TEST(leaves, get_base_point_non_uniform_1D)
   EXPECT_EQ(get_base_point(dim, z_leaves), Point(2, {3,0,0}));
 }
 
-TEST(leaves, get_base_point_non_uniform_2D)
+TEST(tree, get_base_point_non_uniform_2D)
 {
   int const dim = 2;
   Leaves const leaves = get_example_refined(dim);
@@ -527,7 +527,7 @@ TEST(leaves, get_base_point_non_uniform_2D)
   EXPECT_EQ(get_base_point(dim, z_leaves), Point(2, {3,2,0}));
 }
 
-TEST(leaves, get_base_point_non_uniform_3D)
+TEST(tree, get_base_point_non_uniform_3D)
 {
   int const dim = 3;
   Leaves const leaves = get_example_refined(dim);
