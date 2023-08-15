@@ -237,5 +237,135 @@ Box3<real> get_domain(
   return Box3<real>(d_min, d_max);
 }
 
+static Vec3<int> get_offset(int const dim, Vec3<int> const& meta_ijk)
+{
+  static constexpr int o[3] = {-1,0,1};
+  Vec3<int> const offset(o[meta_ijk.x()], o[meta_ijk.y()], o[meta_ijk.z()]);
+  return dimensionalize(dim, offset);
+}
+
+static Vec3<int> get_fine_offset(int const dim, Vec3<int> const& meta_ijk)
+{
+  static constexpr int o[4] = {-1,0,1,2};
+  Vec3<int> const offset(o[meta_ijk.x()], o[meta_ijk.y()], o[meta_ijk.z()]);
+  return dimensionalize(dim, offset);
+}
+
+static bool is_middle(int const dim, Vec3<int> const& meta_ijk)
+{
+  if (meta_ijk == dimensionalize(dim, Vec3<int>(1,1,1))) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+static bool is_fine_middle(int const dim, Vec3<int> const& meta_ijk)
+{
+  if ((meta_ijk == dimensionalize(dim, Vec3<int>(1,1,1))) ||
+      (meta_ijk == dimensionalize(dim, Vec3<int>(2,1,1))) ||
+      (meta_ijk == dimensionalize(dim, Vec3<int>(1,2,1))) ||
+      (meta_ijk == dimensionalize(dim, Vec3<int>(2,2,1))) ||
+      (meta_ijk == dimensionalize(dim, Vec3<int>(1,1,2))) ||
+      (meta_ijk == dimensionalize(dim, Vec3<int>(2,1,2))) ||
+      (meta_ijk == dimensionalize(dim, Vec3<int>(1,2,2))) ||
+      (meta_ijk == dimensionalize(dim, Vec3<int>(2,2,2)))) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+static void collect_adjacent(
+    Adjacent& adj,
+    int const dim,
+    Leaves const& leaves,
+    Point const& pt,
+    Vec3<int> const& meta_ijk,
+    std::int8_t const level_diff,
+    std::function<Vec3<int>(int, Vec3<int> const&)> get_offset)
+{
+  Vec3<int> const offset = get_offset(dim, meta_ijk);
+  Point const adj_pt = Point(pt.level + level_diff, pt.ijk + offset);
+  ID const adj_global_id = get_global_id(dim, adj_pt);
+  if (is_leaf(adj_global_id, leaves)) {
+    Vec3<std::int8_t> ijk(meta_ijk.x(), meta_ijk.y(), meta_ijk.z());
+    Adjacency adjacency{adj_global_id, level_diff, ijk};
+    adj.push_back(adjacency);
+  }
+}
+
+static Adjacent get_adjacent_same(
+    int const dim,
+    ID const global_id,
+    Leaves const& leaves)
+{
+  Adjacent adj;
+  Point const pt = get_point(dim, global_id);
+  auto functor = [&] (Vec3<int> const& meta_ijk) {
+    if (is_middle(dim, meta_ijk)) return;
+    collect_adjacent(adj, dim, leaves, pt, meta_ijk, 0, get_offset);
+  };
+  seq_for_each(meta_grid, functor);
+  return adj;
+}
+
+static Adjacent get_adjacent_fine(
+    int const dim,
+    ID const global_id,
+    Leaves const& leaves)
+{
+  Adjacent adj;
+  Point const pt = get_point(dim, global_id);
+  Point const fine_pt = get_fine_point(dim, pt, {-1,-1,-1});
+  auto functor = [&] (Vec3<int> const& meta_ijk) {
+    if (is_fine_middle(dim, meta_ijk)) return;
+    collect_adjacent(adj, dim, leaves, fine_pt, meta_ijk, -1, get_fine_offset);
+  };
+  seq_for_each(fine_meta_grid, functor);
+  return adj;
+}
+
+static Adjacent get_adjacent_coarse(
+    int const dim,
+    ID const global_id,
+    Leaves const& leaves)
+{
+  Adjacent adj;
+  Point const pt = get_point(dim, global_id);
+  Point const coarse_pt = get_coarse_point(dim, pt);
+  auto functor = [&] (Vec3<int> const& meta_ijk) {
+    if (is_middle(dim, meta_ijk)) return;
+    collect_adjacent(adj, dim, leaves, coarse_pt, meta_ijk, 1, get_offset);
+  };
+  seq_for_each(meta_grid, functor);
+  return adj;
+}
+
+static Adjacent get_adjacent(
+    int const dim,
+    ID const global_id,
+    Leaves const& leaves)
+{
+  Adjacent adj;
+  Adjacent const adj_same = get_adjacent_same(dim, global_id, leaves);
+  Adjacent const adj_fine = get_adjacent_fine(dim, global_id, leaves);
+  Adjacent const adj_coarse = get_adjacent_coarse(dim, global_id, leaves);
+  adj.insert(adj.end(), adj_same.begin(), adj_same.end());
+  adj.insert(adj.end(), adj_fine.begin(), adj_fine.end());
+  adj.insert(adj.end(), adj_coarse.begin(), adj_coarse.end());
+  return adj;
+}
+
+Adjacencies get_adjacencies(int const dim, Leaves const& leaves)
+{
+  Adjacencies adjacencies;
+  for (ID const global_id : leaves) {
+    Adjacent const adjacent = get_adjacent(dim, global_id, leaves);
+    adjacencies[global_id] = adjacent;
+  }
+  return adjacencies;
+}
+
 }
 }

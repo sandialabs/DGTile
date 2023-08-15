@@ -38,8 +38,8 @@ using Adjacencies = std::unordered_map<ID, Adjacent>;
 using Marks = std::vector<std::int8_t>;
 
 static constexpr Grid3 child_grid = {2,2,2};
-static constexpr Grid3 adj_grid = {3,3,3};
-static constexpr Grid3 fine_adj_grid = {4,4,4};
+static constexpr Grid3 meta_grid = {3,3,3};
+static constexpr Grid3 fine_meta_grid = {4,4,4};
 
 [[nodiscard]] ID get_level_offset(int const dim, int const level);
 [[nodiscard]] ID get_level_id(int const dim, Point const& pt);
@@ -55,8 +55,8 @@ template <class LeavesT> [[nodiscard]] int get_max_level(int const dim, LeavesT 
 template <class LeavesT> [[nodiscard]] int get_min_level(int const dim, LeavesT const& leaves);
 template <class LeavesT> [[nodiscard]] Point get_base_point(int const dim, LeavesT const& leaves);
 [[nodiscard]] Box3<real> get_domain(int const dim, ID const gid, Point const& base, Box3<real> const& d);
+[[nodiscard]] Adjacencies get_adjacencies(int const dim, Leaves const& leaves);
 
-// get_adjacencies
 // check_marks
 // balance_tree
 
