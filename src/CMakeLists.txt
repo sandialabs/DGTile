@@ -8,6 +8,7 @@ set(DGT_HEADERS
   dgt_grid3.hpp
   dgt_initialize.hpp
   dgt_lua.hpp
+  dgt_lua_interface.hpp
   dgt_macros.hpp
   dgt_subgrid3.hpp
   dgt_tree.hpp
@@ -22,6 +23,7 @@ set(DGT_SOURCES
   dgt_dg.cpp
   dgt_initialize.cpp
   dgt_lua.cpp
+  dgt_lua_interface.cpp
   dgt_tree.cpp
   dgt_when.cpp
 )

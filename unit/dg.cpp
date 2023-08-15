@@ -25,6 +25,16 @@ TEST(basis, basis_locations)
   EXPECT_EQ(basis_locations::NUM, 9);
 }
 
+TEST(basis, face_basis_locations)
+{
+  EXPECT_EQ(basis_locations::face(X, LEFT), basis_locations::XMIN_FACE);
+  EXPECT_EQ(basis_locations::face(X, RIGHT), basis_locations::XMAX_FACE);
+  EXPECT_EQ(basis_locations::face(Y, LEFT), basis_locations::YMIN_FACE);
+  EXPECT_EQ(basis_locations::face(Y, RIGHT), basis_locations::YMAX_FACE);
+  EXPECT_EQ(basis_locations::face(Z, LEFT), basis_locations::ZMIN_FACE);
+  EXPECT_EQ(basis_locations::face(Z, RIGHT), basis_locations::ZMAX_FACE);
+}
+
 TEST(basis, ipow)
 {
   EXPECT_EQ(ipow(1, 1), 1);

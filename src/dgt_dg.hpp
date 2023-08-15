@@ -8,6 +8,7 @@ static constexpr int max_polynomial_order = 3;
 static constexpr int max_1D_quadrature_points = 5;
 
 namespace basis_locations {
+
 static constexpr int CELL = 0;
 static constexpr int VERTICES = 1;
 static constexpr int XMIN_FACE = 2;
@@ -18,6 +19,12 @@ static constexpr int ZMIN_FACE = 6;
 static constexpr int ZMAX_FACE = 7;
 static constexpr int EVALUATION = 8;
 static constexpr int NUM = 9;
+
+DGT_METHOD constexpr int face(int axis, int dir)
+{
+return XMIN_FACE + axis*DIRECTIONS + dir;
+}
+
 }
 
 template <template <class> class ViewT>
@@ -99,6 +106,15 @@ DGT_METHOD constexpr int num_modes(int const dim, int const p, bool const tensor
   else return num_non_tensor_modes(dim, p);
 }
 
+DGT_METHOD constexpr Grid3 tensor_bounds(int const dim, int const p)
+{
+  Vec3<int> b = Vec3<int>::zero();
+  if (dim > 0) b.x() = p+1;
+  if (dim > 1) b.y() = p+1;
+  if (dim > 2) b.z() = p+1;
+  return Grid3(b);
+}
+
 DGT_METHOD constexpr real get_gauss_weight(int const q, int const pt)
 {
   real table[max_1D_quadrature_points][max_1D_quadrature_points] = {
@@ -132,15 +148,6 @@ DGT_METHOD constexpr real get_legendre(int const p, int const deriv, real const 
     {0.5*(5.*x*x*x-3.*x), 1.5*(5.*x*x-1.),  15.*x, 15.}
   };
   return table[p][deriv];
-}
-
-DGT_METHOD constexpr Grid3 tensor_bounds(int const dim, int const p)
-{
-  Vec3<int> b = Vec3<int>::zero();
-  if (dim > 0) b.x() = p+1;
-  if (dim > 1) b.y() = p+1;
-  if (dim > 2) b.z() = p+1;
-  return Grid3(b);
 }
 
 template <class ModalT, class BasisT>

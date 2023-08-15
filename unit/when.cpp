@@ -1,4 +1,5 @@
 #include <dgt_lua.hpp>
+#include <dgt_lua_interface.hpp>
 #include <dgt_when.hpp>
 
 #include <gtest/gtest.h>

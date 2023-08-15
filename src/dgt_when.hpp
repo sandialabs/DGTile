@@ -95,10 +95,4 @@ class AtEither : public When
 
 WhenPtr combine_either(WhenPtr a, WhenPtr b);
 
-namespace lua {
-class table;
-}
-
-WhenPtr make_when(lua::table const& in);
-
 }
