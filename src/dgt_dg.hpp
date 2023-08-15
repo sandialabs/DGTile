@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dgt_grid3.hpp"
+#include "dgt_vec.hpp"
 
 namespace dgt {
 
@@ -87,6 +88,19 @@ DGT_METHOD constexpr int num_vertices(int const dim)
   return ipow(2, dim);
 }
 
+DGT_METHOD constexpr int num_edges(int const dim)
+{
+  if (dim == 1) return 2;
+  if (dim == 2) return 4;
+  if (dim == 3) return 12;
+  return -1;
+}
+
+DGT_METHOD constexpr int num_faces(int const dim)
+{
+  return 2*dim;
+}
+
 DGT_METHOD constexpr int num_tensor_modes(int const dim, int const p)
 {
   return ipow(p+1, dim);
@@ -148,6 +162,73 @@ DGT_METHOD constexpr real get_legendre(int const p, int const deriv, real const 
     {0.5*(5.*x*x*x-3.*x), 1.5*(5.*x*x-1.),  15.*x, 15.}
   };
   return table[p][deriv];
+}
+
+using ModeVector = Vec<real, num_tensor_modes(DIMENSIONS, max_polynomial_order)>;
+
+DGT_METHOD inline ModeVector get_modes(
+    int const dim,
+    int const p,
+    bool const tensor,
+    Vec3<real> const& xi)
+{
+  int m = 0;
+  ModeVector phi;
+  Grid3 const bounds = tensor_bounds(dim, p);
+  Vec3<int> const b = generalize(dim, bounds.extents());
+  for (int block = 0; block < p+1; ++block) {
+    for (int deg = 0; deg < dim*p + 1; ++deg) {
+      for (int k = 0; k < b.z(); ++k) {
+        for (int j = 0; j < b.y(); ++j) {
+          for (int i = 0; i < b.x(); ++i) {
+            int const sum = i+j+k;
+            int const idx = std::max(i, std::max(j, k));
+            if ((!tensor) && (sum > p)) continue;
+            if ((idx == block) && (sum == deg)) {
+              phi[m]               = get_legendre(i, 0, xi.x());
+              if (dim > 1) phi[m] *= get_legendre(j, 0, xi.y());
+              if (dim > 2) phi[m] *= get_legendre(k, 0, xi.z());
+              m++;
+            }
+          }
+        }
+      }
+    }
+  }
+  return phi;
+}
+
+DGT_METHOD ModeVector inline get_dmodes(
+    int const dim,
+    int const p,
+    bool const tensor,
+    Vec3<int> const& d,
+    Vec3<real> const& xi)
+{
+  int m = 0;
+  ModeVector dphi;
+  Grid3 const bounds = tensor_bounds(dim, p);
+  Vec3<int> const b = generalize(dim, bounds.extents());
+  for (int block = 0; block < p+1; ++block) {
+    for (int deg = 0; deg < dim*p + 1; ++deg) {
+      for (int k = 0; k < b.z(); ++k) {
+        for (int j = 0; j < b.y(); ++j) {
+          for (int i = 0; i < b.x(); ++i) {
+            int const sum = i+j+k;
+            int const idx = std::max(i, std::max(j, k));
+            if ((!tensor) && (sum > p)) continue;
+            if ((idx == block) && (sum == deg)) {
+              dphi[m]               = get_legendre(i, d.x(), xi.x());
+              if (dim > 1) dphi[m] *= get_legendre(j, d.y(), xi.y());
+              if (dim > 2) dphi[m] *= get_legendre(k, d.z(), xi.z());
+              m++;
+            }
+          }
+        }
+      }
+    }
+  }
+  return dphi;
 }
 
 template <class ModalT, class BasisT>

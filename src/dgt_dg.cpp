@@ -2,6 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "dgt_cartesian.hpp"
 #include "dgt_dg.hpp"
 #include "dgt_for_each.hpp"
 #include "dgt_view.hpp"
@@ -15,6 +16,22 @@ static std::string basis_name(
     bool const tensor)
 {
   return fmt::format("Basis[dim={}][p={}][q={}][tensor={}]", dim, p, q, tensor);
+}
+
+static std::string loc_name(int const loc)
+{
+  std::string names[basis_locations::NUM] = {
+    "CELL",
+    "VERTICES",
+    "XMIN_FACE",
+    "XMAX_FACE",
+    "YMIN_FACE",
+    "YMAX_FACE",
+    "ZMIN_FACE",
+    "ZMAX_FACE",
+    "EVALUATION"
+  };
+  return names[loc];
 }
 
 static HostView<real*> get_cell_weights(int const dim, int const q)
@@ -59,6 +76,154 @@ static HostView<real**> get_cell_points(int const dim, int const q)
   return pts;
 }
 
+static HostView<real**> get_vertex_points(int const dim)
+{
+  HostView<real**> pts("", num_vertices(dim), dim);
+  static double vertex_pt[2] = {-1., 1.};
+  Grid3 const bounds = tensor_bounds(dim, 1);
+  auto functor = [&] (Vec3<int> const& ijk) {
+    int const pt = bounds.index(ijk);
+    for (int axis = 0; axis < dim; ++axis) {
+      pts(pt, axis) = vertex_pt[ijk[axis]];
+    }
+  };
+  seq_for_each(bounds, functor);
+  return pts;
+}
+
+static HostView<real**> get_face_points(
+    int const dim,
+    int const q,
+    int const axis,
+    int const dir)
+{
+  HostView<real**> pts("", num_gauss_points(dim-1, q), dim);
+  Grid3 const bounds = tensor_bounds(dim-1, q-1);
+  auto functor = [&] (Vec3<int> const& ijk) {
+    int const pt = bounds.index(ijk);
+    int const ii = (axis == X) ? Y : X;
+    int const jj = (axis == Z) ? Y : Z;
+    pts(pt, axis) = get_dir_sign(dir);
+    if (dim > 1) pts(pt, ii) = get_gauss_point(q, ijk.x());
+    if (dim > 2) pts(pt, jj) = get_gauss_point(q, ijk.y());
+  };
+  seq_for_each(bounds, functor);
+  return pts;
+}
+
+static HostView<real**> get_eval_points(int const dim, int const q)
+{
+  int const npts = num_evaluation_points(dim, q);
+  HostView<real**> pts("", npts, dim);
+  int eval_pt = 0;
+  HostView<real**> cell = get_cell_points(dim, q);
+  for (size_t pt = 0; pt < cell.extent(0); ++pt) {
+    for (int d = 0; d < dim; ++d) {
+      pts(eval_pt, d) = cell(pt, d);
+    }
+    eval_pt++;
+  }
+  for (int axis = 0; axis < dim; ++axis) {
+    for (int dir = 0; dir < DIRECTIONS; ++dir) {
+      HostView<real**> face = get_face_points(dim, q, axis, dir);
+      for (size_t pt = 0; pt < face.extent(0); ++pt) {
+        for (int d = 0; d < dim; ++d) {
+          pts(eval_pt, d) = face(pt, d);
+        }
+        eval_pt++;
+      }
+    }
+  }
+  return pts;
+}
+
+static HostView<real**> get_phis(
+    int const dim,
+    int const p,
+    bool const tensor,
+    HostView<real**> const pts)
+{
+  int const npts = pts.extent(0);
+  int const nmodes = num_modes(dim, p, tensor);
+  HostView<real**> phis("", npts, nmodes);
+  Vec3<real> xi = Vec3<real>::zero();
+  for (int pt = 0; pt < npts; ++pt) {
+    for (int d = 0;  d < dim; ++d) {
+      xi[d] = pts(pt, d);
+    }
+    ModeVector const phi_xi = get_modes(dim, p, tensor, xi);
+    for (int m = 0; m < nmodes; ++m) {
+      phis(pt, m) = phi_xi[m];
+    }
+  }
+  return phis;
+}
+
+static HostView<real***> get_dphis(
+    int const dim,
+    int const p,
+    bool const tensor,
+    HostView<real**> const pts)
+{
+  int const npts = pts.extent(0);
+  int const nmodes = num_modes(dim, p, tensor);
+  HostView<real***> dphis("", dim, npts, nmodes);
+  Vec3<real> xi = Vec3<real>::zero();
+  for (int axis = 0; axis < dim; ++axis) {
+    for (int pt = 0; pt < npts; ++pt) {
+      for (int d = 0; d < dim; ++d) {
+        xi[d] = pts(pt, d);
+      }
+      Vec3<int> const deriv = Vec3<int>::axis(axis);
+      ModeVector const dphi_dxi = get_dmodes(dim, p, tensor, deriv, xi);
+      for (int m = 0; m < nmodes; ++m) {
+        dphis(axis, pt, m) = dphi_dxi[m];
+      }
+    }
+  }
+  return dphis;
+}
+
+template <template <class> class ViewT>
+void build_weights(
+    Basis<ViewT>& B,
+    std::string const& name,
+    int const dim,
+    int const q)
+{
+  int const ncell_pts = num_gauss_points(dim, q);
+  int const nface_pts = num_gauss_points(dim-1, q);
+  B.cell_weights = ViewT<real*>(name + ".cell_weights", ncell_pts);
+  B.face_weights = ViewT<real*>(name + ".face_weights", nface_pts);
+  HostView<real*> cell_weights = get_cell_weights(dim, q);
+  HostView<real*> face_weights = get_face_weights(dim, q);
+  Kokkos::deep_copy(B.cell_weights, cell_weights);
+  Kokkos::deep_copy(B.face_weights, face_weights);
+}
+
+template <template <class> class ViewT>
+void build_mode(
+    Basis<ViewT>& B,
+    std::string const& name,
+    int const location,
+    int const dim,
+    int const p,
+    bool const tensor,
+    HostView<real**> const pts)
+{
+  size_t const npts = pts.extent(0);
+  size_t const nmodes = num_modes(dim, p, tensor);
+  std::string const lname = loc_name(location);
+  B.modes[location].points = ViewT<real**>(name + lname + ".points", npts, dim);
+  B.modes[location].phis = ViewT<real**>(name + lname + ".phis", npts, nmodes);
+  B.modes[location].grad_phis = ViewT<real***>(name + lname + ".grad_phis", dim, npts, nmodes);
+  HostView<real**> phis = get_phis(dim, p, tensor, pts);
+  HostView<real***> grad_phis = get_dphis(dim, p, tensor, pts);
+  Kokkos::deep_copy(B.modes[location].points, pts);
+  Kokkos::deep_copy(B.modes[location].phis, phis);
+  Kokkos::deep_copy(B.modes[location].grad_phis, grad_phis);
+}
+
 template <template <class> class ViewT>
 Basis<ViewT> build_basis(
     int const dim,
@@ -66,37 +231,21 @@ Basis<ViewT> build_basis(
     int const q,
     bool const tensor)
 {
-  using fmt::format;
   using namespace dgt::basis_locations;
-  Basis<ViewT> b;
+  Basis<ViewT> B;
   std::string const name = basis_name(dim, p, q, tensor);
   spdlog::debug("dgt: building -> {}", name);
-  b.cell_weights = ViewT<real*>(name + ".cell_weights", num_gauss_points(dim, q));
-  b.face_weights = ViewT<real*>(name + ".face_weights", num_gauss_points(dim-1, q));
-  b.modes[CELL].points = ViewT<real**>(name + ".modes[CELL].points", num_gauss_points(dim, q), dim);
-  b.modes[VERTICES].points = ViewT<real**>(name + ".modes[VERTICES].points", num_vertices(dim), dim);
-
-
-
-  HostView<real*> cell_weights = get_cell_weights(dim, q);
-  HostView<real*> face_weights = get_face_weights(dim, q);
-  HostView<real**> cell_points = get_cell_points(dim, q);
-  Kokkos::deep_copy(b.cell_weights, cell_weights);
-  Kokkos::deep_copy(b.face_weights, face_weights);
-  Kokkos::deep_copy(b.modes[CELL].points, cell_points);
-
-
-
-  for (size_t i = 0; i < b.modes[CELL].points.extent(0); ++i) {
-    for (size_t j = 0; j < b.modes[CELL].points.extent(1); ++j) {
-    std::cout << b.modes[CELL].points(i, j) << "\n";
+  build_weights(B, name, dim, q);
+  build_mode(B, name, CELL, dim, p, tensor, get_cell_points(dim, q));
+  build_mode(B, name, VERTICES, dim, p, tensor, get_vertex_points(dim));
+  for (int axis = 0; axis < dim; ++axis) {
+    for (int dir = 0; dir < DIRECTIONS; ++dir) {
+      HostView<real**> pts = get_face_points(dim, q, axis, dir);
+      build_mode(B, name, face(axis, dir), dim, p, tensor, pts);
     }
   }
-
-
-  return b;
-
-
+  build_mode(B, name, EVALUATION, dim, p, tensor, get_eval_points(dim, q));
+  return B;
 }
 
 template Basis<View> build_basis(int, int, int, bool);

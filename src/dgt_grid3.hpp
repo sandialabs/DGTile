@@ -81,4 +81,12 @@ DGT_METHOD constexpr Grid3 dimensionalize(int const dim, Grid3 const& grid)
   return d_grid;
 }
 
+DGT_METHOD constexpr Grid3 generalize(int const dim, Grid3 const& grid)
+{
+  Vec3<int> const extents = grid.extents();
+  Vec3<int> const g_extents = generalize(dim, extents);
+  Grid3 const g_grid(g_extents);
+  return g_grid;
+}
+
 }

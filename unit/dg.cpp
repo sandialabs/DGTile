@@ -144,6 +144,20 @@ TEST(basis, num_vertices)
   EXPECT_EQ(num_vertices(3), 8);
 }
 
+TEST(basis, num_edges)
+{
+  EXPECT_EQ(num_edges(1), 2);
+  EXPECT_EQ(num_edges(2), 4);
+  EXPECT_EQ(num_edges(3), 12);
+}
+
+TEST(basis, num_faces)
+{
+  EXPECT_EQ(num_faces(1), 2);
+  EXPECT_EQ(num_faces(2), 4);
+  EXPECT_EQ(num_faces(3), 6);
+}
+
 TEST(basis, get_guass_weight_sums)
 {
   for (int q = 1; q <= max_1D_quadrature_points; ++q) {

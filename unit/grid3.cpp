@@ -93,3 +93,13 @@ TEST(grid3, dimensionalize)
   EXPECT_EQ(dimensionalize(2, a), Grid3(8,8,0));
   EXPECT_EQ(dimensionalize(3, a), Grid3(8,8,8));
 }
+
+TEST(grid3, generalize)
+{
+  Grid3 const a(8,0,0);
+  Grid3 const b(8,8,0);
+  Grid3 const c(8,8,8);
+  EXPECT_EQ(generalize(1, a), Grid3(8,1,1));
+  EXPECT_EQ(generalize(2, b), Grid3(8,8,1));
+  EXPECT_EQ(generalize(3, c), Grid3(8,8,8));
+}

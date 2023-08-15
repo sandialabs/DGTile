@@ -223,4 +223,14 @@ DGT_METHOD constexpr Vec3<T> dimensionalize(int const dim, Vec3<T> const& v)
   return d_v;
 }
 
+template <class T>
+DGT_METHOD constexpr Vec3<T> generalize(int const dim, Vec3<T> const v)
+{
+  Vec3<T> g_v = v;
+  for (int axis = dim; axis < DIMENSIONS; ++axis) {
+    g_v[axis] = T(1);
+  }
+  return g_v;
+}
+
 }

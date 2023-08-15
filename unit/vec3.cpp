@@ -209,6 +209,19 @@ void test_dimensionalize()
   EXPECT_EQ(dimensionalize(3, a), Vec3<T>(T(8), T(8), T(8)));
 }
 
+template <class T>
+void test_generalize()
+{
+  Vec3<T> const a = Vec3<T>(T(8), T(0), T(0));
+  Vec3<T> const b = Vec3<T>(T(8), T(8), T(8));
+  EXPECT_EQ(generalize(1, a), Vec3<T>(T(8), T(1), T(1)));
+  EXPECT_EQ(generalize(2, a), Vec3<T>(T(8), T(0), T(1)));
+  EXPECT_EQ(generalize(3, a), Vec3<T>(T(8), T(0), T(0)));
+  EXPECT_EQ(generalize(1, b), Vec3<T>(T(8), T(1), T(1)));
+  EXPECT_EQ(generalize(2, b), Vec3<T>(T(8), T(8), T(1)));
+  EXPECT_EQ(generalize(3, b), Vec3<T>(T(8), T(8), T(8)));
+}
+
 TEST(vec3, construct)
 {
   test_construct<int>();
@@ -361,4 +374,10 @@ TEST(vec3, dimensionalize)
 {
   test_dimensionalize<int>();
   test_dimensionalize<real>();
+}
+
+TEST(vec3, generalize)
+{
+  test_generalize<int>();
+  test_generalize<real>();
 }
