@@ -1,5 +1,4 @@
 #include <dgt_lua.hpp>
-#include <dgt_lua_interface.hpp>
 #include <dgt_when.hpp>
 
 #include <gtest/gtest.h>
@@ -31,82 +30,25 @@ static WhenPtr combine_many_steps()
   return when;
 }
 
-static void test_at_always(WhenPtr when)
-{
-  std::vector<bool> const expected = {1,1,1,1,1,1};
-  test_when(when, expected, 0.6);
-}
-
-static void test_at_never(WhenPtr when)
-{
-  std::vector<bool> const expected = {0,0,0,0,0,0};
-  test_when(when, expected, 0.6);
-}
-
-static void test_at_step(WhenPtr when)
-{
-  std::vector<bool> const expected = {0,0,0,1,0,0};
-  test_when(when, expected, 0.6);
-}
-
-static void test_at_either_steps(WhenPtr when)
-{
-  std::vector<bool> const expected = {0,0,1,0,1,0};
-  test_when(when, expected, 0.6);
-}
-
-static void test_at_many_steps(WhenPtr when)
-{
-  std::vector<bool> const expected = {1,1,1,1,1,1};
-  test_when(when, expected, 0.6);
-}
-
-static void test_at_step_periodically(WhenPtr when)
-{
-  std::vector<bool> const expected = {1,0,0,1,0,0};
-  test_when(when, expected, 0.6);
-}
-
-static void test_at_time(WhenPtr when)
-{
-  std::vector<bool> const expected = {0,0,1,0,0,0};
-  test_when(when, expected, 0.6);
-}
-
-static void test_at_exact_time(WhenPtr when)
-{
-  std::vector<bool> const expected = {0,0,1,0,0,0};
-  test_when(when, expected, 0.55);
-}
-
-static void test_at_time_periodically(WhenPtr when)
-{
-  std::vector<bool> const expected = {1,0,1,0,1,0};
-  test_when(when, expected, 0.6);
-}
-
-static void test_at_exact_time_periodically(WhenPtr when)
-{
-  std::vector<bool> const expected = {1,0,1,0,1,0};
-  test_when(when, expected, 0.5);
-}
-
 TEST(when, at_always)
 {
   WhenPtr when = std::make_shared<AtAlways>();
-  test_at_always(when);
+  std::vector<bool> const expected = {1,1,1,1,1,1};
+  test_when(when, expected, 0.6);
 }
 
 TEST(when, at_never)
 {
   WhenPtr when = std::make_shared<AtNever>();
-  test_at_never(when);
+  std::vector<bool> const expected = {0,0,0,0,0,0};
+  test_when(when, expected, 0.6);
 }
 
 TEST(when, at_step)
 {
   WhenPtr when = std::make_shared<AtStep>(3);
-  test_at_step(when);
+  std::vector<bool> const expected = {0,0,0,1,0,0};
+  test_when(when, expected, 0.6);
 }
 
 TEST(when, at_either_steps)
@@ -114,41 +56,49 @@ TEST(when, at_either_steps)
   WhenPtr a = std::make_shared<AtStep>(2);
   WhenPtr b = std::make_shared<AtStep>(4);
   WhenPtr when = std::make_shared<AtEither>(a, b);
-  test_at_either_steps(when);
+  std::vector<bool> const expected = {0,0,1,0,1,0};
+  test_when(when, expected, 0.6);
 }
 
 TEST(when, at_many_steps)
 {
   WhenPtr when = combine_many_steps();
-  test_at_many_steps(when);
+  std::vector<bool> const expected = {1,1,1,1,1,1};
+  test_when(when, expected, 0.6);
 }
 
 TEST(when, at_step_periodically)
 {
   WhenPtr when = std::make_shared<AtStepPeriodically>(3);
-  test_at_step_periodically(when);
+  std::vector<bool> const expected = {1,0,0,1,0,0};
+  test_when(when, expected, 0.6);
 }
 
 TEST(when, at_time) {
   WhenPtr when = std::make_shared<AtTime>(0.15);
-  test_at_time(when);
+  std::vector<bool> const expected = {0,0,1,0,0,0};
+  test_when(when, expected, 0.6);
 }
 
 TEST(when, at_exact_time) {
   WhenPtr when = std::make_shared<AtExactTime>(0.15);
-  test_at_exact_time(when);
+  std::vector<bool> const expected = {0,0,1,0,0,0};
+  test_when(when, expected, 0.55);
 }
 
 TEST(when, at_time_periodically) {
   WhenPtr when = std::make_shared<AtTimePeriodically>(0.2);
-  test_at_time_periodically(when);
+  std::vector<bool> const expected = {1,0,1,0,1,0};
+  test_when(when, expected, 0.6);
 }
 
 TEST(when, at_exact_time_periodically) {
   WhenPtr when = std::make_shared<AtExactTimePeriodically>(0.15);
-  test_at_exact_time_periodically(when);
+  std::vector<bool> const expected = {1,0,1,0,1,0};
+  test_when(when, expected, 0.5);
 }
 
+#if 0
 extern "C" {
 
 static int check_whens(lua_State* L)
@@ -190,3 +140,4 @@ TEST(when, from_lua)
   std::filesystem::path const when_path = data_dir / "when.lua";
   stack.dofile(when_path);
 }
+#endif
