@@ -5,13 +5,13 @@
 
 using namespace dgt;
 
-TEST(basis, maxes)
+TEST(dg, maxes)
 {
   EXPECT_EQ(max_polynomial_order, 3);
   EXPECT_EQ(max_1D_quadrature_points, 5);
 }
 
-TEST(basis, basis_locations)
+TEST(dg, basis_locations)
 {
   EXPECT_EQ(basis_locations::CELL, 0);
   EXPECT_EQ(basis_locations::VERTICES, 1);
@@ -25,7 +25,7 @@ TEST(basis, basis_locations)
   EXPECT_EQ(basis_locations::NUM, 9);
 }
 
-TEST(basis, face_basis_locations)
+TEST(dg, face_basis_locations)
 {
   EXPECT_EQ(basis_locations::face(X, LEFT), basis_locations::XMIN_FACE);
   EXPECT_EQ(basis_locations::face(X, RIGHT), basis_locations::XMAX_FACE);
@@ -35,7 +35,7 @@ TEST(basis, face_basis_locations)
   EXPECT_EQ(basis_locations::face(Z, RIGHT), basis_locations::ZMAX_FACE);
 }
 
-TEST(basis, ipow)
+TEST(dg, ipow)
 {
   EXPECT_EQ(ipow(1, 1), 1);
   EXPECT_EQ(ipow(1, 2), 1);
@@ -51,7 +51,7 @@ TEST(basis, ipow)
   EXPECT_EQ(ipow(4, 3), 64);
 }
 
-TEST(basis, num_tensor_modes)
+TEST(dg, num_tensor_modes)
 {
   EXPECT_EQ(num_tensor_modes(1, 0), 1);
   EXPECT_EQ(num_tensor_modes(1, 1), 2);
@@ -67,7 +67,7 @@ TEST(basis, num_tensor_modes)
   EXPECT_EQ(num_tensor_modes(3, 3), 64);
 }
 
-TEST(basis, num_non_tensor_modes)
+TEST(dg, num_non_tensor_modes)
 {
   EXPECT_EQ(num_non_tensor_modes(1, 0), 1);
   EXPECT_EQ(num_non_tensor_modes(1, 1), 2);
@@ -89,7 +89,7 @@ TEST(basis, num_non_tensor_modes)
   EXPECT_EQ(num_non_tensor_modes(3, 5), 56);
 }
 
-TEST(basis, num_modes)
+TEST(dg, num_modes)
 {
   EXPECT_EQ(num_modes(2, 0, true), num_tensor_modes(2, 0));
   EXPECT_EQ(num_modes(2, 1, true), num_tensor_modes(2, 1));
@@ -105,7 +105,7 @@ TEST(basis, num_modes)
   EXPECT_EQ(num_modes(3, 2, false), num_non_tensor_modes(3, 2));
 }
 
-TEST(basis, num_gauss_points)
+TEST(dg, num_gauss_points)
 {
   EXPECT_EQ(num_gauss_points(1, 1), 1);
   EXPECT_EQ(num_gauss_points(1, 2), 2);
@@ -121,7 +121,7 @@ TEST(basis, num_gauss_points)
   EXPECT_EQ(num_gauss_points(3, 4), 64);
 }
 
-TEST(basis, num_evaluation_points)
+TEST(dg, num_evaluation_points)
 {
   EXPECT_EQ(num_evaluation_points(1, 1), 3);
   EXPECT_EQ(num_evaluation_points(1, 2), 4);
@@ -137,28 +137,28 @@ TEST(basis, num_evaluation_points)
   EXPECT_EQ(num_evaluation_points(3, 4), 160);
 }
 
-TEST(basis, num_vertices)
+TEST(dg, num_vertices)
 {
   EXPECT_EQ(num_vertices(1), 2);
   EXPECT_EQ(num_vertices(2), 4);
   EXPECT_EQ(num_vertices(3), 8);
 }
 
-TEST(basis, num_edges)
+TEST(dg, num_edges)
 {
   EXPECT_EQ(num_edges(1), 2);
   EXPECT_EQ(num_edges(2), 4);
   EXPECT_EQ(num_edges(3), 12);
 }
 
-TEST(basis, num_faces)
+TEST(dg, num_faces)
 {
   EXPECT_EQ(num_faces(1), 2);
   EXPECT_EQ(num_faces(2), 4);
   EXPECT_EQ(num_faces(3), 6);
 }
 
-TEST(basis, get_guass_weight_sums)
+TEST(dg, get_guass_weight_sums)
 {
   for (int q = 1; q <= max_1D_quadrature_points; ++q) {
     real sum = 0.;
@@ -169,7 +169,7 @@ TEST(basis, get_guass_weight_sums)
   }
 }
 
-TEST(basis, get_gauss_point_sums)
+TEST(dg, get_gauss_point_sums)
 {
   for (int q = 1; q <= max_1D_quadrature_points; ++q) {
     real sum = 0.;
@@ -180,7 +180,7 @@ TEST(basis, get_gauss_point_sums)
   }
 }
 
-TEST(basis, tensor_bounds)
+TEST(dg, tensor_bounds)
 {
   EXPECT_EQ(tensor_bounds(1, 0), Vec3<int>(1,0,0));
   EXPECT_EQ(tensor_bounds(1, 1), Vec3<int>(2,0,0));
@@ -199,11 +199,28 @@ TEST(basis, tensor_bounds)
   EXPECT_EQ(tensor_bounds(3, 4), Vec3<int>(5,5,5));
 }
 
-TEST(basis, build)
+TEST(dg, basis_host_view_construction)
 {
-  int const dim = 2;
-  int const p = 1;
-  int const q = 2;
-  bool const tensor = true;
-  build_basis<HostView>(dim, p, q, tensor);
+  for (int dim = 1; dim <= DIMENSIONS; ++dim) {
+    for (int p = 0; p <= max_polynomial_order; ++p) {
+      for (int q = 1; q <= max_1D_quadrature_points; ++q) {
+        for (bool tensor : {false, true}) {
+          build_basis<HostView>(dim, p, q, tensor);
+        }
+      }
+    }
+  }
+}
+
+TEST(dg, basis_view_construction)
+{
+  for (int dim = 1; dim <= DIMENSIONS; ++dim) {
+    for (int p = 0; p <= max_polynomial_order; ++p) {
+      for (int q = 1; q <= max_1D_quadrature_points; ++q) {
+        for (bool tensor : {false, true}) {
+          build_basis<View>(dim, p, q, tensor);
+        }
+      }
+    }
+  }
 }
