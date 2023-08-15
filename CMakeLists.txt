@@ -23,7 +23,7 @@ endif()
 enable_language(${DGT_LANGUAGE})
 
 add_subdirectory(src)
-add_subdirectory(unit)
+add_subdirectory(test)
 
 configure_package_config_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/config.cmake.in"
