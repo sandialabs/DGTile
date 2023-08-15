@@ -217,5 +217,25 @@ Point get_base_point(int const dim, LeavesT const& leaves)
 template Point get_base_point(int const, Leaves const&);
 template Point get_base_point(int const, ZLeaves const&);
 
+Box3<real> get_domain(
+    int const dim,
+    ID const global_id,
+    Point const& base_pt,
+    Box3<real> const& domain)
+{
+  Point const leaf_pt = get_point(dim, global_id);
+  int const diff = leaf_pt.level - base_pt.level;
+  Vec3<real> const length = domain.extents();
+  Vec3<real> const base_ijk(base_pt.ijk.x(), base_pt.ijk.y(), base_pt.ijk.z());
+  Vec3<real> const leaf_ijk(leaf_pt.ijk.x(), leaf_pt.ijk.y(), leaf_pt.ijk.z());
+  Vec3<real> const g_base_ijk = generalize(dim, base_ijk);
+  Vec3<real> const dx = comp_division(length, g_base_ijk) / std::pow(2., diff);
+  Vec3<real> const min = domain.lower() + comp_product(leaf_ijk, dx);
+  Vec3<real> const max = min + dx;
+  Vec3<real> const d_min = dimensionalize(dim, min);
+  Vec3<real> const d_max = dimensionalize(dim, max);
+  return Box3<real>(d_min, d_max);
+}
+
 }
 }

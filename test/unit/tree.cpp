@@ -535,3 +535,33 @@ TEST(tree, get_base_point_non_uniform_3D)
   EXPECT_EQ(get_base_point(dim, leaves), Point(2, {3,2,1}));
   EXPECT_EQ(get_base_point(dim, z_leaves), Point(2, {3,2,1}));
 }
+
+TEST(tree, get_domain_1D)
+{
+  int const dim = 1;
+  ID const global_id = 1;
+  Point const base_pt(0, {1,0,0});
+  Box3<real> const domain({0.,0.,0.}, {1.,0.,0.});
+  EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).lower(), Vec3<real>(0.,0.,0.));
+  EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).upper(), Vec3<real>(0.5,0.,0.));
+}
+
+TEST(tree, get_domain_2D)
+{
+  int const dim = 2;
+  ID const global_id = 1;
+  Point const base_pt(0, {1,1,0});
+  Box3<real> const domain({0.,0.,0.}, {1.,1.,0.});
+  EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).lower(), Vec3<real>(0.,0.,0.));
+  EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).upper(), Vec3<real>(0.5,0.5,0.));
+}
+
+TEST(tree, get_domain_3D)
+{
+  int const dim = 3;
+  ID const global_id = 1;
+  Point const base_pt(0, {1,1,1});
+  Box3<real> const domain({0.,0.,0.}, {1.,1.,1.});
+  EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).lower(), Vec3<real>(0.,0.,0.));
+  EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).upper(), Vec3<real>(0.5,0.5,0.5));
+}

@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "dgt_box3.hpp"
 #include "dgt_grid3.hpp"
 
 namespace dgt {
@@ -53,8 +54,8 @@ static constexpr Grid3 fine_adj_grid = {4,4,4};
 template <class LeavesT> [[nodiscard]] int get_max_level(int const dim, LeavesT const& leaves);
 template <class LeavesT> [[nodiscard]] int get_min_level(int const dim, LeavesT const& leaves);
 template <class LeavesT> [[nodiscard]] Point get_base_point(int const dim, LeavesT const& leaves);
+[[nodiscard]] Box3<real> get_domain(int const dim, ID const gid, Point const& base, Box3<real> const& d);
 
-// get_domain
 // get_adjacencies
 // check_marks
 // balance_tree

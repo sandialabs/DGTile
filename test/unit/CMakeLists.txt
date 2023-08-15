@@ -8,6 +8,7 @@ set(UNIT_TEST_SOURCES
   for_each.cpp
   grid3.cpp
   main.cpp
+  print.cpp
   subgrid3.cpp
   tree.cpp
   vec.cpp
