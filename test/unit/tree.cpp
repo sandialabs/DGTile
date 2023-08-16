@@ -565,3 +565,66 @@ TEST(tree, get_domain_3D)
   EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).lower(), Vec3<real>(0.,0.,0.));
   EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).upper(), Vec3<real>(0.5,0.5,0.5));
 }
+
+TEST(tree, write_vtu_failure)
+{
+  int const dim = 3;
+  Leaves const leaves = create(dim, {4,4,4});
+  ZLeaves const z_leaves = order(dim, leaves);
+  Box3<real> const domain({0.,0.,0.}, {1.,1.,1.});
+  EXPECT_THROW(write_vtu(dim, "cant/do/that", z_leaves, domain), std::runtime_error);
+}
+
+TEST(tree, write_uniform_1D)
+{
+  int const dim = 1;
+  Leaves const leaves = create(dim, {4,0,0});
+  ZLeaves const z_leaves = order(dim, leaves);
+  Box3<real> const domain({0.,0.,0.}, {1.,0.,0.});
+  write_vtu(dim, "out_tree_uniform_1D", z_leaves, domain);
+}
+
+TEST(tree, write_uniform_2D)
+{
+  int const dim = 2;
+  Leaves const leaves = create(dim, {4,4,0});
+  ZLeaves const z_leaves = order(dim, leaves);
+  Box3<real> const domain({0.,0.,0.}, {1.,1.,0.});
+  write_vtu(dim, "out_tree_uniform_2D", z_leaves, domain);
+}
+
+TEST(tree, write_uniform_3D)
+{
+  int const dim = 3;
+  Leaves const leaves = create(dim, {4,4,4});
+  ZLeaves const z_leaves = order(dim, leaves);
+  Box3<real> const domain({0.,0.,0.}, {1.,1.,1.});
+  write_vtu(dim, "out_tree_uniform_2D", z_leaves, domain);
+}
+
+TEST(vtu, write_non_uniform_1D)
+{
+  int const dim = 1;
+  Leaves const leaves = get_example_refined(dim);
+  ZLeaves const z_leaves = order(dim, leaves);
+  Box3<real> const domain({0.,0.,0.}, {1.,0.,0.});
+  write_vtu(dim, "unit_non_uniform_1D", z_leaves, domain);
+}
+
+TEST(vtu, write_non_uniform_2D)
+{
+  int const dim = 2;
+  Leaves const leaves = get_example_refined(dim);
+  ZLeaves const z_leaves = order(dim, leaves);
+  Box3<real> const domain({0.,0.,0.}, {1.,1.,0.});
+  write_vtu(dim, "unit_non_uniform_2D", z_leaves, domain);
+}
+
+TEST(vtu, write_non_uniform_3D)
+{
+  int const dim = 3;
+  Leaves const leaves = get_example_refined(dim);
+  ZLeaves const z_leaves = order(dim, leaves);
+  Box3<real> const domain({0.,0.,0.}, {1.,1.,1.});
+  write_vtu(dim, "unit_non_uniform_3D", z_leaves, domain);
+}

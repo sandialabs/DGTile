@@ -66,7 +66,9 @@ class function : public stack_object {
   {
     auto results = operator()(std::forward<Args>(args)...);
     if (results.size() < 1) {
-      throw std::runtime_error(fmt::format("Lua function {} called from C++ should have returned at least one result but returned none", this->name()));
+      throw std::runtime_error(fmt::format(
+            "Lua function {} called from C++ should have returned at least one result but returned none",
+            this->name()));
     }
     return std::move(results[0]);
   }

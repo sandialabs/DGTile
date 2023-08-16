@@ -56,6 +56,7 @@ template <class LeavesT> [[nodiscard]] int get_min_level(int const dim, LeavesT 
 template <class LeavesT> [[nodiscard]] Point get_base_point(int const dim, LeavesT const& leaves);
 [[nodiscard]] Box3<real> get_domain(int const dim, ID const gid, Point const& base, Box3<real> const& d);
 [[nodiscard]] Adjacencies get_adjacencies(int const dim, Leaves const& leaves);
+void write_vtu(int const dim, std::string const& prefix, ZLeaves const& zl, Box3<real> const& d);
 
 // check_marks
 // balance_tree

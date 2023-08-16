@@ -26,6 +26,7 @@ set(DGT_SOURCES
   dgt_lua.cpp
   dgt_lua_interface.cpp
   dgt_tree.cpp
+  dgt_tree_vtu.cpp
   dgt_when.cpp
 )
 
