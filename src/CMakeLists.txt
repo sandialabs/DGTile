@@ -2,6 +2,7 @@ set(DGT_HEADERS
   dgt_base64.hpp
   dgt_bounds.hpp
   dgt_box3.hpp
+  dgt_cartesian.hpp
   dgt_defines.hpp
   dgt_dg.hpp
   dgt_for_each.hpp
@@ -21,6 +22,7 @@ set(DGT_HEADERS
 
 set(DGT_SOURCES
   dgt_base64.cpp
+  dgt_cartesian.cpp
   dgt_dg.cpp
   dgt_initialize.cpp
   dgt_lua.cpp

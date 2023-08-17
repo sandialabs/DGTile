@@ -13,6 +13,7 @@ namespace tree {
 using ID = std::uint64_t;
 
 enum {DEREFINE = -1, REMAIN = 0, REFINE = 1};
+enum {COARSE_TO_FINE = -1, EQUAL = 0, FINE_TO_COARSE = 1};
 
 struct Point
 {
@@ -58,6 +59,8 @@ template <class LeavesT> [[nodiscard]] Point get_base_point(int const dim, Leave
 [[nodiscard]] Adjacencies get_adjacencies(int const dim, Leaves const& leaves);
 void write_vtu(int const dim, std::string const& prefix, ZLeaves const& zl, Box3<real> const& d);
 
+// TODO:
+// add periodic to adjacencies
 // check_marks
 // balance_tree
 

@@ -25,6 +25,13 @@ TEST(tree, marking_definitions)
   EXPECT_EQ(REFINE, 1);
 }
 
+TEST(tree, adjacency_definitions)
+{
+  EXPECT_EQ(COARSE_TO_FINE, -1);
+  EXPECT_EQ(EQUAL, 0);
+  EXPECT_EQ(FINE_TO_COARSE, 1);
+}
+
 TEST(tree, point_construction)
 {
   Point const p(2, {1,2,3});

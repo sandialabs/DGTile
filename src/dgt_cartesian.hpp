@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dgt_vec3.hpp"
+#include "dgt_subgrid3.hpp"
 
 namespace dgt {
 
@@ -42,5 +42,11 @@ DGT_METHOD inline int permute(int const ijk, int const axis)
     (ijk == Z) ? (axis+2) % DIMENSIONS :
     -1;
 }
+
+[[nodiscard]] Subgrid3 get_cells(
+    int const distribution,
+    Grid3 const& cell_grid,
+    Vec3<std::int8_t> const& meta_ijk,
+    std::int8_t const level_difference);
 
 }
