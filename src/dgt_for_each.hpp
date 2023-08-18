@@ -15,8 +15,6 @@ DGT_ALWAYS_INLINE inline constexpr void seq_for_each(
   if (subgrid.size() < 0) return;
   Subgrid3 s = subgrid;
   s.upper() = generalize(subgrid.upper().dimension(), s.upper());
-  if (s.upper().dimension() < 3) s.upper().z() = 1;
-  if (s.upper().dimension() < 2) s.upper().y() = 1;
   for (int k = s.lower().z(); k < s.upper().z(); ++k) {
     for (int j = s.lower().y(); j < s.upper().y(); ++j) {
       for (int i = s.lower().x(); i < s.upper().x(); ++i) {
