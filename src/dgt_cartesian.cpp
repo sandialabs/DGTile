@@ -11,6 +11,31 @@ static int get_offset(int const distribution)
   else return 0;
 }
 
+Vec3<std::int8_t> get_equal_adj_meta_ijk(
+    int const dim,
+    Vec3<std::int8_t> const& meta_ijk)
+{
+  Vec3<std::int8_t> adj_meta_ijk = meta_ijk;
+  for (int axis = 0; axis < dim; ++axis) {
+    if (meta_ijk[axis] == 0) adj_meta_ijk[axis] = 2;
+    if (meta_ijk[axis] == 2) adj_meta_ijk[axis] = 0;
+  }
+  return adj_meta_ijk;
+}
+
+Vec3<std::int8_t> get_adj_meta_ijk(
+    int const dim,
+    Vec3<std::int8_t> const& meta_ijk,
+    std::int8_t const level_difference)
+{
+  if (level_difference == tree::EQUAL) {
+    return get_equal_adj_meta_ijk(dim, meta_ijk);
+  } else {
+    spdlog::error("dgt:get_adj_meta_ijk - invalid level_difference");
+    throw std::runtime_error("dgt:get_adj_meta_ijk");
+  }
+}
+
 Subgrid3 get_equal_cells(
     Grid3 const& cell_grid,
     Vec3<std::int8_t> const& meta_ijk,

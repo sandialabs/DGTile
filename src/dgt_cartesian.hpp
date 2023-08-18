@@ -43,6 +43,11 @@ DGT_METHOD inline int permute(int const ijk, int const axis)
     -1;
 }
 
+[[nodiscard]] Vec3<std::int8_t> get_adj_meta_ijk(
+    int const dim,
+    Vec3<std::int8_t> const& meta_ijk,
+    std::int8_t const level_difference);
+
 [[nodiscard]] Subgrid3 get_cells(
     int const distribution,
     Grid3 const& cell_grid,
