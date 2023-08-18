@@ -29,7 +29,7 @@ struct Point
 struct Adjacency {
   ID neighbor = -1;
   std::int8_t level_difference = -1;
-  Vec3<std::int8_t> ijk = Vec3<std::int8_t>::zero();
+  Vec3<std::int8_t> offset = Vec3<std::int8_t>::zero();
 };
 
 using Leaves = std::unordered_set<ID>;
@@ -37,10 +37,6 @@ using ZLeaves = std::vector<ID>;
 using Adjacent = std::vector<Adjacency>;
 using Adjacencies = std::unordered_map<ID, Adjacent>;
 using Marks = std::vector<std::int8_t>;
-
-static constexpr Grid3 child_grid = {2,2,2};
-static constexpr Grid3 meta_grid = {3,3,3};
-static constexpr Grid3 fine_meta_grid = {4,4,4};
 
 [[nodiscard]] ID get_level_offset(int const dim, int const level);
 [[nodiscard]] ID get_level_id(int const dim, Point const& pt);

@@ -4,6 +4,10 @@
 
 namespace dgt {
 
+static constexpr Grid3 child_grid = {2,2,2};
+static constexpr Subgrid3 offset_grid = {{-1,-1,-1}, {2,2,2}};
+static constexpr Subgrid3 fine_offset_grid = {{-1,-1,-1,}, {3,3,3}};
+
 DGT_METHOD inline int get_dir_sign(int const dir)
 {
   static constexpr int sign[DIRECTIONS] = {-1, 1};

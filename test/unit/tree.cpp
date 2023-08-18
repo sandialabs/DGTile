@@ -39,27 +39,6 @@ TEST(tree, point_construction)
   EXPECT_EQ(p.ijk, Vec3<int>(1,2,3));
 }
 
-TEST(tree, child_grid)
-{
-  EXPECT_EQ(child_grid.extents().x(), 2);
-  EXPECT_EQ(child_grid.extents().y(), 2);
-  EXPECT_EQ(child_grid.extents().z(), 2);
-}
-
-TEST(tree, meta_grid)
-{
-  EXPECT_EQ(meta_grid.extents().x(), 3);
-  EXPECT_EQ(meta_grid.extents().y(), 3);
-  EXPECT_EQ(meta_grid.extents().z(), 3);
-}
-
-TEST(tree, fine_meta_grid)
-{
-  EXPECT_EQ(fine_meta_grid.extents().x(), 4);
-  EXPECT_EQ(fine_meta_grid.extents().y(), 4);
-  EXPECT_EQ(fine_meta_grid.extents().z(), 4);
-}
-
 TEST(tree, get_level_offset_1D)
 {
   int const dim = 1;

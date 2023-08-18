@@ -1,3 +1,4 @@
+#include "dgt_cartesian.hpp"
 #include "dgt_for_each.hpp"
 #include "dgt_tree.hpp"
 
@@ -237,39 +238,16 @@ Box3<real> get_domain(
   return Box3<real>(d_min, d_max);
 }
 
-static Vec3<int> get_offset(int const dim, Vec3<int> const& meta_ijk)
+static bool is_fine_middle(int const dim, Vec3<int> const& offset)
 {
-  static constexpr int o[3] = {-1,0,1};
-  Vec3<int> const offset(o[meta_ijk.x()], o[meta_ijk.y()], o[meta_ijk.z()]);
-  return dimensionalize(dim, offset);
-}
-
-static Vec3<int> get_fine_offset(int const dim, Vec3<int> const& meta_ijk)
-{
-  static constexpr int o[4] = {-1,0,1,2};
-  Vec3<int> const offset(o[meta_ijk.x()], o[meta_ijk.y()], o[meta_ijk.z()]);
-  return dimensionalize(dim, offset);
-}
-
-static bool is_middle(int const dim, Vec3<int> const& meta_ijk)
-{
-  if (meta_ijk == dimensionalize(dim, Vec3<int>(1,1,1))) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-static bool is_fine_middle(int const dim, Vec3<int> const& meta_ijk)
-{
-  if ((meta_ijk == dimensionalize(dim, Vec3<int>(1,1,1))) ||
-      (meta_ijk == dimensionalize(dim, Vec3<int>(2,1,1))) ||
-      (meta_ijk == dimensionalize(dim, Vec3<int>(1,2,1))) ||
-      (meta_ijk == dimensionalize(dim, Vec3<int>(2,2,1))) ||
-      (meta_ijk == dimensionalize(dim, Vec3<int>(1,1,2))) ||
-      (meta_ijk == dimensionalize(dim, Vec3<int>(2,1,2))) ||
-      (meta_ijk == dimensionalize(dim, Vec3<int>(1,2,2))) ||
-      (meta_ijk == dimensionalize(dim, Vec3<int>(2,2,2)))) {
+  if ((offset == dimensionalize(dim, Vec3<int>(0,0,0))) ||
+      (offset == dimensionalize(dim, Vec3<int>(1,0,0))) ||
+      (offset == dimensionalize(dim, Vec3<int>(0,1,0))) ||
+      (offset == dimensionalize(dim, Vec3<int>(1,1,0))) ||
+      (offset == dimensionalize(dim, Vec3<int>(0,0,1))) ||
+      (offset == dimensionalize(dim, Vec3<int>(1,0,1))) ||
+      (offset == dimensionalize(dim, Vec3<int>(0,1,1))) ||
+      (offset == dimensionalize(dim, Vec3<int>(1,1,1)))) {
     return true;
   } else {
     return false;
@@ -281,32 +259,30 @@ static void collect_adjacent(
     int const dim,
     Leaves const& leaves,
     Point const& pt,
-    Vec3<int> const& meta_ijk,
-    std::int8_t const level_diff,
-    std::function<Vec3<int>(int, Vec3<int> const&)> get_offset)
+    Vec3<int> const& offset,
+    std::int8_t const level_diff)
 {
-  Vec3<int> const offset = get_offset(dim, meta_ijk);
   Point const adj_pt = Point(pt.level + level_diff, pt.ijk + offset);
   ID const adj_global_id = get_global_id(dim, adj_pt);
   if (is_leaf(adj_global_id, leaves)) {
-    Vec3<std::int8_t> ijk(meta_ijk.x(), meta_ijk.y(), meta_ijk.z());
+    Vec3<std::int8_t> ijk(offset.x(), offset.y(), offset.z());
     Adjacency adjacency{adj_global_id, level_diff, ijk};
     adj.push_back(adjacency);
   }
 }
 
-static Adjacent get_adjacent_same(
+static Adjacent get_adjacent_equal(
     int const dim,
     ID const global_id,
     Leaves const& leaves)
 {
   Adjacent adj;
   Point const pt = get_point(dim, global_id);
-  auto functor = [&] (Vec3<int> const& meta_ijk) {
-    if (is_middle(dim, meta_ijk)) return;
-    collect_adjacent(adj, dim, leaves, pt, meta_ijk, 0, get_offset);
+  auto functor = [&] (Vec3<int> const& offset) {
+    if (offset == Vec3<int>::zero()) return;
+    collect_adjacent(adj, dim, leaves, pt, offset, 0);
   };
-  seq_for_each(meta_grid, functor);
+  seq_for_each(dimensionalize(dim, offset_grid), functor);
   return adj;
 }
 
@@ -318,11 +294,12 @@ static Adjacent get_adjacent_fine(
   Adjacent adj;
   Point const pt = get_point(dim, global_id);
   Point const fine_pt = get_fine_point(dim, pt, {-1,-1,-1});
-  auto functor = [&] (Vec3<int> const& meta_ijk) {
-    if (is_fine_middle(dim, meta_ijk)) return;
-    collect_adjacent(adj, dim, leaves, fine_pt, meta_ijk, -1, get_fine_offset);
+  Subgrid3 const grid = dimensionalize(dim,  fine_offset_grid);
+  auto functor = [&] (Vec3<int> const& offset) {
+    if (is_fine_middle(dim, offset)) return;
+    collect_adjacent(adj, dim, leaves, fine_pt, offset, -1);
   };
-  seq_for_each(fine_meta_grid, functor);
+  seq_for_each(grid, functor);
   return adj;
 }
 
@@ -334,11 +311,12 @@ static Adjacent get_adjacent_coarse(
   Adjacent adj;
   Point const pt = get_point(dim, global_id);
   Point const coarse_pt = get_coarse_point(dim, pt);
-  auto functor = [&] (Vec3<int> const& meta_ijk) {
-    if (is_middle(dim, meta_ijk)) return;
-    collect_adjacent(adj, dim, leaves, coarse_pt, meta_ijk, 1, get_offset);
+  Subgrid3 const grid = dimensionalize(dim, offset_grid);
+  auto functor = [&] (Vec3<int> const& offset) {
+    if (offset == Vec3<int>::zero()) return;
+    collect_adjacent(adj, dim, leaves, coarse_pt, offset, 1);
   };
-  seq_for_each(meta_grid, functor);
+  seq_for_each(grid, functor);
   return adj;
 }
 
@@ -348,10 +326,10 @@ static Adjacent get_adjacent(
     Leaves const& leaves)
 {
   Adjacent adj;
-  Adjacent const adj_same = get_adjacent_same(dim, global_id, leaves);
+  Adjacent const adj_equal= get_adjacent_equal(dim, global_id, leaves);
   Adjacent const adj_fine = get_adjacent_fine(dim, global_id, leaves);
   Adjacent const adj_coarse = get_adjacent_coarse(dim, global_id, leaves);
-  adj.insert(adj.end(), adj_same.begin(), adj_same.end());
+  adj.insert(adj.end(), adj_equal.begin(), adj_equal.end());
   adj.insert(adj.end(), adj_fine.begin(), adj_fine.end());
   adj.insert(adj.end(), adj_coarse.begin(), adj_coarse.end());
   return adj;
