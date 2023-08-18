@@ -28,8 +28,8 @@ struct Point
 
 struct Adjacency {
   ID neighbor = -1;
-  std::int8_t level_difference = -1;
-  Vec3<std::int8_t> offset = Vec3<std::int8_t>::zero();
+  std::int8_t level_offset = -1;
+  Vec3<std::int8_t> ijk_offset = Vec3<std::int8_t>::zero();
 };
 
 using Leaves = std::unordered_set<ID>;
