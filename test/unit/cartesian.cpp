@@ -167,3 +167,36 @@ TEST(cartesian, get_fine_to_coarse_cells_owned_2D)
   EXPECT_EQ(get_fine_to_coarse_cells(OWNED, g, { 0, 1,0}), Subgrid3({1,5,0}, {7,7,0}));
   EXPECT_EQ(get_fine_to_coarse_cells(OWNED, g, { 1, 1,0}), Subgrid3({5,5,0}, {7,7,0}));
 }
+
+//TODO: get_fine_to_coarse_cells_owned_3D
+
+TEST(cartesian, get_coarse_to_fine_cells_ghost_1D)
+{
+  Grid3 const g(8,0,0);
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,0,0}, {-1,0,0}), Subgrid3({0,0,0}, {1,0,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {0,0,0}, { 1,0,0}), Subgrid3({7,0,0}, {8,0,0}));
+}
+
+TEST(cartesian, get_coarse_to_fine_cells_ghost_2D)
+{
+  Grid3 const g(8,8,0);
+  // XMIN face for the two children near it
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,0,0}, {-1,0,0}), Subgrid3({0,1,0}, {1,4,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,1,0}, {-1,0,0}), Subgrid3({0,4,0}, {1,7,0}));
+  //TODO: fill this in
+}
+
+TEST(cartesian, get_coarse_to_fine_cells_ghost_3D)
+{
+  Grid3 const g(8,8,8);
+  // XMIN face for the four children near it
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,0,0}, {-1,0,0}), Subgrid3({0,1,1}, {1,4,4}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,1,0}, {-1,0,0}), Subgrid3({0,4,1}, {1,7,4}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,0,1}, {-1,0,0}), Subgrid3({0,1,4}, {1,4,7}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,1,1}, {-1,0,0}), Subgrid3({0,4,4}, {1,7,7}));
+  //TODO: fill this in
+}
+
+//TODO: get_coarse_to_fine_cells_owned_1D
+//TODO: get_coarse_to_fine_cells_owned_2D
+//TODO: get_coarse_to_fine_cells_owned_3D

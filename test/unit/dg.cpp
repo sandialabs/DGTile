@@ -246,7 +246,7 @@ void test_view_sizes(BasisT const& B)
   EXPECT_EQ(B.modes[EVALUATION].grad_phis.extent(2), B.num_modes);
 }
 
-void test_basis(
+static void test_basis(
     int const dim,
     int const p,
     int const q,

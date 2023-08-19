@@ -57,4 +57,10 @@ DGT_METHOD inline int permute(int const ijk, int const axis)
     Grid3 const& cell_grid,
     Vec3<std::int8_t> const& ijk_offset);
 
+[[nodiscard]] Subgrid3 get_coarse_to_fine_cells(
+    int const ownership,
+    Grid3 const& cell_grid,
+    Vec3<int> const& child_ijk,
+    Vec3<std::int8_t> const& ijk_offset);
+
 }
