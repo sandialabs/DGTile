@@ -1,5 +1,6 @@
 #include <fstream>
 #include <filesystem>
+#include <stdexcept>
 #include <sstream>
 
 #include "dgt_tree.hpp"
