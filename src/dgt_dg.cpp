@@ -265,6 +265,13 @@ Basis<ViewT> build_basis(
   using namespace dgt::basis_locations;
   Basis<ViewT> B;
   std::string const name = basis_name(dim, p, q, tensor);
+  B.dim = dim;
+  B.p = p;
+  B.q = q;
+  B.tensor = tensor;
+  B.num_modes = num_modes(dim, p, tensor);
+  B.num_cell_pts = num_gauss_points(dim, q);
+  B.num_face_pts = num_gauss_points(dim-1, q);
   build_weights(B, name, dim, q);
   build_mass(B, name, dim, p, tensor);
   build_mode(B, name, CELL, dim, p, tensor, get_cell_points(dim, q));
@@ -276,9 +283,6 @@ Basis<ViewT> build_basis(
     }
   }
   build_mode(B, name, EVALUATION, dim, p, tensor, get_eval_points(dim, q));
-  B.num_modes = num_modes(dim, p, tensor);
-  B.num_cell_pts = num_gauss_points(dim, q);
-  B.num_face_pts = num_gauss_points(dim-1, q);
   return B;
 }
 
