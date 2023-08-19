@@ -49,6 +49,7 @@ struct Basis
     int num_cell_pts = -1;
     int num_face_pts = -1;
   public:
+    ViewT<real*> mass;
     ViewT<real*> cell_weights;
     ViewT<real*> face_weights;
     TabulatedBasis<ViewT> modes[basis_locations::NUM];

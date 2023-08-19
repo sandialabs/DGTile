@@ -1,5 +1,3 @@
-#include <spdlog/spdlog.h>
-
 #include "dgt_cartesian.hpp"
 #include "dgt_tree.hpp"
 

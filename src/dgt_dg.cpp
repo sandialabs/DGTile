@@ -1,7 +1,5 @@
 #include <fmt/format.h>
 
-#include <spdlog/spdlog.h>
-
 #include "dgt_cartesian.hpp"
 #include "dgt_dg.hpp"
 #include "dgt_for_each.hpp"
@@ -184,6 +182,39 @@ static HostView<real***> get_dphis(
   return dphis;
 }
 
+static HostView<real*> get_mass(
+    int const dim,
+    int const p,
+    bool const tensor)
+{
+  int const nmodes = num_modes(dim, p, tensor);
+  int const ncell_pts = num_gauss_points(dim, p+1);
+  HostView<real*> const wts = get_cell_weights(dim, p+1);
+  HostView<real**> const pts = get_cell_points(dim, p+1);
+  HostView<real**> phis = get_phis(dim, p, tensor, pts);
+  HostView<real*> mass("", nmodes);
+  for (int pt = 0; pt < ncell_pts; ++pt) {
+    for (int m = 0; m < nmodes; ++m) {
+      mass(m) += phis(pt, m) * phis(pt, m) * wts(pt);
+    }
+  }
+  return mass;
+}
+
+template <template <class> class ViewT>
+void build_mass(
+    Basis<ViewT>& B,
+    std::string const& name,
+    int const dim,
+    int const p,
+    bool const tensor)
+{
+  int const nmodes = num_modes(dim, p, tensor);
+  B.mass = ViewT<real*>(name + ".mass", nmodes);
+  HostView<real*> mass = get_mass(dim, p, tensor);
+  Kokkos::deep_copy(B.mass, mass);
+}
+
 template <template <class> class ViewT>
 void build_weights(
     Basis<ViewT>& B,
@@ -234,8 +265,8 @@ Basis<ViewT> build_basis(
   using namespace dgt::basis_locations;
   Basis<ViewT> B;
   std::string const name = basis_name(dim, p, q, tensor);
-  spdlog::debug("dgt: building -> {}", name);
   build_weights(B, name, dim, q);
+  build_mass(B, name, dim, p, tensor);
   build_mode(B, name, CELL, dim, p, tensor, get_cell_points(dim, q));
   build_mode(B, name, VERTICES, dim, p, tensor, get_vertex_points(dim));
   for (int axis = 0; axis < dim; ++axis) {
@@ -245,6 +276,9 @@ Basis<ViewT> build_basis(
     }
   }
   build_mode(B, name, EVALUATION, dim, p, tensor, get_eval_points(dim, q));
+  B.num_modes = num_modes(dim, p, tensor);
+  B.num_cell_pts = num_gauss_points(dim, q);
+  B.num_face_pts = num_gauss_points(dim-1, q);
   return B;
 }
 
