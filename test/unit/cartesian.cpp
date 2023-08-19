@@ -48,54 +48,6 @@ TEST(cartesian, permute)
   EXPECT_EQ(permute(Z, Z), Y);
 }
 
-TEST(cartesian, get_adj_ijk_offset_1D)
-{
-  EXPECT_EQ(get_adj_ijk_offset({-1,0,0}), Vec3<std::int8_t>( 1,0,0));
-  EXPECT_EQ(get_adj_ijk_offset({ 1,0,0}), Vec3<std::int8_t>(-1,0,0));
-}
-
-TEST(cartesian, get_adj_ijk_offset_2D)
-{
-  EXPECT_EQ(get_adj_ijk_offset({-1,-1,0}), Vec3<std::int8_t>( 1, 1,0));
-  EXPECT_EQ(get_adj_ijk_offset({ 0,-1,0}), Vec3<std::int8_t>( 0, 1,0));
-  EXPECT_EQ(get_adj_ijk_offset({ 1,-1,0}), Vec3<std::int8_t>(-1, 1,0));
-  EXPECT_EQ(get_adj_ijk_offset({-1, 0,0}), Vec3<std::int8_t>( 1, 0,0));
-  EXPECT_EQ(get_adj_ijk_offset({ 1, 0,0}), Vec3<std::int8_t>(-1, 0,0));
-  EXPECT_EQ(get_adj_ijk_offset({-1, 1,0}), Vec3<std::int8_t>( 1,-1,0));
-  EXPECT_EQ(get_adj_ijk_offset({ 0, 1,0}), Vec3<std::int8_t>( 0,-1,0));
-  EXPECT_EQ(get_adj_ijk_offset({ 1, 1,0}), Vec3<std::int8_t>(-1,-1,0));
-}
-
-TEST(cartesian, get_adj_ijk_offset_3D)
-{
-  EXPECT_EQ(get_adj_ijk_offset({-1,-1,-1}), Vec3<std::int8_t>( 1, 1, 1));
-  EXPECT_EQ(get_adj_ijk_offset({ 0,-1,-1}), Vec3<std::int8_t>( 0, 1, 1));
-  EXPECT_EQ(get_adj_ijk_offset({ 1,-1,-1}), Vec3<std::int8_t>(-1, 1, 1));
-  EXPECT_EQ(get_adj_ijk_offset({-1, 0,-1}), Vec3<std::int8_t>( 1, 0, 1));
-  EXPECT_EQ(get_adj_ijk_offset({ 0, 0,-1}), Vec3<std::int8_t>( 0, 0, 1));
-  EXPECT_EQ(get_adj_ijk_offset({ 1, 0,-1}), Vec3<std::int8_t>(-1, 0, 1));
-  EXPECT_EQ(get_adj_ijk_offset({-1, 1,-1}), Vec3<std::int8_t>( 1,-1, 1));
-  EXPECT_EQ(get_adj_ijk_offset({ 0, 1,-1}), Vec3<std::int8_t>( 0,-1, 1));
-  EXPECT_EQ(get_adj_ijk_offset({ 1, 1,-1}), Vec3<std::int8_t>(-1,-1, 1));
-  EXPECT_EQ(get_adj_ijk_offset({-1,-1, 0}), Vec3<std::int8_t>( 1, 1, 0));
-  EXPECT_EQ(get_adj_ijk_offset({ 0,-1, 0}), Vec3<std::int8_t>( 0, 1, 0));
-  EXPECT_EQ(get_adj_ijk_offset({ 1,-1, 0}), Vec3<std::int8_t>(-1, 1, 0));
-  EXPECT_EQ(get_adj_ijk_offset({-1, 0, 0}), Vec3<std::int8_t>( 1, 0, 0));
-  EXPECT_EQ(get_adj_ijk_offset({ 1, 0, 0}), Vec3<std::int8_t>(-1, 0, 0));
-  EXPECT_EQ(get_adj_ijk_offset({-1, 1, 0}), Vec3<std::int8_t>( 1,-1, 0));
-  EXPECT_EQ(get_adj_ijk_offset({ 0, 1, 0}), Vec3<std::int8_t>( 0,-1, 0));
-  EXPECT_EQ(get_adj_ijk_offset({ 1, 1, 0}), Vec3<std::int8_t>(-1,-1, 0));
-  EXPECT_EQ(get_adj_ijk_offset({-1,-1, 1}), Vec3<std::int8_t>( 1, 1,-1));
-  EXPECT_EQ(get_adj_ijk_offset({ 0,-1, 1}), Vec3<std::int8_t>( 0, 1,-1));
-  EXPECT_EQ(get_adj_ijk_offset({ 1,-1, 1}), Vec3<std::int8_t>(-1, 1,-1));
-  EXPECT_EQ(get_adj_ijk_offset({-1, 0, 1}), Vec3<std::int8_t>( 1, 0,-1));
-  EXPECT_EQ(get_adj_ijk_offset({ 0, 0, 1}), Vec3<std::int8_t>( 0, 0,-1));
-  EXPECT_EQ(get_adj_ijk_offset({ 1, 0, 1}), Vec3<std::int8_t>(-1, 0,-1));
-  EXPECT_EQ(get_adj_ijk_offset({-1, 1, 1}), Vec3<std::int8_t>( 1,-1,-1));
-  EXPECT_EQ(get_adj_ijk_offset({ 0, 1, 1}), Vec3<std::int8_t>( 0,-1,-1));
-  EXPECT_EQ(get_adj_ijk_offset({ 1, 1, 1}), Vec3<std::int8_t>(-1,-1,-1));
-}
-
 TEST(cartesian, get_cells_ghost_1D)
 {
   Grid3 const g(8,0,0);
@@ -194,4 +146,24 @@ TEST(cartesian, get_cells_owned_3D)
   EXPECT_EQ(get_cells(OWNED, g, {-1, 1, 1}), Subgrid3({1,6,6},{2,7,7}));
   EXPECT_EQ(get_cells(OWNED, g, { 0, 1, 1}), Subgrid3({1,6,6},{7,7,7}));
   EXPECT_EQ(get_cells(OWNED, g, { 1, 1, 1}), Subgrid3({6,6,6},{7,7,7}));
+}
+
+TEST(cartesian, get_fine_to_coarse_cells_owned_1D)
+{
+  Grid3 const g(8,0,0);
+  EXPECT_EQ(get_fine_to_coarse_cells(OWNED, g, {-1,0,0}), Subgrid3({1,0,0}, {3,0,0}));
+  EXPECT_EQ(get_fine_to_coarse_cells(OWNED, g, { 1,0,0}), Subgrid3({5,0,0}, {7,0,0}));
+}
+
+TEST(cartesian, get_fine_to_coarse_cells_owned_2D)
+{
+  Grid3 const g(8,8,0);
+  EXPECT_EQ(get_fine_to_coarse_cells(OWNED, g, {-1,-1,0}), Subgrid3({1,1,0}, {3,3,0}));
+  EXPECT_EQ(get_fine_to_coarse_cells(OWNED, g, { 0,-1,0}), Subgrid3({1,1,0}, {7,3,0}));
+  EXPECT_EQ(get_fine_to_coarse_cells(OWNED, g, { 1,-1,0}), Subgrid3({5,1,0}, {7,3,0}));
+  EXPECT_EQ(get_fine_to_coarse_cells(OWNED, g, {-1, 0,0}), Subgrid3({1,1,0}, {3,7,0}));
+  EXPECT_EQ(get_fine_to_coarse_cells(OWNED, g, { 1, 0,0}), Subgrid3({5,1,0}, {7,7,0}));
+  EXPECT_EQ(get_fine_to_coarse_cells(OWNED, g, {-1, 1,0}), Subgrid3({1,5,0}, {3,7,0}));
+  EXPECT_EQ(get_fine_to_coarse_cells(OWNED, g, { 0, 1,0}), Subgrid3({1,5,0}, {7,7,0}));
+  EXPECT_EQ(get_fine_to_coarse_cells(OWNED, g, { 1, 1,0}), Subgrid3({5,5,0}, {7,7,0}));
 }
