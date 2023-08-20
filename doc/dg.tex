@@ -19,7 +19,7 @@ u(\bs{\xi}, t) = \sum_{e=1}^{n_e} \sum_{a=1}^{n_b} c_a^e(t) \phi_a(\bs{\xi})
 
 \subsection{Legendre Polynomials}
 
-The first four Legendre polynomials of order $p$ on the one dimensional
+The first four Legendre polynomials of order $p$ on the one-dimensional
 interval $[-1,1]$ are given as
 %
 \begin{equation}
@@ -32,7 +32,7 @@ interval $[-1,1]$ are given as
 \label{eq:legendre_polynomials}
 \end{equation}
 %
-and the derivative of these polynomials are given as
+with derivatives
 %
 \begin{equation}
 \begin{aligned}
@@ -42,6 +42,14 @@ and the derivative of these polynomials are given as
 \mathcal{L}'_3(x) &= \frac32(5x^2-1).
 \end{aligned}
 \label{eq:legendre_polynomial_derivatives}
+\end{equation}
+%
+The Legendre polynomials are \emph{orthogonal} over the interval $[-1,1]$,
+which means that
+%
+\begin{equation}
+\int_{-1}^1 \; \mathcal{L}(x)_i \mathcal{L}(x)_j \, \text{d}x = 0
+\quad \text{if} \; i \neq j.
 \end{equation}
 
 \subsection{Tensor Product Bases}
@@ -76,4 +84,10 @@ and the derivative of these polynomials are given as
   \; i,j,k \in \mathbb{N}_0 \land i + j + k \leq p \right\}
 \end{aligned}
 \label{eq:complete_basis}
+\end{equation}
+
+\subsection{Numerical Integration}
+
+\begin{equation}
+\int_{-1}^{1} f(x) \, \text{d}x \approx \sum_{i=1}^{q} w_q f(\xi_q)
 \end{equation}
