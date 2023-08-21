@@ -238,6 +238,44 @@ Box3<real> get_domain(
   return Box3<real>(d_min, d_max);
 }
 
+static void resize(
+    Boundaries& boundaries,
+    int const dim)
+{
+  boundaries.resize(dim);
+  for (int axis = 0; axis < dim; ++axis) {
+    boundaries[axis].resize(DIRECTIONS);
+  }
+}
+
+static int get_max_ijk(Point const& pt, Point const& base, int const axis)
+{
+  int const nblocks = base.ijk[axis];
+  int const diff = pt.level - base.level;
+  int const max_ijk = int(std::pow(2,diff)*nblocks) - 1;
+  return max_ijk;
+}
+
+Boundaries get_boundaries(
+    int const dim,
+    Leaves const& leaves,
+    Point const& base)
+{
+  Boundaries boundaries;
+  resize(boundaries, dim);
+  for (ID const global_id : leaves) {
+    Point const leaf_pt = get_point(dim, global_id);
+    Vec3<int> const ijk = leaf_pt.ijk;
+    for (int axis = 0; axis < dim; ++axis) {
+      int const min = 0;
+      int const max = get_max_ijk(leaf_pt, base, axis);
+      if (ijk[axis] == min) boundaries[axis][LEFT].push_back(global_id);
+      if (ijk[axis] == max) boundaries[axis][RIGHT].push_back(global_id);
+    }
+  }
+  return boundaries;
+}
+
 static bool is_fine_middle(int const dim, Vec3<int> const& offset)
 {
   if ((offset == dimensionalize(dim, Vec3<int>(0,0,0))) ||

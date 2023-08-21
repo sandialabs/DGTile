@@ -34,6 +34,7 @@ struct Adjacency {
 
 using Leaves = std::unordered_set<ID>;
 using ZLeaves = std::vector<ID>;
+using Boundaries = std::vector<std::vector<std::vector<ID>>>;
 using Adjacent = std::vector<Adjacency>;
 using Adjacencies = std::unordered_map<ID, Adjacent>;
 using Marks = std::vector<std::int8_t>;
@@ -52,10 +53,12 @@ template <class LeavesT> [[nodiscard]] int get_max_level(int const dim, LeavesT 
 template <class LeavesT> [[nodiscard]] int get_min_level(int const dim, LeavesT const& leaves);
 template <class LeavesT> [[nodiscard]] Point get_base_point(int const dim, LeavesT const& leaves);
 [[nodiscard]] Box3<real> get_domain(int const dim, ID const gid, Point const& base, Box3<real> const& d);
+[[nodiscard]] Boundaries get_boundaries(int const dim, Leaves const& leaves, Point const& base);
 [[nodiscard]] Adjacencies get_adjacencies(int const dim, Leaves const& leaves);
 void write_vtu(int const dim, std::string const& prefix, ZLeaves const& zl, Box3<real> const& d);
 
 // TODO:
+// get_boundaries
 // add periodic to adjacencies
 // check_marks
 // balance_tree

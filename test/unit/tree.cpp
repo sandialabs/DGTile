@@ -552,6 +552,59 @@ TEST(tree, get_domain_3D)
   EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).upper(), Vec3<real>(0.5,0.5,0.5));
 }
 
+TEST(tree, get_boundaries_1D)
+{
+  int const dim = 1;
+  Leaves const leaves = create(dim, {4,0,0});
+  Point const base = get_base_point(dim, leaves);
+  Boundaries const boundaries = get_boundaries(dim, leaves, base);
+  EXPECT_EQ(boundaries.size(), dim);
+  EXPECT_EQ(boundaries[X].size(), DIRECTIONS);
+  EXPECT_EQ(boundaries[X][LEFT].size(), 1);
+  EXPECT_EQ(boundaries[X][RIGHT].size(), 1);
+  EXPECT_EQ(boundaries[X][LEFT][0], ID(3));
+  EXPECT_EQ(boundaries[X][RIGHT][0], ID(6));
+}
+
+TEST(tree, get_boundaries_2D)
+{
+  int const dim = 2;
+  Leaves const leaves = create(dim, {4,4,0});
+  Point const base = get_base_point(dim, leaves);
+  Boundaries const boundaries = get_boundaries(dim, leaves, base);
+  EXPECT_EQ(boundaries.size(), dim);
+  EXPECT_EQ(boundaries[X].size(), DIRECTIONS);
+  EXPECT_EQ(boundaries[Y].size(), DIRECTIONS);
+  EXPECT_EQ(boundaries[X][LEFT].size(), 4);
+  EXPECT_EQ(boundaries[X][RIGHT].size(), 4);
+  EXPECT_EQ(boundaries[Y][LEFT].size(), 4);
+  EXPECT_EQ(boundaries[Y][RIGHT].size(), 4);
+  for (int i = 0; i < 4; ++i) {
+    EXPECT_EQ(boundaries[X][LEFT][i], ID(17) - 4*i);
+    EXPECT_EQ(boundaries[X][RIGHT][i], ID(20) - 4*i);
+    EXPECT_EQ(boundaries[Y][LEFT][i], ID(8) - i);
+    EXPECT_EQ(boundaries[Y][RIGHT][i], ID(20) - i);
+  }
+}
+
+TEST(tree, get_boundaries_3D)
+{
+  int const dim = 3;
+  Leaves const leaves = create(dim, {4,4,4});
+  Point const base = get_base_point(dim, leaves);
+  Boundaries const boundaries = get_boundaries(dim, leaves, base);
+  EXPECT_EQ(boundaries.size(), dim);
+  EXPECT_EQ(boundaries[X].size(), DIRECTIONS);
+  EXPECT_EQ(boundaries[Y].size(), DIRECTIONS);
+  EXPECT_EQ(boundaries[Z].size(), DIRECTIONS);
+  EXPECT_EQ(boundaries[X][LEFT].size(), 16);
+  EXPECT_EQ(boundaries[X][RIGHT].size(), 16);
+  EXPECT_EQ(boundaries[Y][LEFT].size(), 16);
+  EXPECT_EQ(boundaries[Y][RIGHT].size(), 16);
+  EXPECT_EQ(boundaries[Z][LEFT].size(), 16);
+  EXPECT_EQ(boundaries[Z][RIGHT].size(), 16);
+}
+
 TEST(tree, write_vtu_failure)
 {
   int const dim = 3;
