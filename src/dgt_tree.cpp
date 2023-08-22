@@ -7,6 +7,13 @@
 namespace dgt {
 namespace tree {
 
+static bool operator==(Point const& a, Point const& b)
+{
+  return
+    (a.level == b.level) &&
+    (a.ijk == b.ijk);
+}
+
 ID get_level_offset(int const dim, int const level)
 {
   ID const num = (ID(1) << (dim * level)) - 1;
@@ -129,42 +136,6 @@ ZLeaves order(int const dim, Leaves const& leaves)
   return z_leaves;
 }
 
-static void insert_children(
-    Leaves& leaves,
-    int const dim,
-    ID const global_id)
-{
-  Point const pt = get_point(dim, global_id);
-  auto functor = [&] (Vec3<int> const& child_ijk) {
-    Point const fine_pt = get_fine_point(dim, pt, child_ijk);
-    ID const fine_global_id = get_global_id(dim, fine_pt);
-    leaves.insert(fine_global_id);
-  };
-  seq_for_each(dimensionalize(dim, child_grid), functor);
-}
-
-static void insert_parent(
-    Leaves& leaves,
-    int const dim,
-    ID const global_id)
-{
-  Point const pt = get_point(dim, global_id);
-  Point const coarse_pt = get_coarse_point(dim, pt);
-  ID const coarse_global_id = get_global_id(dim, coarse_pt);
-  leaves.insert(coarse_global_id);
-}
-
-Leaves modify(int const dim, ZLeaves const& z_leaves, Marks const& marks)
-{
-  Leaves leaves;
-  for (std::size_t i = 0; i < z_leaves.size(); ++i) {
-    if (marks[i] == REMAIN) leaves.insert(z_leaves[i]);
-    if (marks[i] == REFINE) insert_children(leaves, dim, z_leaves[i]);
-    if (marks[i] == DEREFINE) insert_parent(leaves, dim, z_leaves[i]);
-  }
-  return leaves;
-}
-
 int min_op(int const a, int const b) { return (a < b) ? a : b; }
 int max_op(int const a, int const b) { return (a > b) ? a : b; }
 
@@ -238,6 +209,108 @@ Box3<real> get_domain(
   Vec3<real> const d_min = dimensionalize(dim, min);
   Vec3<real> const d_max = dimensionalize(dim, max);
   return Box3<real>(d_min, d_max);
+}
+
+struct AdjImpl
+{
+  Adjacent adjacent;
+  bool should_refine = false;
+};
+
+Box3<int> get_grid_bounds(int const level, Point const& base_pt)
+{
+  int const dim = base_pt.ijk.dimension();
+  int const diff = level - base_pt.level;
+  Vec3<int> min = Vec3<int>::zero();
+  Vec3<int> max = Vec3<int>::zero();
+  for (int axis = 0; axis < dim; ++axis) {
+    int const naxis = base_pt.ijk[axis];
+    max[axis] = int(std::pow(2,diff)*naxis) - 1;
+  }
+  return Box3<int>(min, max);
+}
+
+static bool is_in(
+    int const dim,
+    Point const& adj_pt,
+    Box3<int> const& bounds)
+{
+  for (int axis = 0; axis < dim; ++axis) {
+    if (adj_pt.ijk[axis] < bounds.lower()[axis]) return false;
+    if (adj_pt.ijk[axis] > bounds.upper()[axis]) return false;
+  }
+  return true;
+}
+
+static Point make_periodic(
+    Point& pt,
+    int const dim,
+    Periodic const& periodic,
+    Vec3<int> const& offset,
+    Box3<int> const& bounds)
+{
+  if (periodic == Vec3<bool>::zero()) {
+    return pt;
+  }
+  Point result = pt;
+  for (int axis = 0; axis < dim; ++axis) {
+    if (!periodic[axis]) continue;
+    if (offset[axis] == -1) result.ijk[axis] = bounds.upper()[axis];
+    if (offset[axis] ==  1) result.ijk[axis] = bounds.lower()[axis];
+  }
+  return result;
+}
+
+static Vec3<std::int8_t> toi8(Vec3<int> const& ijk)
+{
+  return Vec3<std::int8_t>(
+      std::int8_t(ijk.x()),
+      std::int8_t(ijk.y()),
+      std::int8_t(ijk.z()));
+}
+
+static AdjImpl get_adjacent(
+    int const dim,
+    ID const global_id,
+    Leaves const& leaves,
+    Point const& base_pt,
+    Periodic const& periodic)
+{
+  AdjImpl result;
+  Point const pt = get_point(dim, global_id);
+  Box3<int> const bounds = get_grid_bounds(pt.level, base_pt);
+  Subgrid3 const grid = dimensionalize(dim, offset_grid);
+  auto functor = [&] (Vec3<int> const& offset) {
+    if (offset == Vec3<int>::zero()) return;
+    Point adj_pt(pt.level, pt.ijk + offset);
+    if (!is_in(dim, adj_pt, bounds)) {
+      Point const pt = make_periodic(adj_pt, dim, periodic, offset, bounds);
+      bool const not_periodic = (pt == adj_pt);
+      if (not_periodic) return;
+      else adj_pt = pt;
+    }
+    ID const adj_global_id = get_global_id(dim, adj_pt);
+    if (is_leaf(adj_global_id, leaves)) {
+      result.adjacent.push_back({adj_global_id, 0, toi8(offset)});
+    }
+  };
+  seq_for_each(grid, functor);
+  return result;
+}
+
+Adjacencies get_adjacencies(
+    int const dim,
+    Leaves const& leaves,
+    Point const& base_pt,
+    Periodic const& periodic)
+{
+  Adjacencies result;
+  for (ID const global_id : leaves) {
+    AdjImpl const impl = get_adjacent(
+        dim, global_id, leaves, base_pt, periodic);
+    result[global_id] = impl.adjacent;
+  }
+  return result;
 }
 
 }

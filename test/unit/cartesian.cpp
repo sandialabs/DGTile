@@ -2,15 +2,12 @@
 
 #include <gtest/gtest.h>
 
-#include <dgt_print.hpp> // debug
-
 using namespace dgt;
 
 TEST(cartesian, grid_definitions)
 {
   EXPECT_EQ(child_grid, Grid3(2,2,2));
   EXPECT_EQ(offset_grid, Subgrid3({-1,-1,-1},{2,2,2}));
-  EXPECT_EQ(fine_offset_grid, Subgrid3({-1,-1,-1},{3,3,3}));
 }
 
 TEST(cartesian, get_dir_sign)

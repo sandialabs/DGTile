@@ -16,6 +16,13 @@ inline std::ostream& operator<<(std::ostream& os, Vec3<T> const& v)
   return os;
 }
 
+template <>
+inline std::ostream& operator<<(std::ostream& os, Vec3<std::int8_t> const& v)
+{
+  os << "[" << int(v.x()) << ", " << int(v.y()) << ", " << int(v.z()) << "]";
+  return os;
+}
+
 template <class T>
 inline std::ostream& operator<<(std::ostream& os, Box3<T> const& b)
 {

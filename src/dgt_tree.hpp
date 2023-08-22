@@ -12,9 +12,6 @@ namespace tree {
 
 using ID = std::uint64_t;
 
-enum {DEREFINE = -1, REMAIN = 0, REFINE = 1};
-enum {COARSE_TO_FINE = -1, EQUAL = 0, FINE_TO_COARSE = 1};
-
 struct Point
 {
   int level = -1;
@@ -26,11 +23,19 @@ struct Point
   }
 };
 
+struct Adjacency
+{
+  ID neighbor = -1;
+  std::int8_t level_offset = -1;
+  Vec3<std::int8_t> ijk_offset = Vec3<std::int8_t>::zero();
+};
+
+using Adjacent = std::vector<Adjacency>;
+using Adjacencies = std::unordered_map<ID, Adjacent>;
 using Leaves = std::unordered_set<ID>;
-using ZLeaves = std::vector<ID>;
-using Boundaries = std::vector<std::vector<std::vector<ID>>>;
-using Marks = std::vector<std::int8_t>;
+using Levels = std::vector<std::int8_t>;
 using Periodic = Vec3<bool>;
+using ZLeaves = std::vector<ID>;
 
 [[nodiscard]] ID get_level_offset(int const dim, int const level);
 
@@ -51,9 +56,6 @@ using Periodic = Vec3<bool>;
 
 [[nodiscard]] ZLeaves order(int const dim, Leaves const& leaves);
 
-[[nodiscard]] Leaves modify(
-    int const dim, ZLeaves const& z_leaves, Marks  const& marks);
-
 template <class LeavesT>
 [[nodiscard]] int get_max_level(int const dim, LeavesT const& leaves);
 
@@ -66,6 +68,10 @@ template <class LeavesT>
 [[nodiscard]] Box3<real> get_domain(
     int const dim, ID const global_id,
     Point const& base, Box3<real> const& d);
+
+[[nodiscard]] Adjacencies get_adjacencies(
+    int const dim, Leaves const& leaves,
+    Point const& base_pt, Periodic const& periodic);
 
 void write_vtu(
     int const dim, std::string const& prefix,
