@@ -2,8 +2,6 @@
 #include "dgt_for_each.hpp"
 #include "dgt_tree.hpp"
 
-#include "dgt_print.hpp"
-
 namespace dgt {
 namespace tree {
 
@@ -249,12 +247,14 @@ static Point make_periodic(
     Vec3<int> const& offset,
     Box3<int> const& bounds)
 {
-  if (periodic == Vec3<bool>::zero()) {
-    return pt;
-  }
+  if (periodic == Vec3<bool>::zero()) return pt;
   Point result = pt;
   for (int axis = 0; axis < dim; ++axis) {
-    if (!periodic[axis]) continue;
+    if (!periodic[axis]) {
+      if (pt.ijk[axis] < bounds.lower()[axis]) return pt;
+      if (pt.ijk[axis] > bounds.upper()[axis]) return pt;
+      continue;
+    }
     if (offset[axis] == -1) result.ijk[axis] = bounds.upper()[axis];
     if (offset[axis] ==  1) result.ijk[axis] = bounds.lower()[axis];
   }
