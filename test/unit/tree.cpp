@@ -2,22 +2,26 @@
 
 #include <gtest/gtest.h>
 
-#include <dgt_print.hpp> // debug
+#include <dgt_print.hpp>
 
 using namespace dgt;
 using namespace dgt::tree;
 
-namespace dgt {
-namespace tree {
-
-static bool operator==(Point const& a, Point const& b)
+static std::vector<Vec3<int>> get_adj_children(
+    int const dim,
+    Vec3<int> const& offset)
 {
-  return
-    (a.level == b.level) &&
-    (a.ijk == b.ijk);
-}
-
-}
+  std::vector<Vec3<int>> children;
+  children.push_back(offset);
+  for (int axis = 0; axis < dim; ++axis) {
+    std::size_t num_children = children.size();
+    for (std::size_t i = 0; i < num_children; ++i) {
+      if      (children[i][axis] == -1) children[i][axis] = 1;
+      else if (children[i][axis] ==  1) children[i][axis] = 0;
+      else    children.push_back(children[i] + Vec3<int>::axis(axis));
+    }
+  }
+  return children;
 }
 
 TEST(tree, point_construction)
@@ -172,348 +176,62 @@ TEST(tree, create_3D)
   EXPECT_EQ(leaves.count(ID(15)), 1);
 }
 
-TEST(tree, order_1D)
+TEST(tree, get_adj_children_1D)
 {
   int const dim = 1;
-  Leaves const leaves = create(dim, {3,0,0});
-  ZLeaves const z_leaves = order(dim, leaves);
-  EXPECT_EQ(z_leaves.size(), 3);
-  EXPECT_EQ(z_leaves[0], ID(3));
-  EXPECT_EQ(z_leaves[1], ID(4));
-  EXPECT_EQ(z_leaves[2], ID(5));
+  std::vector<Vec3<int>> children;
+  children = get_adj_children(dim, {-1,0,0});
+  EXPECT_EQ(children.size(), 1);
+  EXPECT_EQ(children[0], Vec3<int>(1,0,0));
+  children = get_adj_children(dim, { 1,0,0});
+  EXPECT_EQ(children.size(), 1);
+  EXPECT_EQ(children[0], Vec3<int>(0,0,0));
 }
 
-TEST(tree, order_2D)
+TEST(tree, get_adj_children_2D)
 {
   int const dim = 2;
-  Leaves const leaves = create(dim, {3,2,0});
-  ZLeaves const z_leaves = order(dim, leaves);
-  EXPECT_EQ(z_leaves.size(), 6);
-  EXPECT_EQ(z_leaves[0], ID(5));
-  EXPECT_EQ(z_leaves[1], ID(6));
-  EXPECT_EQ(z_leaves[2], ID(9));
-  EXPECT_EQ(z_leaves[3], ID(10));
-  EXPECT_EQ(z_leaves[4], ID(7));
-  EXPECT_EQ(z_leaves[5], ID(11));
+  std::vector<Vec3<int>> children;
+  children = get_adj_children(dim, {-1,-1,0});
+  EXPECT_EQ(children.size(), 1);
+  EXPECT_EQ(children[0], Vec3<int>(1,1,0));
+  children = get_adj_children(dim, {0,-1,0});
+  EXPECT_EQ(children.size(), 2);
+  EXPECT_EQ(children[0], Vec3<int>(0,1,0));
+  EXPECT_EQ(children[1], Vec3<int>(1,1,0));
+  children = get_adj_children(dim, {1,-1,0});
+  EXPECT_EQ(children.size(), 1);
+  EXPECT_EQ(children[0], Vec3<int>(0,1,0));
+  children = get_adj_children(dim, {-1,0,0});
+  EXPECT_EQ(children.size(), 2);
+  EXPECT_EQ(children[0], Vec3<int>(1,0,0));
+  EXPECT_EQ(children[1], Vec3<int>(1,1,0));
+  children = get_adj_children(dim, {1,0,0});
+  EXPECT_EQ(children.size(), 2);
+  EXPECT_EQ(children[0], Vec3<int>(0,0,0));
+  EXPECT_EQ(children[1], Vec3<int>(0,1,0));
+  children = get_adj_children(dim, {-1,1,0});
+  EXPECT_EQ(children.size(), 1);
+  EXPECT_EQ(children[0], Vec3<int>(1,0,0));
+  children = get_adj_children(dim, {0,1,0});
+  EXPECT_EQ(children.size(), 2);
+  EXPECT_EQ(children[0], Vec3<int>(0,0,0));
+  EXPECT_EQ(children[1], Vec3<int>(1,0,0));
+  children = get_adj_children(dim, {1,1,0});
+  EXPECT_EQ(children.size(), 1);
+  EXPECT_EQ(children[0], Vec3<int>(0,0,0));
 }
 
-TEST(tree, order_3D)
+TEST(tree, get_adj_children_3D)
 {
   int const dim = 3;
-  Leaves const leaves = create(dim, {3,2,1});
-  ZLeaves const z_leaves = order(dim, leaves);
-  ASSERT_EQ(z_leaves.size(), 6);
-  EXPECT_EQ(z_leaves[0], ID(9));
-  EXPECT_EQ(z_leaves[1], ID(10));
-  EXPECT_EQ(z_leaves[2], ID(13));
-  EXPECT_EQ(z_leaves[3], ID(14));
-  EXPECT_EQ(z_leaves[4], ID(11));
-  EXPECT_EQ(z_leaves[5], ID(15));
-}
+  std::vector<Vec3<int>> children;
+  
+  children = get_adj_children(dim, {-1,-1,-1});
+  EXPECT_EQ(children.size(), 1);
+  EXPECT_EQ(children[0], Vec3<int>(1,1,1));
 
-TEST(tree, get_min_level_uniform_1D)
-{
-  int const dim = 1;
-  Leaves const leaves1 = create(dim, {1,0,0});
-  Leaves const leaves2 = create(dim, {3,0,0});
-  Leaves const leaves3 = create(dim, {22,0,0});
-  ZLeaves const z_leaves1 = order(dim, leaves1);
-  ZLeaves const z_leaves2 = order(dim, leaves2);
-  ZLeaves const z_leaves3 = order(dim, leaves3);
-  EXPECT_EQ(get_min_level(dim, leaves1), 0);
-  EXPECT_EQ(get_min_level(dim, leaves2), 2);
-  EXPECT_EQ(get_min_level(dim, leaves3), 5);
-  EXPECT_EQ(get_min_level(dim, z_leaves1), 0);
-  EXPECT_EQ(get_min_level(dim, z_leaves2), 2);
-  EXPECT_EQ(get_min_level(dim, z_leaves3), 5);
-}
-
-TEST(tree, get_min_level_uniform_2D)
-{
-  int const dim = 2;
-  Leaves const leaves1 = create(dim, {1,1,0});
-  Leaves const leaves2 = create(dim, {3,2,0});
-  Leaves const leaves3 = create(dim, {22,2,0});
-  ZLeaves const z_leaves1 = order(dim, leaves1);
-  ZLeaves const z_leaves2 = order(dim, leaves2);
-  ZLeaves const z_leaves3 = order(dim, leaves3);
-  EXPECT_EQ(get_min_level(dim, leaves1), 0);
-  EXPECT_EQ(get_min_level(dim, leaves2), 2);
-  EXPECT_EQ(get_min_level(dim, leaves3), 5);
-  EXPECT_EQ(get_min_level(dim, z_leaves1), 0);
-  EXPECT_EQ(get_min_level(dim, z_leaves2), 2);
-  EXPECT_EQ(get_min_level(dim, z_leaves3), 5);
-}
-
-TEST(tree, get_min_level_uniform_3D)
-{
-  int const dim = 3;
-  Leaves const leaves1 = create(dim, {1,1,1});
-  Leaves const leaves2 = create(dim, {3,2,1});
-  Leaves const leaves3 = create(dim, {22,2,1});
-  ZLeaves const z_leaves1 = order(dim, leaves1);
-  ZLeaves const z_leaves2 = order(dim, leaves2);
-  ZLeaves const z_leaves3 = order(dim, leaves3);
-  EXPECT_EQ(get_min_level(dim, leaves1), 0);
-  EXPECT_EQ(get_min_level(dim, leaves2), 2);
-  EXPECT_EQ(get_min_level(dim, leaves3), 5);
-  EXPECT_EQ(get_min_level(dim, z_leaves1), 0);
-  EXPECT_EQ(get_min_level(dim, z_leaves2), 2);
-  EXPECT_EQ(get_min_level(dim, z_leaves3), 5);
-}
-
-TEST(tree, get_max_level_uniform_1D)
-{
-  int const dim = 1;
-  Leaves const leaves1 = create(dim, {1,0,0});
-  Leaves const leaves2 = create(dim, {3,0,0});
-  Leaves const leaves3 = create(dim, {22,0,0});
-  ZLeaves const z_leaves1 = order(dim, leaves1);
-  ZLeaves const z_leaves2 = order(dim, leaves2);
-  ZLeaves const z_leaves3 = order(dim, leaves3);
-  EXPECT_EQ(get_max_level(dim, leaves1), 0);
-  EXPECT_EQ(get_max_level(dim, leaves2), 2);
-  EXPECT_EQ(get_max_level(dim, leaves3), 5);
-  EXPECT_EQ(get_max_level(dim, z_leaves1), 0);
-  EXPECT_EQ(get_max_level(dim, z_leaves2), 2);
-  EXPECT_EQ(get_max_level(dim, z_leaves3), 5);
-}
-
-TEST(tree, get_max_level_uniform_2D)
-{
-  int const dim = 2;
-  Leaves const leaves1 = create(dim, {1,1,0});
-  Leaves const leaves2 = create(dim, {3,2,0});
-  Leaves const leaves3 = create(dim, {22,2,0});
-  ZLeaves const z_leaves1 = order(dim, leaves1);
-  ZLeaves const z_leaves2 = order(dim, leaves2);
-  ZLeaves const z_leaves3 = order(dim, leaves3);
-  EXPECT_EQ(get_max_level(dim, leaves1), 0);
-  EXPECT_EQ(get_max_level(dim, leaves2), 2);
-  EXPECT_EQ(get_max_level(dim, leaves3), 5);
-  EXPECT_EQ(get_max_level(dim, z_leaves1), 0);
-  EXPECT_EQ(get_max_level(dim, z_leaves2), 2);
-  EXPECT_EQ(get_max_level(dim, z_leaves3), 5);
-}
-
-TEST(tree, get_max_level_uniform_3D)
-{
-  int const dim = 3;
-  Leaves const leaves1 = create(dim, {1,1,1});
-  Leaves const leaves2 = create(dim, {3,2,1});
-  Leaves const leaves3 = create(dim, {22,2,1});
-  ZLeaves const z_leaves1 = order(dim, leaves1);
-  ZLeaves const z_leaves2 = order(dim, leaves2);
-  ZLeaves const z_leaves3 = order(dim, leaves3);
-  EXPECT_EQ(get_max_level(dim, leaves1), 0);
-  EXPECT_EQ(get_max_level(dim, leaves2), 2);
-  EXPECT_EQ(get_max_level(dim, leaves3), 5);
-  EXPECT_EQ(get_max_level(dim, z_leaves1), 0);
-  EXPECT_EQ(get_max_level(dim, z_leaves2), 2);
-  EXPECT_EQ(get_max_level(dim, z_leaves3), 5);
-}
-
-TEST(tree, get_base_point_uniform_1D)
-{
-  int const dim = 1;
-  Leaves const leaves1 = create(dim, {1,0,0});
-  Leaves const leaves2 = create(dim, {3,0,0});
-  Leaves const leaves3 = create(dim, {22,0,0});
-  ZLeaves const z_leaves1 = order(dim, leaves1);
-  ZLeaves const z_leaves2 = order(dim, leaves2);
-  ZLeaves const z_leaves3 = order(dim, leaves3);
-  EXPECT_EQ(get_base_point(dim, leaves1), Point(0, {1,0,0}));
-  EXPECT_EQ(get_base_point(dim, leaves2), Point(2, {3,0,0}));
-  EXPECT_EQ(get_base_point(dim, leaves3), Point(5, {22,0,0}));
-  EXPECT_EQ(get_base_point(dim, z_leaves1), Point(0, {1,0,0}));
-  EXPECT_EQ(get_base_point(dim, z_leaves2), Point(2, {3,0,0}));
-  EXPECT_EQ(get_base_point(dim, z_leaves3), Point(5, {22,0,0}));
-}
-
-TEST(tree, get_base_point_uniform_2D)
-{
-  int const dim = 2;
-  Leaves const leaves1 = create(dim, {1,1,0});
-  Leaves const leaves2 = create(dim, {3,2,0});
-  Leaves const leaves3 = create(dim, {22,2,0});
-  ZLeaves const z_leaves1 = order(dim, leaves1);
-  ZLeaves const z_leaves2 = order(dim, leaves2);
-  ZLeaves const z_leaves3 = order(dim, leaves3);
-  EXPECT_EQ(get_base_point(dim, leaves1), Point(0, {1,1,0}));
-  EXPECT_EQ(get_base_point(dim, leaves2), Point(2, {3,2,0}));
-  EXPECT_EQ(get_base_point(dim, leaves3), Point(5, {22,2,0}));
-  EXPECT_EQ(get_base_point(dim, z_leaves1), Point(0, {1,1,0}));
-  EXPECT_EQ(get_base_point(dim, z_leaves2), Point(2, {3,2,0}));
-  EXPECT_EQ(get_base_point(dim, z_leaves3), Point(5, {22,2,0}));
-}
-
-TEST(tree, get_base_point_uniform_3D)
-{
-  int const dim = 3;
-  Leaves const leaves1 = create(dim, {1,1,1});
-  Leaves const leaves2 = create(dim, {3,2,1});
-  Leaves const leaves3 = create(dim, {22,2,1});
-  ZLeaves const z_leaves1 = order(dim, leaves1);
-  ZLeaves const z_leaves2 = order(dim, leaves2);
-  ZLeaves const z_leaves3 = order(dim, leaves3);
-  EXPECT_EQ(get_base_point(dim, leaves1), Point(0, {1,1,1}));
-  EXPECT_EQ(get_base_point(dim, leaves2), Point(2, {3,2,1}));
-  EXPECT_EQ(get_base_point(dim, leaves3), Point(5, {22,2,1}));
-  EXPECT_EQ(get_base_point(dim, z_leaves1), Point(0, {1,1,1}));
-  EXPECT_EQ(get_base_point(dim, z_leaves2), Point(2, {3,2,1}));
-  EXPECT_EQ(get_base_point(dim, z_leaves3), Point(5, {22,2,1}));
-}
-
-TEST(tree, get_domain_1D)
-{
-  int const dim = 1;
-  ID const global_id = 1;
-  Point const base_pt(0, {1,0,0});
-  Box3<real> const domain({0.,0.,0.}, {1.,0.,0.});
-  EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).lower(), Vec3<real>(0.,0.,0.));
-  EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).upper(), Vec3<real>(0.5,0.,0.));
-}
-
-TEST(tree, get_domain_2D)
-{
-  int const dim = 2;
-  ID const global_id = 1;
-  Point const base_pt(0, {1,1,0});
-  Box3<real> const domain({0.,0.,0.}, {1.,1.,0.});
-  EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).lower(), Vec3<real>(0.,0.,0.));
-  EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).upper(), Vec3<real>(0.5,0.5,0.));
-}
-
-TEST(tree, get_domain_3D)
-{
-  int const dim = 3;
-  ID const global_id = 1;
-  Point const base_pt(0, {1,1,1});
-  Box3<real> const domain({0.,0.,0.}, {1.,1.,1.});
-  EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).lower(), Vec3<real>(0.,0.,0.));
-  EXPECT_EQ(get_domain(dim, global_id, base_pt, domain).upper(), Vec3<real>(0.5,0.5,0.5));
-}
-
-TEST(tree, get_adjacencies_single_block_1D)
-{
-  int const dim = 1;
-  Leaves const leaves = create(dim, {1,0,0});
-  Periodic const periodic(false, false, false);
-  Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
-  EXPECT_EQ(adjacencies.size(), 1);
-  EXPECT_EQ(adjacencies[ID(0)].size(), 0);
-}
-
-TEST(tree, get_adjacencies_single_block_periodic_X_1D)
-{
-  int const dim = 1;
-  Leaves const leaves = create(dim, {1,0,0});
-  Periodic const periodic(true, false, false);
-  Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
-  EXPECT_EQ(adjacencies.size(), 1);
-  EXPECT_EQ(adjacencies[ID(0)].size(), 2);
-}
-
-TEST(tree, get_adjacencies_single_block_2D)
-{
-  int const dim = 2;
-  Leaves const leaves = create(dim, {1,1,0});
-  Periodic const periodic(false, false, false);
-  Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
-  EXPECT_EQ(adjacencies.size(), 1);
-  EXPECT_EQ(adjacencies[ID(0)].size(), 0);
-}
-
-TEST(tree, get_adjacencies_single_block_periodic_X_2D)
-{
-  int const dim = 2;
-  Leaves const leaves = create(dim, {1,1,0});
-  Periodic const periodic(true, false, false);
-  Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
-  EXPECT_EQ(adjacencies.size(), 1);
-  EXPECT_EQ(adjacencies[ID(0)].size(), 2);
-  EXPECT_EQ(adjacencies[ID(0)][0].neighbor, ID(0));
-  EXPECT_EQ(adjacencies[ID(0)][1].neighbor, ID(0));
-  EXPECT_EQ(adjacencies[ID(0)][0].ijk_offset, Vec3<std::int8_t>(-1,0,0));
-  EXPECT_EQ(adjacencies[ID(0)][1].ijk_offset, Vec3<std::int8_t>( 1,0,0));
-}
-
-TEST(tree, get_adjacencies_single_block_periodic_Y_2D)
-{
-  int const dim = 2;
-  Leaves const leaves = create(dim, {1,1,0});
-  Periodic const periodic(false, true, false);
-  Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
-  EXPECT_EQ(adjacencies.size(), 1);
-  EXPECT_EQ(adjacencies[ID(0)].size(), 2);
-  EXPECT_EQ(adjacencies[ID(0)][0].neighbor, ID(0));
-  EXPECT_EQ(adjacencies[ID(0)][1].neighbor, ID(0));
-  EXPECT_EQ(adjacencies[ID(0)][0].ijk_offset, Vec3<std::int8_t>(0,-1,0));
-  EXPECT_EQ(adjacencies[ID(0)][1].ijk_offset, Vec3<std::int8_t>(0, 1,0));
-}
-
-TEST(tree, get_adjacencies_single_block_periodic_XY_2D)
-{
-  int const dim = 2;
-  Leaves const leaves = create(dim, {1,1,0});
-  Periodic const periodic(true, true, false);
-  Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
-  EXPECT_EQ(adjacencies.size(), 1);
-  EXPECT_EQ(adjacencies[ID(0)].size(), 8);
-  for (std::size_t i = 0; i < 8; ++i) {
-    EXPECT_EQ(adjacencies[ID(0)][i].neighbor, ID(0));
-  }
-}
-
-TEST(tree, get_adjacencies_single_block_3D)
-{
-  int const dim = 3;
-  Leaves const leaves = create(dim, {1,1,1});
-  Periodic const periodic(false, false, false);
-  Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
-  EXPECT_EQ(adjacencies.size(), 1);
-  EXPECT_EQ(adjacencies[ID(0)].size(), 0);
-}
-
-TEST(tree, write_vtu_failure)
-{
-  int const dim = 3;
-  Leaves const leaves = create(dim, {4,4,4});
-  ZLeaves const z_leaves = order(dim, leaves);
-  Box3<real> const domain({0.,0.,0.}, {1.,1.,1.});
-  EXPECT_THROW(write_vtu(dim, "cant/do/that", z_leaves, domain), std::runtime_error);
-}
-
-TEST(tree, write_uniform_1D)
-{
-  int const dim = 1;
-  Leaves const leaves = create(dim, {4,0,0});
-  ZLeaves const z_leaves = order(dim, leaves);
-  Box3<real> const domain({0.,0.,0.}, {1.,0.,0.});
-  write_vtu(dim, "out_tree_uniform_1D", z_leaves, domain);
-}
-
-TEST(tree, write_uniform_2D)
-{
-  int const dim = 2;
-  Leaves const leaves = create(dim, {4,4,0});
-  ZLeaves const z_leaves = order(dim, leaves);
-  Box3<real> const domain({0.,0.,0.}, {1.,1.,0.});
-  write_vtu(dim, "out_tree_uniform_2D", z_leaves, domain);
-}
-
-TEST(tree, write_uniform_3D)
-{
-  int const dim = 3;
-  Leaves const leaves = create(dim, {4,4,4});
-  ZLeaves const z_leaves = order(dim, leaves);
-  Box3<real> const domain({0.,0.,0.}, {1.,1.,1.});
-  write_vtu(dim, "out_tree_uniform_2D", z_leaves, domain);
+  //TODO: finish this
+  children = get_adj_children(dim, {-1,0,0});
+  EXPECT_EQ(children.size(), 4);
 }

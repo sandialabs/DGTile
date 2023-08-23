@@ -47,7 +47,7 @@ using ZLeaves = std::vector<ID>;
 
 [[nodiscard]] Point get_point(int const dim, ID const global_id);
 
-[[nodiscard]] Point get_coarse_point(int const dim, ID const global_id);
+[[nodiscard]] Point get_coarse_point(int const dim, Point const& pt);
 
 [[nodiscard]] Point get_fine_point(
     int const dim, Point const& pt, Vec3<int> const& child_ijk);
