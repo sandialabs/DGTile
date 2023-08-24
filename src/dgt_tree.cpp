@@ -288,6 +288,21 @@ static std::vector<Vec3<int>> get_adj_children(
   return children;
 }
 
+static std::vector<ID> get_fine_ids(
+    int const dim,
+    Point const& adj_pt,
+    Vec3<int> const& offset)
+{
+  std::vector<Vec3<int>> children = get_adj_children(dim, offset);
+  std::vector<ID> ids(children.size());
+  for (std::size_t i = 0; i < children.size(); ++i) {
+    Vec3<int> const child_ijk = children[i];
+    Point const fine_pt = get_fine_point(dim, adj_pt, child_ijk);
+    ids[i] = get_global_id(dim, fine_pt);
+  }
+  return ids;
+}
+
 static Adjacent get_adj(
     int const dim,
     ID const global_id,
@@ -314,19 +329,17 @@ static Adjacent get_adj(
     } else {
       Point const coarse_adj_pt = get_coarse_point(dim, adj_pt);
       ID const coarse_adj_id = get_global_id(dim, coarse_adj_pt);
-//      std::vector<ID> const fine_adj_ids = get_fine_ids(dim, adj_pt, offset);
+      std::vector<ID> const fine_adj_ids = get_fine_ids(dim, adj_pt, offset);
       bool const is_fine_to_coarse = is_leaf(coarse_adj_id, leaves);
-//      bool const is_coarse_to_fine = are_leaves(fine_adj_ids, leaves);
+      bool const is_coarse_to_fine = are_leaves(fine_adj_ids, leaves);
       if (is_fine_to_coarse) {
         result.push_back({coarse_adj_id, -1, toi8(offset)});
       }
-
-      //else if (is_coarse_to_fine) {
-      //  for (ID const fine_adj_id : fine_adj_ids) {
-      //    result.push_back({fine_adj_id, 1, toi8(offset)});
-      //  }
-      //}
-
+      else if (is_coarse_to_fine) {
+        for (ID const fine_adj_id : fine_adj_ids) {
+          result.push_back({fine_adj_id, 1, toi8(offset)});
+        }
+      }
       else {
         throw std::runtime_error("dgt::tree::get_adj - invalid");
       }
