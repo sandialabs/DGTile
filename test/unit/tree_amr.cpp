@@ -18,13 +18,27 @@ static bool operator==(Point const& a, Point const& b)
 }
 }
 
+static Leaves refine_zleaf(
+    int const dim,
+    Leaves const& leaves,
+    int const index)
+{
+  ZLeaves const z_leaves = order(dim, leaves);
+  Marks marks(z_leaves.size(), REMAIN);
+  marks[index] = REFINE;
+  return modify(dim, z_leaves, marks);
+}
+
 static Leaves get_example_refined(int const dim)
 {
   Leaves const leaves = create(dim, {3,2,1});
-  ZLeaves const z_leaves = order(dim, leaves);
-  Marks marks(z_leaves.size(), REMAIN);
-  marks[0] = REFINE;
-  return modify(dim, z_leaves, marks);
+  return refine_zleaf(dim, leaves, 0);
+}
+
+static Leaves get_example_refined2(int const dim)
+{
+  Leaves const leaves = get_example_refined(dim);
+  return refine_zleaf(dim, leaves, 3);
 }
 
 TEST(tree_amr, modify_1D)
@@ -161,6 +175,32 @@ TEST(tree_amr, get_base_point_3D)
   ZLeaves const z_leaves = order(dim, leaves);
   EXPECT_EQ(get_base_point(dim, leaves), Point(2, {3,2,1}));
   EXPECT_EQ(get_base_point(dim, z_leaves), Point(2, {3,2,1}));
+}
+
+TEST(tree_amr, get_adjacencies_failure)
+{
+  int const dim = 2;
+  Leaves const leaves = get_example_refined2(dim);
+  ZLeaves const z_leaves = order(dim, leaves);
+  Point const base_pt = get_base_point(dim, z_leaves);
+  Periodic const periodic(true, false, false);
+  EXPECT_THROW((void)get_adjacencies(dim, leaves, base_pt, periodic), std::runtime_error);
+}
+
+TEST(tree_amr, balance_2D)
+{
+  int const dim = 2;
+  Periodic const periodic(true, false, false);
+  Box3<real> const domain({0.,0.,0.}, {3.,2.,0.});
+  Leaves const leaves = get_example_refined2(dim);
+  ZLeaves const z_leaves = order(dim, leaves);
+  Point const base_pt = get_base_point(dim, leaves);
+  Leaves const balanced_leaves = balance(dim, leaves, base_pt, periodic);
+  ZLeaves const balanced_z_leaves = order(dim, balanced_leaves);
+
+  write_vtu(dim, "debug_before", z_leaves, domain);
+  write_vtu(dim, "debug_after", balanced_z_leaves, domain);
+
 }
 
 TEST(tree_amr, write_non_uniform_1D)

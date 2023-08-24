@@ -45,12 +45,15 @@ with derivatives
 \end{equation}
 %
 The Legendre polynomials are \emph{orthogonal} over the interval $[-1,1]$,
-which means that
+where
 %
 \begin{equation}
-\int_{-1}^1 \; \mathcal{L}(x)_i \mathcal{L}(x)_j \, \text{d}x = 0
-\quad \text{if} \; i \neq j.
+\int_{-1}^1 \; \mathcal{L}_m(x) \mathcal{L}_n(x) \, \text{d}x =
+\frac{2}{2n + 1} \delta_{mn},
 \end{equation}
+%
+where $\delta_{mn}$ denotes the Kronecker delta (equal to $1$ if $m=n$ and
+$0$ otherwise).
 
 \subsection{Tensor Product Bases}
 

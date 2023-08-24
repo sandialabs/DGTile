@@ -365,15 +365,18 @@ static AdjImpl get_adj(
       bool const needs_refinement = is_leaf_in(finer_adj_ids, leaves);
       if (is_fine_to_coarse) {
         result.adjacent.push_back({coarse_adj_id, -1, toi8(offset)});
-      } else if (is_coarse_to_fine) {
+      }
+      if (is_coarse_to_fine) {
         for (ID const fine_adj_id : fine_adj_ids) {
           result.adjacent.push_back({fine_adj_id, 1, toi8(offset)});
         }
-      } else if (needs_refinement) {
+      }
+      if (needs_refinement) {
         result.should_refine = true;
       }
-      else {
-        throw std::runtime_error("dgt::tree::get_adj - invalid");
+      int const sum = is_fine_to_coarse + is_coarse_to_fine + needs_refinement;
+      if (sum > 1) {
+        throw std::runtime_error("dgt::tree.get_adj - invalid tree");
       }
     }
   };
@@ -392,7 +395,7 @@ Adjacencies get_adjacencies(
     AdjImpl const impl = get_adj(dim, global_id, leaves, base_pt, periodic);
     result[global_id] = impl.adjacent;
     if (impl.should_refine) {
-      throw std::runtime_error("dgt::tree::get_adjacencies - invalid tree");
+      throw std::runtime_error("dgt::tree:get_adjacencies - invalid tree");
     }
   }
   return result;
@@ -436,6 +439,47 @@ Leaves modify(
     if (marks[i] == DEREFINE) insert_parent(leaves, dim, leaf);
   }
   return leaves;
+}
+
+static std::vector<ID> get_refines(
+    int const dim,
+    Leaves const& leaves,
+    Point const& base_pt,
+    Periodic const& periodic)
+{
+  std::vector<ID> result;
+  for (ID const global_id : leaves) {
+    AdjImpl const impl = get_adj(dim, global_id, leaves, base_pt, periodic);
+    if (impl.should_refine) {
+      result.push_back(global_id);
+    }
+  }
+  return result;
+}
+
+Leaves balance(
+    int const dim,
+    Leaves const& leaves,
+    Point const& base_pt,
+    Periodic const& periodic)
+{
+  Leaves result = leaves;
+  bool needs_modification = true;
+  while (needs_modification) {
+    ZLeaves const z_leaves = order(dim, result);
+    std::vector<ID> const ids = get_refines(dim, result, base_pt, periodic);
+    std::size_t const num_refines = ids.size();
+    if (num_refines > 0) {
+      for (std::size_t i = 0; i < num_refines; ++i) {
+        ID const leaf = ids[i];
+        insert_children(result, dim, leaf);
+        result.erase(leaf);
+      }
+    } else {
+      needs_modification = false;
+    }
+  }
+  return result;
 }
 
 }

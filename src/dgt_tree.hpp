@@ -80,6 +80,10 @@ template <class LeavesT>
 [[nodiscard]] Leaves modify(
     int const dim, ZLeaves const& z_leaves, Marks const& marks);
 
+[[nodiscard]] Leaves balance(
+    int const dim, Leaves const& leaves,
+    Point const& base_pt, Periodic const& periodic);
+
 void write_vtu(
     int const dim, std::string const& prefix,
     ZLeaves const& zl, Box3<real> const& d);
