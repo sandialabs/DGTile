@@ -343,7 +343,7 @@ TEST(tree_uniform, write_uniform_1D)
   Leaves const leaves = create(dim, {4,0,0});
   ZLeaves const z_leaves = order(dim, leaves);
   Box3<real> const domain({0.,0.,0.}, {1.,0.,0.});
-  write_vtu(dim, "out_tree_uniform_uniform_1D", z_leaves, domain);
+  write_vtu(dim, "out_tree_uniform_1D", z_leaves, domain);
 }
 
 TEST(tree_uniform, write_uniform_2D)
@@ -352,7 +352,7 @@ TEST(tree_uniform, write_uniform_2D)
   Leaves const leaves = create(dim, {4,4,0});
   ZLeaves const z_leaves = order(dim, leaves);
   Box3<real> const domain({0.,0.,0.}, {1.,1.,0.});
-  write_vtu(dim, "out_tree_uniform_uniform_2D", z_leaves, domain);
+  write_vtu(dim, "out_tree_uniform_2D", z_leaves, domain);
 }
 
 TEST(tree_uniform, write_uniform_3D)

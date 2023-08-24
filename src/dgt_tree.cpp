@@ -99,18 +99,27 @@ Leaves create(int const dim, Grid3 const& grid)
   return leaves;
 }
 
-static bool is_leaf(ID const global_id, Leaves const& leaves)
+static bool is_leaf(ID const id, Leaves const& leaves)
 {
-  return leaves.count(global_id);
+  return leaves.count(id);
 }
 
-static bool are_leaves(std::vector<ID> const& global_ids, Leaves const& leaves)
+static bool are_leaves(std::vector<ID> const& ids, Leaves const& leaves)
 {
   bool are = true;
-  for (ID const global_id : global_ids) {
-    if (!is_leaf(global_id, leaves)) are = false;
+  for (ID const id : ids) {
+    if (!is_leaf(id, leaves)) are = false;
   }
   return are;
+}
+
+static bool is_leaf_in(std::vector<ID> const& ids, Leaves const& leaves)
+{
+  bool is_in = false;
+  for (ID const id : ids) {
+    if (is_leaf(id, leaves)) is_in = true;
+  }
+  return is_in;
 }
 
 static void recursively_order(
@@ -303,14 +312,34 @@ static std::vector<ID> get_fine_ids(
   return ids;
 }
 
-static Adjacent get_adj(
+static std::vector<ID> get_finer_ids(
+    int const dim,
+    std::vector<ID> const& adj_ids,
+    Vec3<int> const& offset)
+{
+  std::vector<ID> finer_ids;
+  for (ID const global_id : adj_ids) {
+    Point const pt = get_point(dim, global_id);
+    std::vector<ID> const ids = get_fine_ids(dim, pt, offset);
+    finer_ids.insert(finer_ids.end(), ids.begin(), ids.end());
+  }
+  return finer_ids;
+}
+
+struct AdjImpl
+{
+  Adjacent adjacent;
+  bool should_refine = false;
+};
+
+static AdjImpl get_adj(
     int const dim,
     ID const global_id,
     Leaves const& leaves,
     Point const& base_pt,
     Periodic const& periodic)
 {
-  Adjacent result;
+  AdjImpl result;
   Point const pt = get_point(dim, global_id);
   Box3<int> const bounds = get_grid_bounds(pt.level, base_pt);
   Subgrid3 const grid = dimensionalize(dim, offset_grid);
@@ -325,20 +354,23 @@ static Adjacent get_adj(
     }
     ID const adj_id = get_global_id(dim, adj_pt);
     if (is_leaf(adj_id, leaves)) {
-      result.push_back({adj_id, 0, toi8(offset)});
+      result.adjacent.push_back({adj_id, 0, toi8(offset)});
     } else {
       Point const coarse_adj_pt = get_coarse_point(dim, adj_pt);
       ID const coarse_adj_id = get_global_id(dim, coarse_adj_pt);
       std::vector<ID> const fine_adj_ids = get_fine_ids(dim, adj_pt, offset);
+      std::vector<ID> const finer_adj_ids = get_finer_ids(dim, fine_adj_ids, offset);
       bool const is_fine_to_coarse = is_leaf(coarse_adj_id, leaves);
       bool const is_coarse_to_fine = are_leaves(fine_adj_ids, leaves);
+      bool const needs_refinement = is_leaf_in(finer_adj_ids, leaves);
       if (is_fine_to_coarse) {
-        result.push_back({coarse_adj_id, -1, toi8(offset)});
-      }
-      else if (is_coarse_to_fine) {
+        result.adjacent.push_back({coarse_adj_id, -1, toi8(offset)});
+      } else if (is_coarse_to_fine) {
         for (ID const fine_adj_id : fine_adj_ids) {
-          result.push_back({fine_adj_id, 1, toi8(offset)});
+          result.adjacent.push_back({fine_adj_id, 1, toi8(offset)});
         }
+      } else if (needs_refinement) {
+        result.should_refine = true;
       }
       else {
         throw std::runtime_error("dgt::tree::get_adj - invalid");
@@ -357,10 +389,53 @@ Adjacencies get_adjacencies(
 {
   Adjacencies result;
   for (ID const global_id : leaves) {
-    Adjacent const a = get_adj(dim, global_id, leaves, base_pt, periodic);
-    result[global_id] = a;
+    AdjImpl const impl = get_adj(dim, global_id, leaves, base_pt, periodic);
+    result[global_id] = impl.adjacent;
+    if (impl.should_refine) {
+      throw std::runtime_error("dgt::tree::get_adjacencies - invalid tree");
+    }
   }
   return result;
+}
+
+static void insert_children(
+    Leaves& leaves,
+    int const dim,
+    ID const global_id)
+{
+  Point const pt = get_point(dim, global_id);
+  auto functor = [&] (Vec3<int> const& child_ijk) {
+    Point const fine_pt = get_fine_point(dim, pt, child_ijk);
+    ID const fine_global_id = get_global_id(dim, fine_pt);
+    leaves.insert(fine_global_id);
+  };
+  seq_for_each(dimensionalize(dim, child_grid), functor);
+}
+
+static void insert_parent(
+    Leaves& leaves,
+    int const dim,
+    ID const global_id)
+{
+  Point const pt = get_point(dim, global_id);
+  Point const coarse_pt = get_coarse_point(dim, pt);
+  ID const coarse_global_id = get_global_id(dim, coarse_pt);
+  leaves.insert(coarse_global_id);
+}
+
+Leaves modify(
+    int const dim,
+    ZLeaves const& z_leaves,
+    Marks const& marks)
+{
+  Leaves leaves;
+  for (std::size_t i = 0; i < z_leaves.size(); ++i) {
+    ID const leaf = z_leaves[i];
+    if (marks[i] == REMAIN) leaves.insert(leaf);
+    if (marks[i] == REFINE) insert_children(leaves, dim, leaf);
+    if (marks[i] == DEREFINE) insert_parent(leaves, dim, leaf);
+  }
+  return leaves;
 }
 
 }

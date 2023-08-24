@@ -12,6 +12,9 @@ namespace tree {
 
 using ID = std::uint64_t;
 
+enum {DEREFINE=-1, REMAIN=0, REFINE=1};
+enum {FINE_TO_COARSE=-1, EQUAL=0, COARSE_TO_FINE=1};
+
 struct Point
 {
   int level = -1;
@@ -34,6 +37,7 @@ using Adjacent = std::vector<Adjacency>;
 using Adjacencies = std::unordered_map<ID, Adjacent>;
 using Leaves = std::unordered_set<ID>;
 using Levels = std::vector<std::int8_t>;
+using Marks = std::vector<std::int8_t>;
 using Periodic = Vec3<bool>;
 using ZLeaves = std::vector<ID>;
 
@@ -72,6 +76,9 @@ template <class LeavesT>
 [[nodiscard]] Adjacencies get_adjacencies(
     int const dim, Leaves const& leaves,
     Point const& base_pt, Periodic const& periodic);
+
+[[nodiscard]] Leaves modify(
+    int const dim, ZLeaves const& z_leaves, Marks const& marks);
 
 void write_vtu(
     int const dim, std::string const& prefix,

@@ -24,6 +24,20 @@ static std::vector<Vec3<int>> get_adj_children(
   return children;
 }
 
+TEST(tree, mark_definitions)
+{
+  EXPECT_EQ(DEREFINE, -1);
+  EXPECT_EQ(REMAIN, 0);
+  EXPECT_EQ(REFINE, 1);
+}
+
+TEST(tree, adjacency_definitions)
+{
+  EXPECT_EQ(FINE_TO_COARSE, -1);
+  EXPECT_EQ(EQUAL, 0);
+  EXPECT_EQ(COARSE_TO_FINE, 1);
+}
+
 TEST(tree, point_construction)
 {
   Point const p(2, {1,2,3});
@@ -226,12 +240,19 @@ TEST(tree, get_adj_children_3D)
 {
   int const dim = 3;
   std::vector<Vec3<int>> children;
-  
   children = get_adj_children(dim, {-1,-1,-1});
   EXPECT_EQ(children.size(), 1);
   EXPECT_EQ(children[0], Vec3<int>(1,1,1));
-
-  //TODO: finish this
   children = get_adj_children(dim, {-1,0,0});
   EXPECT_EQ(children.size(), 4);
+  EXPECT_EQ(children[0], Vec3<int>(1,0,0));
+  EXPECT_EQ(children[1], Vec3<int>(1,1,0));
+  EXPECT_EQ(children[2], Vec3<int>(1,0,1));
+  EXPECT_EQ(children[3], Vec3<int>(1,1,1));
+  children = get_adj_children(dim, {1,0,0});
+  EXPECT_EQ(children.size(), 4);
+  EXPECT_EQ(children[0], Vec3<int>(0,0,0));
+  EXPECT_EQ(children[1], Vec3<int>(0,1,0));
+  EXPECT_EQ(children[2], Vec3<int>(0,0,1));
+  EXPECT_EQ(children[3], Vec3<int>(0,1,1));
 }
