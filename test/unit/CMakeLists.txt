@@ -5,6 +5,7 @@ set(UNIT_TEST_SOURCES
   cartesian.cpp
   defines.cpp
   dg.cpp
+  dg_dim1.cpp
   for_each.cpp
   grid3.cpp
   main.cpp
