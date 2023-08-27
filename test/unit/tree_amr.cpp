@@ -209,6 +209,8 @@ TEST(tree_amr, balance_3D)
   EXPECT_EQ(balanced.size(), 41);
 }
 
+//TODO: test out the interface with desired levels
+
 TEST(tree_amr, write_non_uniform_1D)
 {
   int const dim = 1;

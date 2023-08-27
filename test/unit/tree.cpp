@@ -16,9 +16,10 @@ static std::vector<Vec3<int>> get_adj_children(
   for (int axis = 0; axis < dim; ++axis) {
     std::size_t num_children = children.size();
     for (std::size_t i = 0; i < num_children; ++i) {
-      if      (children[i][axis] == -1) children[i][axis] = 1;
-      else if (children[i][axis] ==  1) children[i][axis] = 0;
-      else    children.push_back(children[i] + Vec3<int>::axis(axis));
+      Vec3<int>& child = children[i];
+      if      (child[axis] == -1) child[axis] = 1;
+      else if (child[axis] ==  1) child[axis] = 0;
+      else children.push_back(child + Vec3<int>::axis(axis));
     }
   }
   return children;

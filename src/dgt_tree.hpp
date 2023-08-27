@@ -77,12 +77,17 @@ template <class LeavesT>
     int const dim, Leaves const& leaves,
     Point const& base_pt, Periodic const& periodic);
 
-[[nodiscard]] Leaves modify(
-    int const dim, ZLeaves const& z_leaves, Marks const& marks);
-
 [[nodiscard]] Leaves balance(
     int const dim, Leaves const& leaves,
     Point const& base_pt, Periodic const& periodic);
+
+[[nodiscard]] Leaves modify(
+    int const dim, ZLeaves const& z_leaves, Marks const& marks);
+
+[[nodiscard]] Leaves modify(
+    int const dim, ZLeaves const& z_leaves, Levels const& levels,
+    Point const& base_pt, Periodic const& periodic,
+    int const min_level = 0, int const max_level = 16);
 
 void write_vtu(
     int const dim, std::string const& prefix,

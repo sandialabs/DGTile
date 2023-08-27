@@ -428,21 +428,6 @@ static void insert_parent(
   leaves.insert(coarse_global_id);
 }
 
-Leaves modify(
-    int const dim,
-    ZLeaves const& z_leaves,
-    Marks const& marks)
-{
-  Leaves leaves;
-  for (std::size_t i = 0; i < z_leaves.size(); ++i) {
-    ID const leaf = z_leaves[i];
-    if (marks[i] == REMAIN) leaves.insert(leaf);
-    if (marks[i] == REFINE) insert_children(leaves, dim, leaf);
-    if (marks[i] == DEREFINE) insert_parent(leaves, dim, leaf);
-  }
-  return leaves;
-}
-
 static std::vector<ID> get_refines(
     int const dim,
     Leaves const& leaves,
@@ -482,6 +467,48 @@ Leaves balance(
     }
   }
   return result;
+}
+
+Leaves modify(
+    int const dim,
+    ZLeaves const& z_leaves,
+    Marks const& marks)
+{
+  Leaves leaves;
+  for (std::size_t i = 0; i < z_leaves.size(); ++i) {
+    ID const leaf = z_leaves[i];
+    if (marks[i] == REMAIN) leaves.insert(leaf);
+    if (marks[i] == REFINE) insert_children(leaves, dim, leaf);
+    if (marks[i] == DEREFINE) insert_parent(leaves, dim, leaf);
+    // TODO: need to make derefining somehow consistent...
+  }
+  return leaves;
+}
+
+Leaves modify(
+    int const dim,
+    ZLeaves const& z_leaves,
+    Levels const& levels,
+    Point const& base_pt,
+    Periodic const& periodic,
+    int const min_level,
+    int const max_level)
+{
+  Marks marks(z_leaves.size(), REMAIN);
+  for (std::size_t i = 0; i < z_leaves.size(); ++i) {
+    ID const leaf = z_leaves[i];
+    int const current_level = get_level(dim, leaf);
+    int const desired_level = int(levels[i]);
+    bool const can_refine = (current_level < max_level);
+    bool const can_derefine = (current_level > min_level);
+    bool const should_refine = (desired_level > current_level);
+    bool const should_derefine = (desired_level < current_level);
+    if (should_refine && can_refine) marks[i] = REFINE;
+    if (should_derefine && can_derefine) marks[i] = DEREFINE;
+  }
+  Leaves leaves = modify(dim, z_leaves, marks);
+  leaves = balance(dim, leaves, base_pt, periodic);
+  return leaves;
 }
 
 }
