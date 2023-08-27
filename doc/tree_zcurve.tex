@@ -1,0 +1,39 @@
+\begin{figure}[ht!]
+\centering
+\begin{tikzpicture}[scale=0.75]
+\coordinate(A) at (0,0);
+\coordinate(B) at (8,0);
+\coordinate(C) at (8,8);
+\coordinate(D) at (0,8);
+\draw [black, thick] (A) -- (B) -- (C) -- (D) -- (A);
+\draw [black, thick] (0,2) -- (8,2);
+\draw [black, thick] (0,4) -- (8,4);
+\draw [black, thick] (0,6) -- (8,6);
+\draw [black, thick] (2,0) -- (2,8);
+\draw [black, thick] (4,0) -- (4,8);
+\draw [black, thick] (6,0) -- (6,8);
+\node at (1,1) (a) {0};
+\node at (3,1) (b) {1};
+\node at (1,3) (c) {2};
+\node at (3,3) (d) {3};
+\node at (5,1) (e) {4};
+\node at (7,1) (f) {5};
+\node at (5,3) (g) {6};
+\node at (7,3) (h) {7};
+\node at (1,5) (i) {8};
+\node at (3,5) (j) {9};
+\node at (1,7) (k) {10};
+\node at (3,7) (l) {11};
+\node at (5,5) (m) {12};
+\node at (7,5) (n) {13};
+\node at (5,7) (o) {14};
+\node at (7,7) (p) {15};
+\draw [black, dashed] (a) -- (b) -- (c) -- (d);
+\draw [black, dashed] (d) -- (e) -- (f) -- (g) -- (h);
+\draw [black, dashed] (h) -- (i) -- (j) -- (k) -- (l);
+\draw [black, dashed] (l) -- (m) -- (n) -- (o) -- (p);
+\end{tikzpicture}
+\caption{Z-curve ordering of the leaves in a $4x4$ $2$-dimensional
+tree with ordered indices displayed.}
+\label{fig:zcurve}
+\end{figure}

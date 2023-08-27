@@ -6,14 +6,14 @@ A \emph{tree} is an abstract hierarchical data type that connects \emph{nodes}
 via \emph{edges}. Each node in a tree is connected to a single \emph{parent
 node} with the exception of the \emph{root node}, which has no parent.
 Additionally, each node may be connected to multiple \emph{child nodes}.
-In DGTile, we use a \emph{binary tree}, a \emph{quadtree}, and an \emph{octree}
-to enable mesh adaptivity in one, two, and three spatial dimensions,
-respectively. In a binary tree, quadtree, and octree each \emph{internal node}
-is connected to exactly two, four, and eight \emph{child nodes}. In contrast,
-a \emph{leaf node} is any node in the tree that contains no children. The
-\emph{level} of a node in the tree is its distance away from the rood node,
-where the \emph{distance} is the number of edges along the shortes path
-between two nodes. The root node in a tree has a level of $0$.
+In \texttt{DGTile}, we use a \emph{binary tree}, a \emph{quadtree}, and an
+\emph{octree} to enable mesh adaptivity in one, two, and three spatial
+dimensions, respectively. In a binary tree, quadtree, and octree each
+\emph{internal node} is connected to exactly two, four, and eight \emph{child
+nodes}. In contrast, a \emph{leaf node} is any node in the tree that contains
+no children. The \emph{level} of a node in the tree is its distance away from
+the rood node, where the \emph{distance} is the number of edges along the
+shortest path between two nodes. The root node in a tree has a level of $0$.
 
 \subsection{Uniquely Identifying Nodes in the Tree}
 
@@ -72,10 +72,16 @@ the $n_{lf}$ leaves in the tree. That's it! Concretely, the \texttt{C++} data
 structure used to store the global leaf identifiers is a \texttt{
 std::unordered\_set<std::uint64\_t>}, so that the look-up of global
 identifiers is on average $\mathcal{O}(1)$. Here, the global identifiers
-$\ID_i$ are stored as \texttt{std::uint64\_t} types so that trees at finer
-levels $l$ may be represented without integer overflow.
+$\ID_i$ are stored as the type \texttt{std::uint64\_t} so that trees at
+higher levels $l$ may be represented without integer overflow.
 
 \subsection{Z-curve Ordering}
+
+\input{tree_zcurve.tex}
+
+The leaves in the tree that \texttt{DGTile} are ordered spatially with a
+\emph{Z-curve} ordering. Figure~\ref{fig:zcurve}
+
 
 \subsection{Leaf Adjacencies}
 
