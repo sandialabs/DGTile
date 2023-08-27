@@ -66,6 +66,15 @@ levels $l=0,1,2$ for an octree.
 
 \subsection{Tree Representation}
 
+Once the leaves in the tree are known, the tree itself is simply stored as
+the unique global identifiers $\ID_i$, $i=1,2,\dots,n_{lf}$, for each of
+the $n_{lf}$ leaves in the tree. That's it! Concretely, the \texttt{C++} data
+structure used to store the global leaf identifiers is a \texttt{
+std::unordered\_set<std::uint64\_t>}, so that the look-up of global
+identifiers is on average $\mathcal{O}(1)$. Here, the global identifiers
+$\ID_i$ are stored as \texttt{std::uint64\_t} types so that trees at finer
+levels $l$ may be represented without integer overflow.
+
 \subsection{Z-curve Ordering}
 
 \subsection{Leaf Adjacencies}

@@ -190,17 +190,23 @@ TEST(tree_amr, get_adjacencies_failure)
 TEST(tree_amr, balance_2D)
 {
   int const dim = 2;
-  Periodic const periodic(true, false, false);
-  Box3<real> const domain({0.,0.,0.}, {3.,2.,0.});
+  Periodic const periodic(false, false, false);
   Leaves const leaves = get_example_refined2(dim);
-  ZLeaves const z_leaves = order(dim, leaves);
   Point const base_pt = get_base_point(dim, leaves);
-  Leaves const balanced_leaves = balance(dim, leaves, base_pt, periodic);
-  ZLeaves const balanced_z_leaves = order(dim, balanced_leaves);
+  Leaves const balanced = balance(dim, leaves, base_pt, periodic);
+  EXPECT_EQ(leaves.size(), 12);
+  EXPECT_EQ(balanced.size(), 21);
+}
 
-  write_vtu(dim, "debug_before", z_leaves, domain);
-  write_vtu(dim, "debug_after", balanced_z_leaves, domain);
-
+TEST(tree_amr, balance_3D)
+{
+  int const dim = 3;
+  Periodic const periodic(false, false, false);
+  Leaves const leaves = get_example_refined2(dim);
+  Point const base_pt = get_base_point(dim, leaves);
+  Leaves const balanced = balance(dim, leaves, base_pt, periodic);
+  EXPECT_EQ(leaves.size(), 20);
+  EXPECT_EQ(balanced.size(), 41);
 }
 
 TEST(tree_amr, write_non_uniform_1D)

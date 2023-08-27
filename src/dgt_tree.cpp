@@ -288,7 +288,9 @@ static std::vector<Vec3<int>> get_adj_children(
   std::vector<Vec3<int>> children;
   children.push_back(offset);
   for (int axis = 0; axis < dim; ++axis) {
-    for (Vec3<int>& child : children) {
+    std::size_t num_children = children.size();
+    for (std::size_t i = 0; i < num_children; ++i) {
+      Vec3<int>& child = children[i];
       if      (child[axis] == -1) child[axis] = 1;
       else if (child[axis] ==  1) child[axis] = 0;
       else children.push_back(child + Vec3<int>::axis(axis));
