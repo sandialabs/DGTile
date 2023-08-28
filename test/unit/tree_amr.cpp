@@ -177,6 +177,33 @@ TEST(tree_amr, get_base_point_3D)
   EXPECT_EQ(get_base_point(dim, z_leaves), Point(2, {3,2,1}));
 }
 
+TEST(tree_amr, get_base_point_test2_1D)
+{
+  int const dim = 1;
+  Leaves const leaves = get_example_refined2(dim);
+  ZLeaves const z_leaves = order(dim, leaves);
+  EXPECT_EQ(get_base_point(dim, leaves), Point(2, {3,0,0}));
+  EXPECT_EQ(get_base_point(dim, z_leaves), Point(2, {3,0,0}));
+}
+
+TEST(tree_amr, get_base_point_test2_2D)
+{
+  int const dim = 2;
+  Leaves const leaves = get_example_refined2(dim);
+  ZLeaves const z_leaves = order(dim, leaves);
+  EXPECT_EQ(get_base_point(dim, leaves), Point(2, {3,2,0}));
+  EXPECT_EQ(get_base_point(dim, z_leaves), Point(2, {3,2,0}));
+}
+
+TEST(tree_amr, get_base_point_test2_3D)
+{
+  int const dim = 3;
+  Leaves const leaves = get_example_refined2(dim);
+  ZLeaves const z_leaves = order(dim, leaves);
+  EXPECT_EQ(get_base_point(dim, leaves), Point(2, {3,2,1}));
+  EXPECT_EQ(get_base_point(dim, z_leaves), Point(2, {3,2,1}));
+}
+
 TEST(tree_amr, get_adjacencies_failure)
 {
   int const dim = 2;
@@ -209,7 +236,33 @@ TEST(tree_amr, balance_3D)
   EXPECT_EQ(balanced.size(), 41);
 }
 
-//TODO: test out the interface with desired levels
+TEST(tree_amr, modify_interface2_2D)
+{
+  int const dim = 2;
+  Leaves const leaves = get_example_refined(dim);
+  ZLeaves const z_leaves = order(dim, leaves);
+  Periodic const periodic(false, false, false);
+  Point const base_pt = get_base_point(dim, z_leaves);
+  Levels levels(z_leaves.size(), 0);
+  levels[3] = 4;
+  Leaves const modified_leaves = modify(dim, z_leaves, levels, base_pt, periodic);
+  ZLeaves const modified_z_leaves = order(dim, modified_leaves);
+  EXPECT_EQ(modified_leaves.size(), 21);
+}
+
+TEST(tree_amr, modify_interface2_3D)
+{
+  int const dim = 3;
+  Leaves const leaves = get_example_refined(dim);
+  ZLeaves const z_leaves = order(dim, leaves);
+  Periodic const periodic(false, false, false);
+  Point const base_pt = get_base_point(dim, z_leaves);
+  Levels levels(z_leaves.size(), 0);
+  levels[7] = 4;
+  Leaves const modified_leaves = modify(dim, z_leaves, levels, base_pt, periodic);
+  ZLeaves const modified_z_leaves = order(dim, modified_leaves);
+  EXPECT_EQ(modified_leaves.size(), 41);
+}
 
 TEST(tree_amr, write_non_uniform_1D)
 {

@@ -197,11 +197,11 @@ Point get_base_point(int const dim, LeavesT const& leaves)
   int const min_level = get_min_level(dim, leaves);
   for (ID const global_id : leaves) {
     int const leaf_level = get_level(dim, global_id);
-    if (leaf_level != min_level) continue;
+    int const diff = leaf_level - min_level;
     Point const leaf_pt = get_point(dim, global_id);
-    ijk.x() = std::max(ijk.x(), leaf_pt.ijk.x() + 1);
-    ijk.y() = std::max(ijk.y(), leaf_pt.ijk.y() + 1);
-    ijk.z() = std::max(ijk.z(), leaf_pt.ijk.z() + 1);
+    ijk.x() = std::max(ijk.x(), (leaf_pt.ijk.x() >> diff) + 1);
+    ijk.y() = std::max(ijk.y(), (leaf_pt.ijk.y() >> diff) + 1);
+    ijk.z() = std::max(ijk.z(), (leaf_pt.ijk.z() >> diff) + 1);
   }
   return Point(min_level, dimensionalize(dim, ijk));
 }
@@ -229,7 +229,7 @@ Box3<real> get_domain(
   return Box3<real>(d_min, d_max);
 }
 
-Box3<int> get_grid_bounds(int const level, Point const& base_pt)
+static Box3<int> get_grid_bounds(int const level, Point const& base_pt)
 {
   int const dim = base_pt.ijk.dimension();
   int const diff = level - base_pt.level;
@@ -237,7 +237,7 @@ Box3<int> get_grid_bounds(int const level, Point const& base_pt)
   Vec3<int> max = Vec3<int>::zero();
   for (int axis = 0; axis < dim; ++axis) {
     int const naxis = base_pt.ijk[axis];
-    max[axis] = int(std::pow(2,diff)*naxis) - 1;
+    max[axis] = (1 << diff)*naxis - 1;
   }
   return Box3<int>(min, max);
 }
