@@ -348,27 +348,22 @@ static void fill_border(Border& border, int soln_idx) {
   p3a::static_array<View<double***>, ndirs> U_border = get_U(border);
   p3a::static_array<View<double**>, ndirs> U_avg_border = get_U_avg(border);
   verify(dim, p, tensor, neq, cell_grid, border_side_grid, U, U_border, U_avg_border);
-  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& side_ijk) {
+
+  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& side_ijk, int const& eq, int const& pt) {
     p3a::vector3<int> const border_side_ijk = get_border_ijk(side_ijk, axis);
     p3a::vector3<int> const cell_ijk = get_sides_adj_cell(side_ijk, axis, idir);
     int const cell = cell_grid.index(cell_ijk);
     int const border_side = border_side_grid.index(border_side_ijk);
-    for (int eq = 0; eq < neq; ++eq) {
+    if ( pt == 0 ) {
       auto const avg = U(cell, eq, 0);
-      for (int msg_dir = 0; msg_dir < ndirs; ++msg_dir) {
+      for (int msg_dir = 0; msg_dir < ndirs; ++msg_dir)
         U_avg_border[msg_dir](border_side, eq) = avg;
-      }
     }
-    for (int pt = 0; pt < npts; ++pt) {
-      for (int eq = 0; eq < neq; ++eq) {
-        double const val = interp_scalar_side(U, b, cell, axis, dir, pt, eq);
-        for (int msg_dir = 0; msg_dir < ndirs; ++msg_dir) {
-          U_border[msg_dir](border_side, pt, eq) = val;
-        }
-      }
-    }
+    double const val = interp_scalar_side(U, b, cell, axis, dir, pt, eq);
+    for (int msg_dir = 0; msg_dir < ndirs; ++msg_dir)
+      U_border[msg_dir](border_side, pt, eq) = val;
   };
-  p3a::for_each(p3a::execution::par, sides, f);
+  p3a::for_each(p3a::execution::par, sides, neq, npts, f);
 }
 
 static void fill_amr_border(Border& border, int soln_idx) {
@@ -394,30 +389,24 @@ static void fill_amr_border(Border& border, int soln_idx) {
   p3a::static_array<View<double****>, ndirs> U_border = get_amr_U(border);
   p3a::static_array<View<double***>, ndirs> U_avg_border = get_amr_U_avg(border);
   verify(dim, p, tensor, neq, nchild, cell_grid, border_side_grid, U, U_border, U_avg_border);
-  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& side_ijk) {
+
+  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& side_ijk, int const& eq, int const& pt) {
     p3a::vector3<int> const border_side_ijk = get_border_ijk(side_ijk, axis);
     p3a::vector3<int> const cell_ijk = get_sides_adj_cell(side_ijk, axis, idir);
     int const cell = cell_grid.index(cell_ijk);
     int const border_side = border_side_grid.index(border_side_ijk);
     for (int which_child = 0; which_child < nchild; ++which_child) {
-      for (int eq = 0; eq < neq; ++eq) {
+      if ( pt == 0 ) {
         double const avg = U(cell, eq, 0);
-        for (int msg_dir = 0; msg_dir < ndirs; ++msg_dir) {
+        for (int msg_dir = 0; msg_dir < ndirs; ++msg_dir)
           U_avg_border[msg_dir](border_side, which_child, eq) = avg;
-        }
       }
-      for (int pt = 0; pt < npts; ++pt) {
-        for (int eq = 0; eq < neq; ++eq) {
-          double const val = interp_scalar_child_side(
-              U, b, cell, axis, dir, which_child, pt, eq);
-          for (int msg_dir = 0; msg_dir < ndirs; ++msg_dir) {
-            U_border[msg_dir](border_side, which_child, pt, eq) = val;
-          }
-        }
-      }
+      double const val = interp_scalar_child_side(U, b, cell, axis, dir, which_child, pt, eq);
+      for (int msg_dir = 0; msg_dir < ndirs; ++msg_dir)
+        U_border[msg_dir](border_side, which_child, pt, eq) = val;
     }
   };
-  p3a::for_each(p3a::execution::par , sides, f);
+  p3a::for_each(p3a::execution::par, sides, neq, npts, f);
 }
 
 static void fill_amr_buffer_from_border(
@@ -441,23 +430,19 @@ static void fill_amr_buffer_from_border(
   View<double***> U_buffer = border.amr(send).child_soln[border_which_child].val;
   View<double**> U_avg_buffer = border.amr(send).child_avg_soln[border_which_child].val;
   verify(dim, p, neq, nchild, border_side_grid, U, U_avg, U_buffer, U_avg_buffer);
-  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& ijk) {
+
+  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& ijk, int const& pt, int const& eq) {
     p3a::vector3<int> const fine_ijk = map_to_fine(ijk, border_local, border_side_grid);
     p3a::vector3<int> const coarse_ijk = get_coarse_ijk(fine_ijk);
     p3a::vector3<int> const local = get_local_from_fine_ijk(fine_ijk);
     int const which_child = get_which_child(axis, local);
     int const border_side = border_side_grid.index(ijk);
     int const border_side_coarse = border_side_grid.index(coarse_ijk);
-    for (int eq = 0; eq < neq; ++eq) {
+    if ( pt == 0 )
       U_avg_buffer(border_side, eq) = U_avg(border_side_coarse, which_child, eq);
-    }
-    for (int pt = 0; pt < npts; ++pt) {
-      for (int eq = 0; eq < neq; ++eq) {
-        U_buffer(border_side, pt, eq) = U(border_side_coarse, which_child, pt, eq);
-      }
-    }
+    U_buffer(border_side, pt, eq) = U(border_side_coarse, which_child, pt, eq);
   };
-  p3a::for_each(p3a::execution::par, border_side_grid, f);
+  p3a::for_each(p3a::execution::par, border_side_grid, npts, neq, f);
 }
 
 static void fill_amr_buffers_from_border(Border& border) {
@@ -492,23 +477,19 @@ static void fill_amr_border_from_buffer(
   View<double***> U_buffer = border.amr(recv).child_soln[border_which_child].val;
   View<double**> U_avg_buffer = border.amr(recv).child_avg_soln[border_which_child].val;
   verify(dim, p, neq, nchild, border_side_grid, U, U_avg, U_buffer, U_avg_buffer);
-  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& ijk) {
+
+  auto f = [=] P3A_DEVICE (p3a::vector3<int> const& ijk, int const& pt, int const& eq) {
     p3a::vector3<int> const fine_ijk = map_to_fine(ijk, border_local, border_side_grid);
     p3a::vector3<int> const coarse_ijk = get_coarse_ijk(fine_ijk);
     p3a::vector3<int> const local = get_local_from_fine_ijk(fine_ijk);
     int const which_child = get_which_child(axis, local);
     int const border_side = border_side_grid.index(ijk);
     int const border_side_coarse = border_side_grid.index(coarse_ijk);
-    for (int eq = 0; eq < neq; ++eq) {
+    if ( pt == 0 )
       U_avg(border_side_coarse, which_child, eq) = U_avg_buffer(border_side, eq);
-    }
-    for (int pt = 0; pt < npts; ++pt) {
-      for (int eq = 0; eq < neq; ++eq) {
-        U(border_side_coarse, which_child, pt, eq) = U_buffer(border_side, pt, eq);
-      }
-    }
+    U(border_side_coarse, which_child, pt, eq) = U_buffer(border_side, pt, eq);
   };
-  p3a::for_each(p3a::execution::par, border_side_grid, f);
+  p3a::for_each(p3a::execution::par, border_side_grid, npts, neq, f);
 }
 
 static void fill_amr_border_from_buffers(Border& border) {
