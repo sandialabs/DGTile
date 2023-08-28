@@ -38,7 +38,8 @@ static Leaves get_example_refined(int const dim)
 static Leaves get_example_refined2(int const dim)
 {
   Leaves const leaves = get_example_refined(dim);
-  return refine_zleaf(dim, leaves, 3);
+  int const leaf = (dim == 1) ? 1 : 3;
+  return refine_zleaf(dim, leaves, leaf);
 }
 
 TEST(tree_amr, modify_1D)
@@ -212,6 +213,17 @@ TEST(tree_amr, get_adjacencies_failure)
   Point const base_pt = get_base_point(dim, z_leaves);
   Periodic const periodic(true, false, false);
   EXPECT_THROW((void)get_adjacencies(dim, leaves, base_pt, periodic), std::runtime_error);
+}
+
+TEST(tree_amr, balance_1D)
+{
+  int const dim = 1;
+  Periodic const periodic(false, false, false);
+  Leaves const leaves = get_example_refined2(dim);
+  Point const base_pt = get_base_point(dim, leaves);
+  Leaves const balanced = balance(dim, leaves, base_pt, periodic);
+  EXPECT_EQ(leaves.size(), 5);
+  EXPECT_EQ(balanced.size(), 6);
 }
 
 TEST(tree_amr, balance_2D)
