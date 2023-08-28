@@ -6,6 +6,8 @@ set(UNIT_TEST_SOURCES
   defines.cpp
   dg.cpp
   dg_dim1.cpp
+  dg_dim2.cpp
+  dg_dim3.cpp
   for_each.cpp
   grid3.cpp
   main.cpp
