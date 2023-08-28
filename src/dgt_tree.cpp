@@ -1,3 +1,5 @@
+#include <list>
+
 #include "dgt_cartesian.hpp"
 #include "dgt_for_each.hpp"
 #include "dgt_tree.hpp"
@@ -469,18 +471,65 @@ Leaves balance(
   return result;
 }
 
+static std::unordered_set<ID> get_valid_parents(
+    int const dim,
+    ZLeaves const& z_leaves,
+    Marks const& marks)
+{
+  std::list<ID> sorted_parents;
+  std::list<ID> unique_parents;
+  std::unordered_set<ID> result;
+  for (std::size_t i = 0; i < z_leaves.size(); ++i) {
+    if (marks[i] == DEREFINE) {
+      ID const leaf = z_leaves[i];
+      Point const pt = get_point(dim, leaf);
+      Point const coarse_pt = get_coarse_point(dim, pt);
+      ID const parent = get_global_id(dim, coarse_pt);
+      unique_parents.push_back(parent);
+    }
+  }
+  unique_parents.sort();
+  sorted_parents = unique_parents;
+  unique_parents.unique();
+  int const num_child = dimensionalize(dim, child_grid).size();
+  for (ID const parent : unique_parents) {
+    int const count = std::count(
+        sorted_parents.begin(), sorted_parents.end(), parent);
+    if (count == num_child) result.insert(parent);
+  }
+  return result;
+}
+
+static bool can_derefine(
+    int const dim,
+    ID const leaf,
+    std::unordered_set<ID> const& parents)
+{
+  Point const pt = get_point(dim, leaf);
+  Point const coarse_pt = get_coarse_point(dim, pt);
+  ID const parent = get_global_id(dim, coarse_pt);
+  if (parents.count(parent)) return true;
+  else return false;
+}
+
 Leaves modify(
     int const dim,
     ZLeaves const& z_leaves,
     Marks const& marks)
 {
   Leaves leaves;
+  auto const parents = get_valid_parents(dim, z_leaves, marks);
   for (std::size_t i = 0; i < z_leaves.size(); ++i) {
     ID const leaf = z_leaves[i];
     if (marks[i] == REMAIN) leaves.insert(leaf);
     if (marks[i] == REFINE) insert_children(leaves, dim, leaf);
-    if (marks[i] == DEREFINE) insert_parent(leaves, dim, leaf);
-    // TODO: need to make derefining somehow consistent...
+    if (marks[i] == DEREFINE) {
+      if (can_derefine(dim, leaf, parents)) {
+        insert_parent(leaves, dim, leaf);
+      } else {
+        leaves.insert(leaf);
+      }
+    }
   }
   return leaves;
 }
