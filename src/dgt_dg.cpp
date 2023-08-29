@@ -13,7 +13,7 @@ static std::string basis_name(
     int const q,
     bool const tensor)
 {
-  return fmt::format("Basis[dim={}][p={}][q={}][tensor={}]", dim, p, q, tensor);
+  return fmt::format("Basis(dim={},p={},q={},tensor={})", dim, p, q, tensor);
 }
 
 static std::string loc_name(int const loc)
@@ -244,7 +244,7 @@ void build_mode(
 {
   size_t const npts = pts.extent(0);
   size_t const nmodes = num_modes(dim, p, tensor);
-  std::string const lname = loc_name(location);
+  std::string const lname = "[" + loc_name(location) + "]";
   B.modes[location].points = ViewT<real**>(name + lname + ".points", npts, dim);
   B.modes[location].phis = ViewT<real**>(name + lname + ".phis", npts, nmodes);
   B.modes[location].grad_phis = ViewT<real***>(name + lname + ".grad_phis", dim, npts, nmodes);
