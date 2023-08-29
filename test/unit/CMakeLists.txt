@@ -11,6 +11,7 @@ set(UNIT_TEST_SOURCES
   for_each.cpp
   grid3.cpp
   main.cpp
+  partitioning.cpp
   print.cpp
   stl.cpp
   subgrid3.cpp
