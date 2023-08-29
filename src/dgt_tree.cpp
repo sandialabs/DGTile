@@ -378,7 +378,10 @@ static AdjImpl get_adj(
       if (needs_refinement) {
         result.should_refine = true;
       }
-      int const sum = is_fine_to_coarse + is_coarse_to_fine + needs_refinement;
+      int const sum =
+        int(is_fine_to_coarse) +
+        int(is_coarse_to_fine) +
+        int(needs_refinement);
       if (sum > 1) {
         throw std::runtime_error("dgt::tree.get_adj - invalid tree");
       }
