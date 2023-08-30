@@ -50,11 +50,13 @@ TEST(subgrid3, extents)
 TEST(subgrid3, size)
 {
   EXPECT_EQ(Subgrid3({1,1,1}, {5,5,5}).size(), 64);
-  EXPECT_EQ(Subgrid3({1,1,0}, {5,5,0}).size(), 16);
-  EXPECT_EQ(Subgrid3({1,0,0}, {5,0,0}).size(), 4);
   EXPECT_EQ(Subgrid3({0,0,0}, {5,5,5}).size(), 125);
-  EXPECT_EQ(Subgrid3({0,0,0}, {5,5,0}).size(), 25);
-  EXPECT_EQ(Subgrid3({1,1,0}, {5,0,5}).size(), -1);
+  EXPECT_EQ(Subgrid3({1,1,0}, {5,5,0}).size(), 0);
+  EXPECT_EQ(generalize(2, Subgrid3({1,1,0}, {5,5,0})).size(), 16);
+  EXPECT_EQ(generalize(2, Subgrid3({0,0,0}, {5,5,0})).size(), 25);
+  EXPECT_EQ(Subgrid3({1,0,0}, {5,0,0}).size(), 0);
+  EXPECT_EQ(generalize(1, Subgrid3({1,0,0}, {5,0,0})).size(), 4);
+  EXPECT_EQ(generalize(1, Subgrid3({0,0,0}, {5,0,0})).size(), 5);
 }
 
 TEST(subgrid3, dimensionalize)
@@ -65,4 +67,11 @@ TEST(subgrid3, dimensionalize)
   EXPECT_EQ(dimensionalize(3, Subgrid3({-1,-1,-1}, {8,8,8})), Subgrid3({-1,-1,-1}, {8,8,8}));
   EXPECT_EQ(dimensionalize(2, Subgrid3({-1,-1,-1}, {8,8,8})), Subgrid3({-1,-1,0}, {8,8,0}));
   EXPECT_EQ(dimensionalize(1, Subgrid3({-1,-1,-1}, {8,8,8})), Subgrid3({-1,0,0}, {8,0,0}));
+}
+
+TEST(subgrid3, generalize)
+{
+  EXPECT_EQ(generalize(3, Subgrid3({1,1,1}, {8,8,8})), Subgrid3({1,1,1}, {8,8,8}));
+  EXPECT_EQ(generalize(2, Subgrid3({1,1,0}, {8,8,0})), Subgrid3({1,1,0}, {8,8,1}));
+  EXPECT_EQ(generalize(1, Subgrid3({1,0,0}, {8,0,0})), Subgrid3({1,0,0}, {8,1,1}));
 }

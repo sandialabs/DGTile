@@ -14,7 +14,7 @@ Subgrid3 get_cells(
     Vec3<std::int8_t> const& ijk_offset)
 {
   int const own_off = (ownership == OWNED) ? 1 : 0;
-  int const dim = cell_grid.dimension();
+  int const dim = infer_dimension(cell_grid);
   Vec3<int> const ncells = cell_grid.extents();
   Vec3<int> lower = Vec3<int>::zero();
   Vec3<int> upper = Vec3<int>::zero();
@@ -36,7 +36,7 @@ Subgrid3 get_fine_to_coarse_cells(
   if (ownership == GHOST) {
     return get_cells(GHOST, cell_grid, ijk_offset);
   }
-  int const dim = cell_grid.dimension();
+  int const dim = infer_dimension(cell_grid);
   Subgrid3 s = get_cells(OWNED, cell_grid, ijk_offset);
   for (int axis = 0; axis < dim; ++axis) {
     if (ijk_offset[axis] == -1) s.upper()[axis] += 1;
@@ -51,7 +51,7 @@ Subgrid3 get_coarse_to_fine_cells(
     Vec3<int> const& child_ijk,
     Vec3<std::int8_t> const& ijk_offset)
 {
-  int const dim = cell_grid.dimension();
+  int const dim = infer_dimension(cell_grid);
   Vec3<int> const ncells = cell_grid.extents();
   Subgrid3 s = get_cells(ownership, cell_grid, ijk_offset);
   for (int axis = 0; axis < dim; ++axis) {

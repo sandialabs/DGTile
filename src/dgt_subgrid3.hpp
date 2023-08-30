@@ -74,15 +74,18 @@ class Subgrid3
 
 };
 
-DGT_METHOD constexpr Subgrid3 dimensionalize(
-    int const dim,
-    Subgrid3 const& subgrid)
+DGT_METHOD constexpr Subgrid3 dimensionalize(int const dim, Subgrid3 const& s)
 {
-  Vec3<int> const lower = dimensionalize(dim, subgrid.lower());
-  Vec3<int> const upper = dimensionalize(dim, subgrid.upper());
-  Subgrid3 d_subgrid(lower, upper);
-  return d_subgrid;
+  Vec3<int> const lower = dimensionalize(dim, s.lower());
+  Vec3<int> const upper = dimensionalize(dim, s.upper());
+  return Subgrid3(lower, upper);
 }
 
+DGT_METHOD constexpr Subgrid3 generalize(int const dim, Subgrid3 const& s)
+{
+  Vec3<int> const lower = dimensionalize(dim, s.lower());
+  Vec3<int> const upper = generalize(dim, s.upper());
+  return Subgrid3(lower, upper);
+}
 
 }

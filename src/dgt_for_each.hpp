@@ -12,9 +12,9 @@ DGT_ALWAYS_INLINE inline constexpr void seq_for_each(
     Subgrid3 const& subgrid,
     Functor const& functor)
 {
-  if (subgrid.size() < 0) return;
-  Subgrid3 s = subgrid;
-  s.upper() = generalize(subgrid.upper().dimension(), s.upper());
+  int const dim = infer_dimension(subgrid.upper());
+  Subgrid3 const s = generalize(dim, subgrid);
+  if (s.size() == 0) return;
   for (int k = s.lower().z(); k < s.upper().z(); ++k) {
     for (int j = s.lower().y(); j < s.upper().y(); ++j) {
       for (int i = s.lower().x(); i < s.upper().x(); ++i) {

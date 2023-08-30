@@ -137,10 +137,10 @@ template <class T>
 void test_volume()
 {
   EXPECT_EQ(Vec3<T>(1,2,3).volume(), T(6));
-  EXPECT_EQ(Vec3<T>(1,2,0).volume(), T(2));
-  EXPECT_EQ(Vec3<T>(5,0,0).volume(), T(5));
-  EXPECT_EQ(Vec3<T>(-1,3,9).volume(), T(-1));
-  EXPECT_EQ(Vec3<T>(1,0,9).volume(), T(-1));
+  EXPECT_EQ(Vec3<T>(1,2,0).volume(), T(0));
+  EXPECT_EQ(Vec3<T>(5,0,0).volume(), T(0));
+  EXPECT_EQ(generalize(DIMENSIONS, Vec3<T>(1,2,0)).volume(), T(2));
+  EXPECT_EQ(generalize(DIMENSIONS, Vec3<T>(5,0,0)).volume(), T(5));
 }
 
 template <class T>
@@ -258,16 +258,6 @@ TEST(vec3, axis)
   test_axis<real>();
 }
 
-TEST(vec3, dimension)
-{
-  EXPECT_EQ(Vec3<int>(1,2,3).dimension(), 3);
-  EXPECT_EQ(Vec3<int>(5,2,0).dimension(), 2);
-  EXPECT_EQ(Vec3<int>(27,0,0).dimension(), 1);
-  EXPECT_EQ(Vec3<int>(-1,1,8).dimension(), -1);
-  EXPECT_EQ(Vec3<int>(0,1,8).dimension(), -1);
-  EXPECT_EQ(Vec3<int>(1,0,8).dimension(), -1);
-}
-
 TEST(vec3, assignment)
 {
   test_assignment<int>();
@@ -368,6 +358,18 @@ TEST(vec3, max)
 {
   test_max<int>();
   test_max<real>();
+}
+
+TEST(vec3, infer_dimension)
+{
+  EXPECT_EQ(infer_dimension(Vec3<int>(3,0,0)), 1);
+  EXPECT_EQ(infer_dimension(Vec3<int>(3,4,0)), 2);
+  EXPECT_EQ(infer_dimension(Vec3<int>(3,4,8)), 3);
+  EXPECT_EQ(infer_dimension(Vec3<int>(0,4,8)), -1);
+  EXPECT_EQ(infer_dimension(Vec3<int>(4,0,8)), -1);
+  EXPECT_EQ(infer_dimension(Vec3<int>(-1,0,0)), -1);
+  EXPECT_EQ(infer_dimension(Vec3<int>(-1,-2,0)), -1);
+  EXPECT_EQ(infer_dimension(Vec3<int>(-1,-2,-3)), -1);
 }
 
 TEST(vec3, dimensionalize)

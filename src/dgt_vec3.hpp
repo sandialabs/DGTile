@@ -60,16 +60,6 @@ class Vec3
       return m_z;
     }
 
-    DGT_METHOD constexpr int dimension() const
-    {
-      bool const has_x = (m_x > T(0));
-      bool const has_y = (m_y > T(0));
-      bool const has_z = (m_z > T(0));
-      if (has_x && !has_y && !has_z) return 1;
-      if (has_x && has_y && !has_z) return 2;
-      if (has_x && has_y && has_z) return 3;
-      return -1;
-    }
 
     DGT_METHOD static constexpr Vec3 zero()
     { 
@@ -163,10 +153,7 @@ class Vec3
 
     DGT_METHOD constexpr T volume() const
     {
-      if (dimension() == 1) return m_x;
-      if (dimension() == 2) return m_x * m_y;
-      if (dimension() == 3) return m_x * m_y * m_z;
-      return T(-1);
+      return m_x * m_y * m_z;
     }
 
 };
@@ -211,6 +198,17 @@ template <class T>
 DGT_METHOD constexpr T max(Vec3<T> const& v)
 {
   return std::max(v.x(), std::max(v.y(), v.z()));
+}
+
+DGT_METHOD constexpr int infer_dimension(Vec3<int> const& v)
+{
+  bool const has_x = (v.x() > 0);
+  bool const has_y = (v.y() > 0);
+  bool const has_z = (v.z() > 0);
+  if (has_x && has_y && has_z) return 3;
+  if (has_x && has_y && !has_z) return 2;
+  if (has_x && !has_y && !has_z) return 1;
+  return -1;
 }
 
 template <class T>

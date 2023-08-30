@@ -231,7 +231,7 @@ Box3<real> get_domain(
 
 static Box3<int> get_grid_bounds(int const level, Point const& base_pt)
 {
-  int const dim = base_pt.ijk.dimension();
+  int const dim = infer_dimension(base_pt.ijk);
   int const diff = level - base_pt.level;
   Vec3<int> min = Vec3<int>::zero();
   Vec3<int> max = Vec3<int>::zero();
