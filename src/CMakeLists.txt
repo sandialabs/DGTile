@@ -5,6 +5,7 @@ set(DGT_HEADERS
   dgt_cartesian.hpp
   dgt_defines.hpp
   dgt_dg.hpp
+  dgt_field.hpp
   dgt_for_each.hpp
   dgt_grid3.hpp
   dgt_initialize.hpp
@@ -26,6 +27,7 @@ set(DGT_SOURCES
   dgt_base64.cpp
   dgt_cartesian.cpp
   dgt_dg.cpp
+  dgt_field.cpp
   dgt_initialize.cpp
   dgt_lua.cpp
   dgt_lua_interface.cpp

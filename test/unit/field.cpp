@@ -1,3 +1,4 @@
+#include <dgt_field.hpp>
 #include <dgt_view.hpp>
 #include <dgt_subgrid3.hpp>
 
@@ -56,6 +57,7 @@ void for_each(
 void do_field_test()
 {
 
+
   // sizes
   int const num_eqs = 5;
   int const num_modes = 8;
@@ -63,17 +65,8 @@ void do_field_test()
   Grid3 const cell_grid(5,2,2);
 
   // create the data
-  std::vector<View<real***>> field_storage(num_blocks);
-  for (int block = 0; block < num_blocks; ++block) {
-    std::string const name = fmt::format("hydro[{}]", block);
-    field_storage[block] = View<real***>(name, cell_grid.size(), num_eqs, num_modes);
-  }
-
-  // create a usable container for the data
-  HostPinnedView<View<real***>*> field("hydro", num_blocks);
-  for (int block = 0; block < num_blocks; ++block) {
-    field[block] = field_storage[block];
-  }
+  ModalField hydro("hydro", num_blocks, cell_grid.size(), num_eqs, num_modes);
+  auto const field = hydro.get();
 
   // loop over the data and do some things
   auto functor = [=] DGT_DEVICE (int const block, Vec3<int> const& cell_ijk) {
@@ -86,9 +79,10 @@ void do_field_test()
   };
   for_each(num_blocks, cell_grid, functor);
 
+
   // compute a sum of the data of a field over a block
   int result = 0;
-  View<real***> view = field_storage[2];
+  View<real***> view = field[2];
   real* data = view.data();
   auto functor2 = [=] DGT_DEVICE (int const i, int& sum) {
     sum += data[i];
