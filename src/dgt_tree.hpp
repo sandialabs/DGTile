@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -28,7 +29,7 @@ struct Point
 
 struct Adjacency
 {
-  ID neighbor = -1;
+  ID neighbor = 0;
   std::int8_t level_offset = -1;
   Vec3<std::int8_t> ijk_offset = Vec3<std::int8_t>::zero();
 };

@@ -7,7 +7,7 @@ using namespace dgt;
 TEST(vec, construct)
 {
   Vec<real, 4> a;
-  (void)a;
+  a[0] = 0;
 }
 
 TEST(vec, mutable_accessor)

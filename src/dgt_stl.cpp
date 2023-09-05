@@ -1,8 +1,6 @@
 #include <fstream>
 #include <stdexcept>
 
-#include <spdlog/spdlog.h>
-
 #include "dgt_stl.hpp"
 
 namespace dgt {
@@ -26,7 +24,7 @@ Triangles read(std::filesystem::path const& path)
 {
   std::ifstream file(path.string().c_str(), std::ios::in | std::ios::binary);
   if (!file.is_open()) {
-    spdlog::error("dgt::stl::read - could not open {}", path.string());
+    throw std::runtime_error("dgt::stl::read - could not open " + path.string());
   }
   char header_char[80] = "";
   char num_triangles_char[4];

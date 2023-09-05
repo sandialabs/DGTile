@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "dgt_subgrid3.hpp"
 
 namespace dgt {

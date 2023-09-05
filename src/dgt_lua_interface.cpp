@@ -1,4 +1,4 @@
-#include <spdlog/spdlog.h>
+#include <fmt/core.h>
 
 #include "dgt_lua.hpp"
 #include "dgt_lua_interface.hpp"
@@ -9,8 +9,9 @@ static void check_when_key(
     lua::table_iterator::value_type const& pair,
     lua::table const& table) {
   if (pair.first.type() != LUA_TSTRING) {
-    spdlog::error("dgt:make_when[{}]-> key must be a string", table.name());
-    throw std::runtime_error("dgt:make_when");
+    std::string const msg = fmt::format(
+        "dgt:make_when[{}]-> key must be a string", table.name());
+    throw std::runtime_error(msg);
   }
 }
 
@@ -20,7 +21,9 @@ static void check_valid_when_keywords(lua::table const& in)
     check_when_key(pair, in);
     std::string const key = lua::string(pair.first).value();
     if (!((key == "kind") || (key == "frequency") || (key == "step") || (key == "time"))) {
-      spdlog::error("dgt:make_when[{}]-> unknown key `{}`", in.name(), key);
+      std::string const msg = fmt::format(
+          "dgt:make_when[{}]-> unknown key `{}`", in.name(), key);
+      printf("%s\n", msg.c_str());
       dgt::errors++;
     }
   }
@@ -54,7 +57,9 @@ static WhenPtr make_single_when(lua::table const& in)
     real const frequency = in.get_number("frequency");
     result = std::make_shared<AtExactTimePeriodically>(frequency);
   } else {
-    spdlog::error("dgt:when-> unknown kind `{}`", kind);
+    std::string const msg = fmt::format(
+        "dgt:when-> unknown kind `{}`", kind);
+    printf("%s\n", msg.c_str());
     dgt::errors++;
   }
   return result;
@@ -65,7 +70,8 @@ WhenPtr make_when(lua::table const& in)
   WhenPtr result = std::make_shared<AtNever>();
   in.check_type(LUA_TTABLE);
   if (in.size() < 1) {
-    spdlog::error("dgt:make_when -> invalid table size");
+    std::string const msg = "dgt:make_when -> invalid table size";
+    printf("%s\n", msg.c_str());
     dgt::errors++;
   }
   for (lua_Integer i = 1; i <= in.size(); ++i) {

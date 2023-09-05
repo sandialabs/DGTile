@@ -3,14 +3,9 @@
 
 ## What is this?
 
-DGTile is a lightweight C++17 adaptive mesh library is meant to support
-explicit discontinuous Galerkin applications on high performance computing
-machines. The mesh supports block-structured adaptivity (isotropic refinement
-and coarsening), where each block represents a Cartesian grid in one, two and
-three spatial dimensions. Additionally, support for modal discontinuous
-Galerkin basis functions is provided. Distributed memory parallelism (MPI) is
-achieved by partitioning blocks over MPI ranks, and shared memory parallelism
-is achieved by parallelizing functors over each block.
+DGTile is a C++17 adaptive mesh library meant to support explicit
+discontinuous Galerkin finite element applications on high performance
+computing machines.
 
 ## Dependencies
 
@@ -21,7 +16,6 @@ DGTile has required dependencies on:
   * [googletest](https://github.com/google/googletest) - testing
   * [lua](https://gitlab.com/codelibre/lua/lua-cmake) - interfacing
   * [mpi](https://www.open-mpi.org/) - distributed memory parallelism
-  * [spdlog](https://github.com/gabime/spdlog) - logging
   * [zlib](https://github.com/zlib-ng/zlib-ng) - data compression
 
 ##

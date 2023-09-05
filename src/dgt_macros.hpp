@@ -7,7 +7,7 @@
 
 #ifdef KOKKOS_ENABLE_CUDA
 #ifndef __CUDACC_EXTENDED_LAMBDA__
-#error "please recompile with -expt-extended-lambda"
+#error "please recompile with --expt-extended-lambda"
 #endif
 #endif
 
