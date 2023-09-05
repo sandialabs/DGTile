@@ -2,8 +2,6 @@
 
 #include <gtest/gtest.h>
 
-#include <dgt_print.hpp> // debug
-
 using namespace dgt;
 
 TEST(grid3, construct_with_values)
