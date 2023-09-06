@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mpicpp.hpp>
+
 #include "dgt_field.hpp"
 #include "dgt_tree.hpp"
 
