@@ -5,7 +5,7 @@
 
 namespace dgt {
 
-class ModalField
+class DGField 
 {
 
   public:
@@ -23,14 +23,14 @@ class ModalField
 
   public:
 
-    ModalField(
+    DGField(
         std::string const& name,
         int const num_blocks,
         int const num_cells,
         int const num_eqs,
         int const num_modes);
 
-    ~ModalField();
+    ~DGField();
 
     std::string name() const { return m_name; }
     accessor_t get() { return m_accessor; }

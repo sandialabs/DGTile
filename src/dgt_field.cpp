@@ -4,7 +4,7 @@
 
 namespace dgt {
 
-ModalField::ModalField(
+DGField::DGField(
     std::string const& name,
     int const num_blocks,
     int const num_cells,
@@ -24,7 +24,7 @@ ModalField::ModalField(
   }
 }
 
-ModalField::~ModalField()
+DGField::~DGField()
 {
 }
 

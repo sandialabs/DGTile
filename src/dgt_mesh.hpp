@@ -26,7 +26,7 @@ class Mesh
 
     Basis<View> m_basis;
 
-    std::vector<ModalField> m_modal_fields;
+    std::vector<ModalField> m_dg_fields;
 
 };
 
