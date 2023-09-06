@@ -57,6 +57,7 @@ void for_each(
 void do_field_test()
 {
 
+  // create a field how I think it should be created
   int const num_blocks = 4;
   int const num_cells = 20;
   int const num_eqs = 5;
@@ -64,13 +65,31 @@ void do_field_test()
   ModalField field("hydro", num_blocks, num_cells, num_eqs, num_modes);
   auto const f = field.get();
 
+  // loop over stuff (in a 1D loop) and fill in values
   auto functor = [=] DGT_DEVICE (int const block) {
-    int const cell = 0;
-    int const eq = 0;
-    int const mode = 0;
-    f[block](cell, eq, mode) = 1.;
+    for (int cell = 0; cell < num_cells; ++cell) {
+      for (int eq = 0; eq < num_eqs; ++eq) {
+        for (int mode = 0; mode < num_modes; ++mode) {
+          f[block](cell, eq, mode) = 1.;
+        }
+      }
+    }
   };
   Kokkos::parallel_for("for", num_blocks, functor);
+
+  // grab each individual view and check that each entry was hit
+  // and filled in with a 1
+  for (int block = 0; block < num_blocks; ++block) {
+    double result = 0.;
+    ModalField::view_t view = field.get(block);
+    real* data = view.data();
+    auto functor2 = [=] DGT_DEVICE (int const i, double& result) {
+      result += data[i];
+    };
+    Kokkos::parallel_reduce("for2", view.size(), functor2, result);
+    std::cout << "sum result! " << result << "\n";
+    std::cout << "expected: ! " << (num_cells*num_eqs*num_modes) << "\n";
+  }
 
 }
 

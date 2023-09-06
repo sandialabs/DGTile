@@ -33,6 +33,8 @@ class ModalField
 
     accessor_t get() { return m_accessor; }
 
+    view_t get(int const idx) { return m_storage[idx]; }
+
 };
 
 }
