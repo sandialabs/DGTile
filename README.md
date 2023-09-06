@@ -1,4 +1,6 @@
-# <img src="logo.png" width="150"> DGTile
+<img src="logo.png" width="200">
+
+# DGTile
 > A portably performant discontinuous Galerkin adaptive mesh library
 
 ## What is this?
