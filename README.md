@@ -18,6 +18,7 @@ DGTile has required dependencies on:
   * [googletest](https://github.com/google/googletest) - testing
   * [lua](https://gitlab.com/codelibre/lua/lua-cmake) - interfacing
   * [mpi](https://www.open-mpi.org/) - distributed memory parallelism
+  * [mpicpp](https://github.com/sandialabs/mpicpp) - MPI C++ interfacing
   * [zlib](https://github.com/zlib-ng/zlib-ng) - data compression
 
 ##

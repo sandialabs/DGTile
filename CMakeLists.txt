@@ -13,6 +13,7 @@ find_package(GTest REQUIRED)
 find_package(Kokkos REQUIRED COMPONENTS separable_compilation)
 find_package(Lua REQUIRED)
 find_package(MPI REQUIRED)
+find_package(mpicpp REQUIRED)
 find_package(ZLIB REQUIRED)
 
 set(DGT_LANGUAGE CXX)
