@@ -17,6 +17,7 @@ class ModalField
 
   private:
 
+    std::string m_name;
     storage_t m_storage;
     accessor_t m_accessor;
 
@@ -31,8 +32,8 @@ class ModalField
 
     ~ModalField();
 
+    std::string name() const { return m_name; }
     accessor_t get() { return m_accessor; }
-
     view_t get(int const idx) { return m_storage[idx]; }
 
 };

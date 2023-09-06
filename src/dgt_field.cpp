@@ -13,6 +13,7 @@ ModalField::ModalField(
 {
   using Kokkos::view_alloc;
   using Kokkos::WithoutInitializing;
+  m_name = name;
   m_storage.resize(num_blocks);
   m_accessor = accessor_t(name, num_blocks);
   for (int block = 0; block < num_blocks; ++block) {
