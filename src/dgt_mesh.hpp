@@ -11,6 +11,8 @@ class Mesh
 
   private:
 
+    mpicpp::comm* m_comm;
+
     Vec3<bool> m_periodic;
     Box3<real> m_domain;
 
@@ -19,6 +21,8 @@ class Mesh
     tree::Leaves m_leaves;
     tree::ZLeaves m_zleaves;
     tree::Leaves m_owned_leaves;
+
+    Basis<View> m_basis;
 
     std::vector<ModalField> m_modal_fields;
 
