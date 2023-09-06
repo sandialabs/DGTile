@@ -12,4 +12,4 @@ target_link_libraries(dgt-integration-tests PRIVATE GTest::gtest)
 target_link_libraries(dgt-integration-tests PRIVATE dgtile)
 
 add_test(NAME unit_tests COMMAND "./dgt-integration-tests")
-set_tests_properties(unit_tests PROPERTIES ENVIRONMENT "DATA_DIR=${CMAKE_CURRENT_SOURCE_DIR}")
+set_tests_properties(unit_tests PROPERTIES ENVIRONMENT "INTEGRATION_DATA_DIR=${CMAKE_CURRENT_SOURCE_DIR}")

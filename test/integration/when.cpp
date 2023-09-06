@@ -58,7 +58,7 @@ TEST(when, from_lua)
 {
   auto stack = lua::stack::newstate();
   stack.setglobal("dgt_check_whens", check_whens);
-  std::filesystem::path const data_dir(std::getenv("DATA_DIR"));
+  std::filesystem::path const data_dir(std::getenv("INTEGRATION_DATA_DIR"));
   std::filesystem::path const when_path = data_dir / "when.lua";
   stack.dofile(when_path);
 }

@@ -6,7 +6,7 @@ using namespace dgt::stl;
 
 TEST(stl, read)
 {
-  std::filesystem::path const data_dir(std::getenv("DATA_DIR"));
+  std::filesystem::path const data_dir(std::getenv("UNIT_DATA_DIR"));
   std::filesystem::path const stl_path = data_dir / "ex.stl";
   Triangles triangles = read(stl_path);
   EXPECT_EQ(triangles.size(), 2);
