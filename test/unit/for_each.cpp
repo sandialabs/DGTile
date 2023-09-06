@@ -81,3 +81,5 @@ TEST(for_each, sequenced_offset_grid_3D)
   seq_for_each(dimensionalize(3, offset_grid), functor);
   EXPECT_EQ(sum, 27);
 }
+
+//TODO: unit test 4D for each
