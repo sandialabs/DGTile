@@ -57,43 +57,20 @@ void for_each(
 void do_field_test()
 {
 
-
-  // sizes
+  int const num_blocks = 4;
+  int const num_cells = 20;
   int const num_eqs = 5;
   int const num_modes = 8;
-  int const num_blocks = 4;
-  Grid3 const cell_grid(5,2,2);
+  ModalField field("hydro", num_blocks, num_cells, num_eqs, num_modes);
+  auto const f = field.get();
 
-  // create the data
-  ModalField hydro("hydro", num_blocks, cell_grid.size(), num_eqs, num_modes);
-  auto const field = hydro.get();
-
-  // loop over the data and do some things
-  auto functor = [=] DGT_DEVICE (int const block, Vec3<int> const& cell_ijk) {
-    int const cell = cell_grid.index(cell_ijk);
-    for (int eq = 0; eq < num_eqs; ++eq) {
-      for (int mode = 0; mode < num_modes; ++mode) {
-        field[block](cell, eq, mode) = 1.;
-      }
-    }
+  auto functor = [=] DGT_DEVICE (int const block) {
+    int const cell = 0;
+    int const eq = 0;
+    int const mode = 0;
+    f[block](cell, eq, mode) = 1.;
   };
-  for_each(num_blocks, cell_grid, functor);
-
-
-  // compute a sum of the data of a field over a block
-  int result = 0;
-  View<real***> view = field[2];
-  real* data = view.data();
-  auto functor2 = [=] DGT_DEVICE (int const i, int& sum) {
-    sum += data[i];
-  };
-  Kokkos::parallel_reduce("sum", view.size(), functor2, result);
-
-  std::cout << "RESULT: " << result  << "\n";
-  std::cout << " > view size: " <<  view.size() << "\n";
-  std::cout << " > view extent 0: " << view.extent(0) << "\n";
-  std::cout << " > view extent 1: " << view.extent(1) << "\n";
-  std::cout << " > view extent 2: " << view.extent(2) << "\n";
+  Kokkos::parallel_for("for", num_blocks, functor);
 
 }
 

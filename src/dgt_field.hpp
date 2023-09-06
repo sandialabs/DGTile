@@ -8,10 +8,16 @@ namespace dgt {
 class ModalField
 {
 
-  private:
+  public:
 
     using view_t = View<real***>;
-    using accessor_t = HostPinnedView<view_t*>;
+    using uview_t = UnmanagedView<real***>;
+    using storage_t = std::vector<view_t>;
+    using accessor_t = HostPinnedView<uview_t*>;
+
+  private:
+
+    storage_t m_storage;
     accessor_t m_accessor;
 
   public:
