@@ -58,7 +58,7 @@ inline void test_basis(
     int const q,
     bool const tensor)
 {
-  auto B = build_basis<HostView>({dim, p, q, tensor});
+  auto B = build_basis<HostView>(dim, p, q, tensor);
   test_integers(B, dim, p, q, tensor);
   test_view_sizes(B);
 }

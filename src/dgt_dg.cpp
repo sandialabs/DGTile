@@ -7,10 +7,13 @@
 
 namespace dgt {
 
-static std::string basis_name(BasisInfo const& in)
+static std::string basis_name(
+    int const dim,
+    int const p,
+    int const q,
+    bool const tensor)
 {
-  return fmt::format("Basis(dim={},p={},q={},tensor={})",
-      in.dim, in.p, in.q, in.tensor);
+  return fmt::format("Basis(dim={},p={},q={},tensor={})", dim, p, q, tensor);
 }
 
 static std::string loc_name(int const loc)
@@ -71,7 +74,7 @@ static HostView<real**> get_cell_points(int const dim, int const q)
   return pts;
 }
 
-static HostView<real**> get_vert_points(int const dim)
+static HostView<real**> get_vertex_points(int const dim)
 {
   HostView<real**> pts("", num_vertices(dim), dim);
   static double vertex_pt[2] = {-1., 1.};
@@ -253,38 +256,37 @@ void build_mode(
 }
 
 template <template <class> class ViewT>
-Basis<ViewT> build_basis(BasisInfo const& in)
+Basis<ViewT> build_basis(
+    int const dim,
+    int const p,
+    int const q,
+    bool const tensor)
 {
   using namespace dgt::basis_locations;
   Basis<ViewT> B;
-  std::string const name = basis_name(in);
-  B.dim = in.dim;
-  B.p = in.p;
-  B.q = in.q;
-  B.tensor = in.tensor;
-  B.num_modes = num_modes(in.dim, in.p, in.tensor);
-  B.num_cell_pts = num_gauss_points(in.dim, in.q);
-  B.num_vert_pts = num_vertices(in.dim);
-  B.num_face_pts = num_gauss_points(in.dim-1, in.q);
-  B.num_eval_pts = num_evaluation_points(in.dim, in.q);
-  HostView<real**> cell_pts = get_cell_points(in.dim, in.q);
-  HostView<real**> vert_pts = get_vert_points(in.dim);
-  HostView<real**> eval_pts = get_eval_points(in.dim, in.q);
-  build_weights(B, name, in.dim, in.q);
-  build_mass(B, name, in.dim, in.p, in.tensor);
-  build_mode(B, name, CELL, in.dim, in.p, in.tensor, cell_pts);
-  build_mode(B, name, VERTICES, in.dim, in.p, in.tensor, vert_pts);
-  for (int axis = 0; axis < in.dim; ++axis) {
+  std::string const name = basis_name(dim, p, q, tensor);
+  B.dim = dim;
+  B.p = p;
+  B.q = q;
+  B.tensor = tensor;
+  B.num_modes = num_modes(dim, p, tensor);
+  B.num_cell_pts = num_gauss_points(dim, q);
+  B.num_face_pts = num_gauss_points(dim-1, q);
+  build_weights(B, name, dim, q);
+  build_mass(B, name, dim, p, tensor);
+  build_mode(B, name, CELL, dim, p, tensor, get_cell_points(dim, q));
+  build_mode(B, name, VERTICES, dim, p, tensor, get_vertex_points(dim));
+  for (int axis = 0; axis < dim; ++axis) {
     for (int dir = 0; dir < DIRECTIONS; ++dir) {
-      HostView<real**> pts = get_face_points(in.dim, in.q, axis, dir);
-      build_mode(B, name, face(axis, dir), in.dim, in.p, in.tensor, pts);
+      HostView<real**> pts = get_face_points(dim, q, axis, dir);
+      build_mode(B, name, face(axis, dir), dim, p, tensor, pts);
     }
   }
-  build_mode(B, name, EVALUATION, in.dim, in.p, in.tensor, eval_pts);
+  build_mode(B, name, EVALUATION, dim, p, tensor, get_eval_points(dim, q));
   return B;
 }
 
-template Basis<View> build_basis(BasisInfo const&);
-template Basis<HostView> build_basis(BasisInfo const&);
+template Basis<View> build_basis(int, int, int, bool);
+template Basis<HostView> build_basis(int, int, int, bool);
 
 }

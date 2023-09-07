@@ -1,7 +1,6 @@
 #pragma once
 
 #include "dgt_defines.hpp"
-#include "dgt_dg.hpp"
 #include "dgt_view.hpp"
 
 namespace dgt {
@@ -19,8 +18,6 @@ class DGField
   private:
 
     std::string m_name;
-    BasisInfo m_basis;
-
     storage_t m_storage;
     accessor_t m_accessor;
 
@@ -31,13 +28,11 @@ class DGField
         int const num_blocks,
         int const num_cells,
         int const num_eqs,
-        BasisInfo const& basis);
+        int const num_modes);
 
     ~DGField();
 
     std::string name() const { return m_name; }
-    BasisInfo basis() const { return m_basis; }
-
     accessor_t get() { return m_accessor; }
     view_t get(int const idx) { return m_storage[idx]; }
 
