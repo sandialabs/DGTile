@@ -48,6 +48,8 @@ struct Basis
     int num_modes = -1;
     int num_cell_pts = -1;
     int num_face_pts = -1;
+    int num_vert_pts = -1;
+    int num_eval_pts = -1;
   public:
     ViewT<real*> mass;
     ViewT<real*> cell_weights;

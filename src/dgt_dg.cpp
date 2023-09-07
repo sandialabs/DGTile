@@ -272,6 +272,8 @@ Basis<ViewT> build_basis(
   B.num_modes = num_modes(dim, p, tensor);
   B.num_cell_pts = num_gauss_points(dim, q);
   B.num_face_pts = num_gauss_points(dim-1, q);
+  B.num_vert_pts = num_vertices(dim);
+  B.num_eval_pts = num_evaluation_points(dim, q);
   build_weights(B, name, dim, q);
   build_mass(B, name, dim, p, tensor);
   build_mode(B, name, CELL, dim, p, tensor, get_cell_points(dim, q));

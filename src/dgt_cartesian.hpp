@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 #include "dgt_subgrid3.hpp"
 
@@ -46,6 +47,15 @@ DGT_METHOD inline int permute(int const ijk, int const axis)
     (ijk == Y) ? (axis+1) % DIMENSIONS :
     (ijk == Z) ? (axis+2) % DIMENSIONS :
     -1;
+}
+
+std::string inline get_axis_name(int const axis)
+{
+  return
+    (axis == X) ? "X" :
+    (axis == Y) ? "Y" :
+    (axis == Z) ? "Z" :
+    "";
 }
 
 [[nodiscard]] Subgrid3 get_cells(

@@ -45,6 +45,13 @@ TEST(cartesian, permute)
   EXPECT_EQ(permute(Z, Z), Y);
 }
 
+TEST(cartesian, get_axis_name)
+{
+  EXPECT_EQ(get_axis_name(X), "X");
+  EXPECT_EQ(get_axis_name(Y), "Y");
+  EXPECT_EQ(get_axis_name(Z), "Z");
+}
+
 TEST(cartesian, get_cells_ghost_1D)
 {
   Grid3 const g(8,0,0);

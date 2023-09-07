@@ -20,6 +20,8 @@ void test_integers(
   EXPECT_EQ(B.num_modes, num_modes(dim, p, tensor));
   EXPECT_EQ(B.num_cell_pts, num_gauss_points(dim, q));
   EXPECT_EQ(B.num_face_pts, num_gauss_points(dim-1, q));
+  EXPECT_EQ(B.num_vert_pts, num_vertices(dim));
+  EXPECT_EQ(B.num_eval_pts, num_evaluation_points(dim, q));
 }
 
 template <class BasisT>
