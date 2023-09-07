@@ -25,6 +25,11 @@ class Grid3
   {
   }
 
+  DGT_METHOD constexpr Vec3<int>& extents()
+  {
+    return m_extents;
+  }
+
   DGT_METHOD constexpr Vec3<int> const& extents() const
   {
     return m_extents;

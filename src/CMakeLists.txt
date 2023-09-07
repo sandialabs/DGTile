@@ -32,6 +32,7 @@ set(DGT_SOURCES
   dgt_initialize.cpp
   dgt_lua.cpp
   dgt_lua_interface.cpp
+  dgt_mesh.cpp
   dgt_partitioning.cpp
   dgt_stl.cpp
   dgt_tree.cpp
