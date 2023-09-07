@@ -28,6 +28,14 @@ return XMIN_FACE + axis*DIRECTIONS + dir;
 
 }
 
+struct BasisInfo
+{
+  int dim = -1;
+  int p = -1;
+  int q = -1;
+  bool tensor = true;
+};
+
 template <template <class> class ViewT>
 struct TabulatedBasis
 {
@@ -47,7 +55,9 @@ struct Basis
   public:
     int num_modes = -1;
     int num_cell_pts = -1;
+    int num_vert_pts = -1;
     int num_face_pts = -1;
+    int num_eval_pts = -1;
   public:
     ViewT<real*> mass;
     ViewT<real*> cell_weights;
@@ -56,11 +66,7 @@ struct Basis
 };
 
 template <template <class> class ViewT>
-Basis<ViewT> build_basis(
-    int const dim,
-    int const p,
-    int const q,
-    bool const tensor);
+Basis<ViewT> build_basis(BasisInfo const& info);
 
 DGT_METHOD constexpr int ipow(int const a, int const b)
 {
