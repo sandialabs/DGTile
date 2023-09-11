@@ -59,6 +59,36 @@ TEST(cartesian, get_cells_ghost_1D)
   EXPECT_EQ(get_cells(GHOST, g, { 1,0,0}), Subgrid3({7,0,0}, {8,0,0}));
 }
 
+TEST(cartesian, get_num_cells)
+{
+  EXPECT_EQ(get_num_cells({5,5,5}), 125);
+  EXPECT_EQ(get_num_cells({5,5,0}), 25);
+  EXPECT_EQ(get_num_cells({5,0,0}), 5);
+  EXPECT_THROW((void)get_num_cells({5,0,5}), std::runtime_error);
+  EXPECT_THROW((void)get_num_cells({0,5,5}), std::runtime_error);
+}
+
+TEST(cartesian, get_face_grid)
+{
+  EXPECT_EQ(get_face_grid({5,5,5}, X), Grid3(6,5,5));
+  EXPECT_EQ(get_face_grid({5,5,5}, Y), Grid3(5,6,5));
+  EXPECT_EQ(get_face_grid({5,5,5}, Z), Grid3(5,5,6));
+  EXPECT_EQ(get_face_grid({5,5,0}, X), Grid3(6,5,0));
+  EXPECT_EQ(get_face_grid({5,5,0}, Y), Grid3(5,6,0));
+  EXPECT_EQ(get_face_grid({5,0,0}, X), Grid3(6,0,0));
+}
+
+TEST(cartesian, get_num_faces)
+{
+  EXPECT_EQ(get_num_faces({5,5,5}, X), 150);
+  EXPECT_EQ(get_num_faces({5,5,5}, Y), 150);
+  EXPECT_EQ(get_num_faces({5,5,5}, Z), 150);
+  EXPECT_EQ(get_num_faces({5,5,0}, X), 30);
+  EXPECT_EQ(get_num_faces({5,5,0}, Y), 30);
+  EXPECT_EQ(get_num_faces({5,0,0}, X), 6);
+  EXPECT_THROW((void)get_num_faces({5,0,5}, X), std::runtime_error);
+}
+
 TEST(cartesian, get_cells_ghost_2D)
 {
   Grid3 const g(8,8,0);

@@ -58,6 +58,11 @@ std::string inline get_axis_name(int const axis)
     "";
 }
 
+[[nodiscard]] int get_num_cells(Grid3 const& cell_grid);
+
+[[nodiscard]] Grid3 get_face_grid(Grid3 const& cell_grid, int const axis);
+[[nodiscard]] int get_num_faces(Grid3 const& cell_grid, int const axis);
+
 [[nodiscard]] Subgrid3 get_cells(
     int const ownership,
     Grid3 const& cell_grid,
