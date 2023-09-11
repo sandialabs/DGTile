@@ -10,39 +10,42 @@ namespace dgt {
 namespace field {
 
 template <class T>
-class CellBase
+class Base
 {
-
   public:
-
     using view_t = View<T>;
     using uview_t = UnmanagedView<T>;
     using storage_t = std::vector<view_t>;
     using accessor_t = HostPinnedView<uview_t*>;
-
   protected:
-
     std::string m_name;
     storage_t m_storage;
     accessor_t m_accessor;
-
   public:
-
     std::string name() const { return m_name; }
     accessor_t get() { return m_accessor; }
     view_t get_view(int const block) { return m_storage[block]; }
-
-  protected:
-
-    void allocate(
-        int const num_blocks,
-        int const extent0,
-        int const extent1,
-        int const extent2);
-
 };
 
-class Modal : public CellBase<real***>
+template <class T>
+class AxisBase
+{
+  public:
+    using view_t = View<T>;
+    using uview_t = UnmanagedView<T>;
+    using storage_t = std::vector<view_t>;
+    using accessor_t = HostPinnedView<uview_t*>;
+  protected:
+    std::string m_name;
+    Vec3<storage_t> m_storage;
+    Vec3<accessor_t> m_accessor;
+  public:
+    std::string name() const { return m_name; }
+    Vec3<accessor_t> get() { return m_accessor; }
+    view_t get_view(int const axis, int const block) { return m_storage[axis][block]; }
+};
+
+class Modal : public Base<real***>
 {
   public:
     Modal(
@@ -53,7 +56,7 @@ class Modal : public CellBase<real***>
         int const num_modes);
 };
 
-class Cell : public CellBase<real**>
+class Cell : public Base<real**>
 {
   public:
     Cell(
@@ -63,13 +66,35 @@ class Cell : public CellBase<real**>
         int const num_comps);
 };
 
-class CellPoints : public CellBase<real***>
+class CellPoints : public Base<real***>
 {
   public:
     CellPoints(
         std::string const& name,
         Grid3 const& cell_grid,
         int const num_blocks,
+        int const num_points,
+        int const num_comps);
+};
+
+class Face : public AxisBase<real**>
+{
+  public:
+    Face(
+        std::string const& name,
+        Grid3 const& cell_grid,
+        int const num_blocks,
+        int const num_comps);
+};
+
+class FacePoints : public AxisBase<real***>
+{
+  public:
+    FacePoints(
+        std::string const& name,
+        Grid3 const& cell_grid,
+        int const num_blocks,
+        int const num_points,
         int const num_comps);
 };
 
