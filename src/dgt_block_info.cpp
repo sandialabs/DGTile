@@ -15,24 +15,23 @@ View<T*> make_view(std::string const& name, std::vector<T> const& data)
   return view;
 }
 
-static std::vector<tree::ID> get_global_ids(tree::Leaves const& ids)
+static std::vector<tree::ID> get_global_ids(std::vector<tree::ID> const& ids)
 {
   std::vector<tree::ID> global_ids(ids.size());
-  int i = 0;
-  for (tree::ID const id : ids) {
-    global_ids[i++] = id;
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    global_ids[i] = ids[i];
   }
   return global_ids;
 }
 
 static std::vector<std::int8_t> get_levels(
     int const dim,
-    tree::Leaves const& ids)
+    std::vector<tree::ID> const& ids)
 {
   std::vector<std::int8_t> levels(ids.size());
-  int i = 0;
-  for (tree::ID const id : ids) {
-    levels[i++] = tree::get_level(dim, id);
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    tree::ID const id = ids[i];
+    levels[i] = tree::get_level(dim, id);
   }
   return levels;
 }
@@ -40,13 +39,13 @@ static std::vector<std::int8_t> get_levels(
 static std::vector<Box3<real>> get_domains(
     int const dim,
     Box3<real> const& domain,
-    tree::Leaves const& ids,
+    std::vector<tree::ID> const& ids,
     tree::Point const& base_pt)
 {
   std::vector<Box3<real>> domains(ids.size());
-  int i = 0;
-  for (tree::ID const id : ids) {
-    domains[i++] = tree::get_domain(dim, id, base_pt, domain);
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    tree::ID const id = ids[i];
+    domains[i] = tree::get_domain(dim, id, base_pt, domain);
   }
   return domains;
 }
@@ -54,14 +53,14 @@ static std::vector<Box3<real>> get_domains(
 static std::vector<Vec3<real>> get_dxs(
     int const dim,
     Box3<real> const& domain,
-    tree::Leaves const& ids,
+    std::vector<tree::ID> const& ids,
     tree::Point const& base_pt)
 {
   std::vector<Vec3<real>> dxs(ids.size());
-  int i = 0;
-  for (tree::ID const id : ids) {
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    tree::ID const id = ids[i];
     Box3<real> const leaf_domain = tree::get_domain(dim, id, base_pt, domain);
-    dxs[i++] = leaf_domain.extents();
+    dxs[i] = leaf_domain.extents();
   }
   return dxs;
 }
@@ -86,15 +85,15 @@ static real get_face_detJ(int const dim, int const axis, Vec3<real> const& dx) {
 static std::vector<real> get_cell_detJs(
     int const dim,
     Box3<real> const& domain,
-    tree::Leaves const& ids,
+    std::vector<tree::ID> const& ids,
     tree::Point const& base_pt)
 {
   std::vector<real> detJs(ids.size());
-  int i = 0;
-  for (tree::ID const id : ids) {
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    tree::ID const id = ids[i];
     Box3<real> const leaf_domain = tree::get_domain(dim, id, base_pt, domain);
     Vec3<real> const dx = leaf_domain.extents();
-    detJs[i++] = get_cell_detJ(dim, dx);
+    detJs[i] = get_cell_detJ(dim, dx);
   }
   return detJs;
 }
@@ -103,15 +102,15 @@ static std::vector<real> get_face_detJs(
     int const dim,
     int const axis,
     Box3<real> const& domain,
-    tree::Leaves const& ids,
+    std::vector<tree::ID> const& ids,
     tree::Point const& base_pt)
 {
   std::vector<real> detJs(ids.size());
-  int i = 0;
-  for (tree::ID const id : ids) {
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    tree::ID const id = ids[i];
     Box3<real> const leaf_domain = tree::get_domain(dim, id, base_pt, domain);
     Vec3<real> const dx = leaf_domain.extents();
-    detJs[i++] = get_face_detJ(dim, axis, dx);
+    detJs[i] = get_face_detJ(dim, axis, dx);
   }
   return detJs;
 }
@@ -119,7 +118,7 @@ static std::vector<real> get_face_detJs(
 BlockInfo create_block_info(
   int const dim,
   Box3<real> const& domain,
-  tree::Leaves const& ids,
+  std::vector<tree::ID> const& ids,
   tree::Point const& base_pt)
 {
   BlockInfo B;

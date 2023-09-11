@@ -18,7 +18,7 @@ struct BlockInfo
 BlockInfo create_block_info(
     int const dim,
     Box3<real> const& domain,
-    tree::Leaves const& ids,
+    std::vector<tree::ID> const& ids,
     tree::Point const& base_pt);
 
 }
