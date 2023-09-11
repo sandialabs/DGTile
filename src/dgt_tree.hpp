@@ -48,7 +48,7 @@ using ZLeaves = std::vector<ID>;
 
 [[nodiscard]] ID get_global_id(int const dim, Point const& pt);
 
-[[nodiscard]] int get_level(int const dim, ID const global_id);
+[[nodiscard]] std::int8_t get_level(int const dim, ID const global_id);
 
 [[nodiscard]] Point get_point(int const dim, ID const global_id);
 
@@ -72,7 +72,7 @@ template <class LeavesT>
 
 [[nodiscard]] Box3<real> get_domain(
     int const dim, ID const global_id,
-    Point const& base, Box3<real> const& d);
+    Point const& base_pt, Box3<real> const& d);
 
 [[nodiscard]] Adjacencies get_adjacencies(
     int const dim, Leaves const& leaves,

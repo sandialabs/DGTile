@@ -40,13 +40,13 @@ ID get_global_id(int const dim, Point const& pt)
   return level_offset + level_id;
 }
 
-int get_level(int const dim, ID const global_id)
+std::int8_t get_level(int const dim, ID const global_id)
 {
   int L = 0;
   while (global_id >= get_level_offset(dim, L+1)) {
     L++;
   }
-  return L;
+  return std::int8_t(L);
 }
 
 Point get_point(int const dim, ID const global_id)
