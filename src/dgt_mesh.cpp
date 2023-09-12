@@ -38,13 +38,10 @@ void Mesh::set_periodic(Vec3<bool> const& periodic)
   m_periodic = periodic;
 }
 
-void Mesh::set_basis(int const p, int const q, bool const tensor)
+void Mesh::set_basis(Basis<View> basis)
 {
-  verify_cell_grid(m_cell_grid);
-  int const dim = infer_dimension(m_cell_grid);
-  m_basis = build_basis<View>(dim, p, q, tensor);
+  m_basis = basis;
 }
-
 
 std::vector<tree::ID> get_owned_leaves(
     mpicpp::comm* comm,

@@ -101,6 +101,30 @@ static void check_valid_basis_keywords(lua::table const& in)
   }
 }
 
+static void check_valid_basis_inputs(
+    lua::table const& in,
+    int const dim,
+    int const p,
+    int const q)
+{
+  if ((dim < 1) || (dim > 3)) {
+    std::string const msg = fmt::format(
+        "dgt::make_basis[{}]-> invalid dimension `{}`", in.name(), dim);
+    throw std::runtime_error(msg);
+  }
+  if ((p < 0) || (p > max_polynomial_order)) {
+    std::string const msg = fmt::format(
+        "dgt::make_basis[{}]-> invalid polynomial_order `{}`", in.name(), p);
+    throw std::runtime_error(msg);
+  }
+  if ((q < 1) || (q > max_1D_quadrature_points)) {
+    std::string const msg = fmt::format(
+        "dgt::make_basis[{}]-> invalid quadrature_rule `{}`", in.name(), q);
+    throw std::runtime_error(msg);
+  }
+}
+
+
 Basis<View> make_basis(lua::table const& in)
 {
   check_valid_basis_keywords(in);
@@ -108,6 +132,7 @@ Basis<View> make_basis(lua::table const& in)
   int const p = in.get_integer("polynomial_order");
   int const q = in.get_integer("quadrature_rule");
   bool const tensor = in.get_boolean("tensor_product");
+  check_valid_basis_inputs(in, dim, p, q);
   return build_basis<View>(dim, p, q, tensor);
 }
 

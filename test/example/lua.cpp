@@ -1,15 +1,23 @@
 #include <dgt_lua.hpp>
+#include <dgt_lua_interface.hpp>
 
-//static std::string get_banner()
-//{
-//  std::string banner;
-//  banner += " _____     ______     ______   __     __         ______    \n";
-//  banner += "/\\  __-.  /\\  ___\\   /\\__  _\\ /\\ \\   /\\ \\       /\\  ___\\   \n";
-//  banner += "\\ \\ \\/\\ \\ \\ \\ \\__ \\  \\/_/\\ \\/ \\ \\ \\  \\ \\ \\____  \\ \\  __\\   \n";
-//  banner += " \\ \\____-  \\ \\_____\\    \\ \\_\\  \\ \\_\\  \\ \\_____\\  \\ \\_____\\ \n";
-//  banner += "  \\/____/   \\/_____/     \\/_/   \\/_/   \\/_____/   \\/_____/ \n";
-//  return banner;
-//}
+#include "example.hpp"
+
+namespace example {
+
+State make_state(
+    dgt::lua::table const& in,
+    std::string const& file_name)
+{
+  State result;
+  result.comm = mpicpp::comm::world();
+  result.input_file_name = file_name;
+  result.name = in.get_string("name");
+  result.basis = dgt::make_basis(in.get_table("basis"));
+  return result;
+}
+
+}
 
 extern "C" {
 
@@ -17,9 +25,10 @@ static int lua_dgtile_run(lua_State* L) {
   return dgt::lua::function_wrapper(L,
     [](dgt::lua::stack s) {
       auto dgtile_table = dgt::lua::table(s.getglobal("dgtile"));
+      auto input_table = dgt::lua::table(s.function_argument(1, "dgtile.run"));
       std::string const file_name = dgtile_table.get_string("file");
-      (void)dgtile_table;
-      (void)file_name;
+      auto state = example::make_state(input_table, file_name);
+      run(state);
       std::vector<dgt::lua::stack_object> results;
       return results;
     });

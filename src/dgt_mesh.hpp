@@ -36,7 +36,7 @@ class Mesh
     void set_domain(Vec3<real> const& domain);
     void set_cell_grid(Grid3 const& cell_grid);
     void set_periodic(Vec3<bool> const& periodic);
-    void set_basis(int const p, int const q, bool const tensor);
+    void set_basis(Basis<View> m_basis);
 
     void init(Grid3 const& block_grid);
 
