@@ -4,6 +4,7 @@
 
 #include "dgt_block_info.hpp"
 #include "dgt_dg.hpp"
+#include "dgt_field.hpp"
 #include "dgt_tree.hpp"
 #include "dgt_view.hpp"
 
@@ -28,6 +29,8 @@ class Mesh
 
     BlockInfo m_block_info;
 
+    std::vector<Modal> m_fields;
+
   public:
 
     Mesh() = default;
@@ -40,6 +43,9 @@ class Mesh
 
     void verify();
     void init(Grid3 const& block_grid);
+
+    bool is_modal(std::string const& name);
+    void add_modal(std::string const& name, bool const with_flux = false);
 
 };
 

@@ -96,4 +96,13 @@ class Field {
 
 };
 
+struct Modal
+{
+  std::string name = "";
+  bool has_flux = true;
+  Field<real***> modal;
+  Field<real***> residual;
+  Vec3<Field<real***>> flux;
+};
+
 }
