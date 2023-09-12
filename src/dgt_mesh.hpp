@@ -33,11 +33,12 @@ class Mesh
     Mesh() = default;
 
     void set_comm(mpicpp::comm* comm);
-    void set_domain(Vec3<real> const& domain);
+    void set_domain(Box3<real> const& domain);
     void set_cell_grid(Grid3 const& cell_grid);
     void set_periodic(Vec3<bool> const& periodic);
     void set_basis(Basis<View> m_basis);
 
+    void verify();
     void init(Grid3 const& block_grid);
 
 };

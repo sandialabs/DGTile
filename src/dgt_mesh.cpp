@@ -18,12 +18,32 @@ static void verify_cell_grid(Grid3 const& cell_grid)
   }
 }
 
+static void verify_basis(Basis<View> const& basis)
+{
+  if ((basis.dim < 1) || (basis.dim > 3)) {
+    throw std::runtime_error("dgt::Mesh - invalid basis.dim");
+  }
+  if ((basis.p < 0) || (basis.p > max_polynomial_order)) {
+    throw std::runtime_error("dgt::Mesh - invalid basis.p");
+  }
+  if ((basis.q < 1) || (basis.q > max_1D_quadrature_points)) {
+    throw std::runtime_error("dgt::Mesh - invalid basis.q");
+  }
+}
+
+static void verify_dimensions(Grid3 const& cell_grid, Basis<View> const& basis)
+{
+  if (basis.dim != infer_dimension(cell_grid)) {
+    throw std::runtime_error("dgt::Mesh - cell_grid/basis dimension mismatch");
+  }
+}
+
 void Mesh::set_comm(mpicpp::comm* comm)
 {
   m_comm = comm;
 }
 
-void Mesh::set_domain(Vec3<real> const& domain)
+void Mesh::set_domain(Box3<real> const& domain)
 {
   m_domain = domain;
 }
@@ -58,10 +78,17 @@ std::vector<tree::ID> get_owned_leaves(
   return std::vector<tree::ID>(begin, end);
 }
 
-void Mesh::init(Grid3 const& block_grid)
+void Mesh::verify()
 {
   verify_comm(m_comm);
   verify_cell_grid(m_cell_grid);
+  verify_basis(m_basis);
+  verify_dimensions(m_cell_grid, m_basis);
+}
+
+void Mesh::init(Grid3 const& block_grid)
+{
+  verify();
   int const dim = infer_dimension(m_cell_grid);
   m_leaves = tree::create(dim, block_grid);
   m_zleaves = tree::order(dim, m_leaves);

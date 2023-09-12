@@ -1,6 +1,7 @@
 #include <string>
 
 #include <dgt_dg.hpp>
+#include <dgt_mesh.hpp>
 #include <dgt_view.hpp>
 
 #include <mpicpp.hpp>
@@ -13,6 +14,7 @@ struct State
   std::string name = "";
   std::string input_file_name = "";
   dgt::Basis<dgt::View> basis;
+  dgt::Mesh mesh;
 };
 
 void run_lua_file(std::string const& path);

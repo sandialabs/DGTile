@@ -1,5 +1,6 @@
 #include <fmt/core.h>
 
+#include "dgt_cartesian.hpp"
 #include "dgt_lua.hpp"
 #include "dgt_lua_interface.hpp"
 
@@ -134,6 +135,69 @@ Basis<View> make_basis(lua::table const& in)
   bool const tensor = in.get_boolean("tensor_product");
   check_valid_basis_inputs(in, dim, p, q);
   return build_basis<View>(dim, p, q, tensor);
+}
+
+static void check_valid_mesh_keywords(lua::table const& in)
+{
+  for (auto pair : in) {
+    check_string_key("make_mesh", pair, in);
+    std::string const key = lua::string(pair.first).value();
+    if (!((key == "X") || (key == "Y") || (key == "Z"))) {
+      std::string const msg = fmt::format(
+          "dgt::make_mesh[{}]-> unknown key `{}`", in.name(), key);
+      printf("%s\n", msg.c_str());
+      dgt::errors++;
+    }
+  }
+}
+
+static void check_valid_axis_keywords(lua::table const& in)
+{
+  for (auto pair : in) {
+    check_string_key("make_mesh", pair, in);
+    std::string const key = lua::string(pair.first).value();
+    if (!((key == "num_blocks") ||
+          (key == "num_cells") ||
+          (key == "min") ||
+          (key == "max") ||
+          (key == "periodic"))) {
+      std::string const msg = fmt::format(
+          "dgt::make_mesh[{}]-> unknown key `{}`", in.name(), key);
+      printf("%s\n", msg.c_str());
+      dgt::errors++;
+    }
+  }
+}
+
+Mesh make_mesh(
+    lua::table const& in,
+    Basis<View> const& basis,
+    mpicpp::comm* comm)
+{
+  Mesh mesh;
+  check_valid_mesh_keywords(in);
+  Grid3 cell_grid(0,0,0);
+  Grid3 block_grid(0,0,0);
+  Vec3<bool> periodic(false, false, false);
+  Box3<real> domain({0,0,0}, {0,0,0});
+  for (int axis = 0; axis < DIMENSIONS; ++axis) {
+    auto const axis_name = get_axis_name(axis);
+    auto const axis_table = in.get_or_table(axis_name.c_str());
+    check_valid_axis_keywords(axis_table);
+    if (axis_table.num_entries() == 0) continue;
+    cell_grid.extents()[axis] = axis_table.get_integer("num_cells");
+    block_grid.extents()[axis] = axis_table.get_integer("num_blocks");
+    domain.lower()[axis] = axis_table.get_number("min");
+    domain.upper()[axis] = axis_table.get_number("max");
+    periodic[axis] = axis_table.get_or("periodic", false);
+  }
+  mesh.set_comm(comm);
+  mesh.set_domain(domain);
+  mesh.set_cell_grid(cell_grid);
+  mesh.set_periodic(periodic);
+  mesh.set_basis(basis);
+  mesh.init(block_grid);
+  return mesh;
 }
 
 }

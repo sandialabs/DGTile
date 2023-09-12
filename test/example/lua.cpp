@@ -14,6 +14,10 @@ State make_state(
   result.input_file_name = file_name;
   result.name = in.get_string("name");
   result.basis = dgt::make_basis(in.get_table("basis"));
+  result.mesh = dgt::make_mesh(
+      in.get_table("mesh"),
+      result.basis,
+      &(result.comm));
   return result;
 }
 
