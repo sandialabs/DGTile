@@ -1,4 +1,5 @@
 #include <dgt_for_each.hpp>
+#include <dgt_view.hpp>
 
 #include <gtest/gtest.h>
 
@@ -82,4 +83,34 @@ TEST(for_each, sequenced_offset_grid_3D)
   EXPECT_EQ(sum, 27);
 }
 
-//TODO: unit test 4D for each
+static void test_4D_for_each(int const dim)
+{
+  int const num_blocks = 4;
+  int const ni = (dim > 0) ? 3 : 1;
+  int const nj = (dim > 1) ? 3 : 1;
+  int const nk = (dim > 2) ? 3 : 1;
+  Grid3 const cell_grid(ni,nj,nk);
+  View<real****> v("4d", ni, nj, nk, num_blocks);
+  auto functor = [=] (int const block, Vec3<int> const& cell_ijk) {
+    int const i = cell_ijk.x();
+    int const j = cell_ijk.y();
+    int const k = cell_ijk.z();
+    v(i,j,k,block) = 1.;
+  };
+  for_each(num_blocks, cell_grid, functor, "4d_test");
+}
+
+TEST(for_each, 4D_for_each_1D_grid)
+{
+  test_4D_for_each(1);
+}
+
+TEST(for_each, 4D_for_each_2D_grid)
+{
+  test_4D_for_each(2);
+}
+
+TEST(for_each, 4D_for_each_3D_grid)
+{
+  test_4D_for_each(3);
+}
