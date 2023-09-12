@@ -5,12 +5,14 @@
 
 namespace dgt {
 
-static void check_when_key(
+static void check_string_key(
+    std::string const& function,
     lua::table_iterator::value_type const& pair,
-    lua::table const& table) {
+    lua::table const& table)
+{
   if (pair.first.type() != LUA_TSTRING) {
     std::string const msg = fmt::format(
-        "dgt:make_when[{}]-> key must be a string", table.name());
+        "dgt:{}[{}]-> key must be a string", function, table.name());
     throw std::runtime_error(msg);
   }
 }
@@ -18,7 +20,7 @@ static void check_when_key(
 static void check_valid_when_keywords(lua::table const& in)
 {
   for (auto pair : in) {
-    check_when_key(pair, in);
+    check_string_key("make_when", pair, in);
     std::string const key = lua::string(pair.first).value();
     if (!((key == "kind") || (key == "frequency") || (key == "step") || (key == "time"))) {
       std::string const msg = fmt::format(
@@ -80,6 +82,33 @@ WhenPtr make_when(lua::table const& in)
     if (when) result = combine_either(result, when);
   }
   return result;
+}
+
+static void check_valid_basis_keywords(lua::table const& in)
+{
+  for (auto pair : in) {
+    check_string_key("make_basis", pair, in);
+    std::string const key = lua::string(pair.first).value();
+    if (!((key == "dimension") ||
+          (key == "polynomial_order") ||
+          (key == "quadrature_rule") ||
+          (key == "tensor_product"))) {
+      std::string const msg = fmt::format(
+          "dgt::make_basis[{}]-> unknown key `{}`", in.name(), key);
+      printf("%s\n", msg.c_str());
+      dgt::errors++;
+    }
+  }
+}
+
+Basis<View> make_basis(lua::table const& in)
+{
+  check_valid_basis_keywords(in);
+  int const dim = in.get_integer("dimension");
+  int const p = in.get_integer("polynomial_order");
+  int const q = in.get_integer("quadrature_rule");
+  bool const tensor = in.get_boolean("tensor_product");
+  return build_basis<View>(dim, p, q, tensor);
 }
 
 }

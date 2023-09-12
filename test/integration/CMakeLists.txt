@@ -1,4 +1,5 @@
 set(INTEGRATION_TEST_SOURCES
+  basis.cpp
   main.cpp
   when.cpp
 )
@@ -11,5 +12,5 @@ set_target_properties(dgt-integration-tests PROPERTIES ${DGT_LANGUAGE}_ARCHITECT
 target_link_libraries(dgt-integration-tests PRIVATE GTest::gtest)
 target_link_libraries(dgt-integration-tests PRIVATE dgtile)
 
-add_test(NAME unit_tests COMMAND "./dgt-integration-tests")
-set_tests_properties(unit_tests PROPERTIES ENVIRONMENT "INTEGRATION_DATA_DIR=${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME integration_tests COMMAND "./dgt-integration-tests")
+set_tests_properties(integration_tests PROPERTIES ENVIRONMENT "INTEGRATION_DATA_DIR=${CMAKE_CURRENT_SOURCE_DIR}")

@@ -6,8 +6,6 @@
 
 using namespace dgt;
 
-extern "C" {
-
 static void test_when(
     WhenPtr when,
     std::vector<bool> const& expected_now,
@@ -22,6 +20,8 @@ static void test_when(
   }
   EXPECT_NEAR(time, expected_final_time, 1.e-15);
 }
+
+extern "C" {
 
 static int check_whens(lua_State* L)
 {
@@ -47,7 +47,7 @@ static int check_whens(lua_State* L)
     test_when(at_time, {0,0,1,0,0,0}, 0.6);
     test_when(at_exact_time, {0,0,1,0,0,0}, 0.55);
     test_when(at_time_periodically, {1,0,1,0,1,0}, 0.6);
-    //test_when(at_exact_time_periodically, {1,0,1,0,1,0}, 0.5);
+    test_when(at_exact_time_periodically, {1,0,1,0,1,0}, 0.5);
     return std::vector<lua::stack_object>({});
   });
 }
