@@ -1,4 +1,5 @@
 set(EXAMPLE_SOURCES
+  lua.cpp
   main.cpp
 )
 
