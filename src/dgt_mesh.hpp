@@ -2,6 +2,7 @@
 
 #include <mpicpp.hpp>
 
+#include "dgt_block_info.hpp"
 #include "dgt_dg.hpp"
 #include "dgt_tree.hpp"
 #include "dgt_view.hpp"
@@ -24,6 +25,8 @@ class Mesh
     tree::Leaves m_leaves;
     tree::ZLeaves m_zleaves;
     std::vector<tree::ID> m_owned_leaves;
+
+    BlockInfo m_block_info;
 
   public:
 

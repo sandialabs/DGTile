@@ -6,6 +6,7 @@ set(DGT_HEADERS
   dgt_cartesian.hpp
   dgt_defines.hpp
   dgt_dg.hpp
+  dgt_field.hpp
   dgt_for_each.hpp
   dgt_grid3.hpp
   dgt_initialize.hpp
