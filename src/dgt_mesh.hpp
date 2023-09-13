@@ -50,7 +50,7 @@ class Mesh
         std::string const& name,
         int const num_stored,
         int const num_comps,
-        bool const with_flux = false);
+        bool const with_flux = true);
 
     mpicpp::comm* comm() { return m_comm; }
     Box3<real> domain() const { return m_domain; }
@@ -67,7 +67,7 @@ class Mesh
     int num_total_cells() const;
 
     Field<real***> get_solution(std::string const& name, int const soln_idx);
-    Vec3<Field<real***>> get_flux(std::string const& name);
+    Vec3<Field<real***>> get_fluxes(std::string const& name);
     Field<real***> get_residual(std::string const& name);
 
 };

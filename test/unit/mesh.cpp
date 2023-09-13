@@ -50,3 +50,46 @@ TEST(mesh, init_3D)
   EXPECT_EQ(mesh.num_owned_blocks(), 8);
   EXPECT_EQ(mesh.num_total_cells(), 64);
 }
+
+TEST(mesh, add_modal_field)
+{
+  mpicpp::comm comm = mpicpp::comm::world();
+  Mesh mesh = get_example_mesh(2, &comm);
+  int const num_blocks = 4;
+  int const num_cells_per_block = 4;
+  int const num_faces_per_block = 6;
+  int const num_modes = 4;
+  int const num_face_pts = 2;
+  int const num_stored = 2;
+  int const num_eqs = 5;
+  mesh.add_modal("hydro", num_stored, num_eqs);
+  Field<real***> U0 = mesh.get_solution("hydro", 0);
+  Field<real***> U1 = mesh.get_solution("hydro", 1);
+  Field<real***> R = mesh.get_residual("hydro");
+  Vec3<Field<real***>> F = mesh.get_fluxes("hydro");
+  EXPECT_EQ(U0.name(), "hydro_0");
+  EXPECT_EQ(U1.name(), "hydro_1");
+  EXPECT_EQ(R.name(), "hydro_residual");
+  EXPECT_EQ(F[X].name(), "hydro_fluxes_X");
+  EXPECT_EQ(F[Y].name(), "hydro_fluxes_Y");
+  EXPECT_EQ(U0.get().size(), num_blocks);
+  EXPECT_EQ(U1.get().size(), num_blocks);
+  EXPECT_EQ(R.get().size(), num_blocks);
+  EXPECT_EQ(F[X].get().size(), num_blocks);
+  EXPECT_EQ(F[Y].get().size(), num_blocks);
+  for (int block = 0; block < num_blocks; ++block) {
+    EXPECT_EQ(U0.get()[block].extent(0), num_cells_per_block);
+    EXPECT_EQ(U1.get()[block].extent(0), num_cells_per_block);
+    EXPECT_EQ(R.get()[block].extent(0), num_cells_per_block);
+    EXPECT_EQ(U0.get()[block].extent(1), num_eqs);
+    EXPECT_EQ(U1.get()[block].extent(1), num_eqs);
+    EXPECT_EQ(R.get()[block].extent(1), num_eqs);
+    EXPECT_EQ(U0.get()[block].extent(2), num_modes);
+    EXPECT_EQ(U1.get()[block].extent(2), num_modes);
+    EXPECT_EQ(R.get()[block].extent(2), num_modes);
+    EXPECT_EQ(F[X].get()[block].extent(0), num_faces_per_block);
+    EXPECT_EQ(F[Y].get()[block].extent(0), num_faces_per_block);
+    EXPECT_EQ(F[X].get()[block].extent(1), num_face_pts);
+    EXPECT_EQ(F[Y].get()[block].extent(1), num_face_pts);
+  }
+}

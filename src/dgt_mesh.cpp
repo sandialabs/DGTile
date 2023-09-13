@@ -136,7 +136,7 @@ void Mesh::add_modal(
     for (int axis = 0; axis < dim; ++axis) {
       int const nfaces = get_num_faces(m_cell_grid, axis);
       std::string const axis_name = get_axis_name(axis);
-      std::string const fname = fmt::format("{}_flux_{}", name, axis_name);
+      std::string const fname = fmt::format("{}_fluxes_{}", name, axis_name);
       f.fluxes[axis].create(fname, nblocks, nfaces, nface_pts, ncomps);
     }
   }
@@ -171,12 +171,12 @@ Field<real***> Mesh::get_solution(std::string const& name, int const soln_idx)
   return m_modal[modal_idx].solution[soln_idx];
 }
 
-Vec3<Field<real***>> Mesh::get_flux(std::string const& name)
+Vec3<Field<real***>> Mesh::get_fluxes(std::string const& name)
 {
   int const modal_idx = modal_index(name);
   if (modal_idx < 0) {
     std::string const msg = fmt::format(
-        "dgt::Mesh::get_flux -> field {} doesn't exist", name);
+        "dgt::Mesh::get_fluxes -> field {} doesn't exist", name);
   }
   return m_modal[modal_idx].fluxes;
 }
