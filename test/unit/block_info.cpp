@@ -19,7 +19,7 @@ TEST(block_info, create_1D)
 {
   int const dim = 1;
   Box3<real> const domain({0.,0.,0.}, {1.,0.,0.});
-  std::vector<tree::ID> const leaves{3,4,2};
+  tree::OwnedLeaves const leaves{3,4,2};
   tree::Point const base_pt(1, {2,0,0});
   BlockInfo B = create_block_info(dim, domain, leaves, base_pt);
   compare(B.global_ids, {3,4,2});
@@ -40,7 +40,7 @@ TEST(block_info, create_2D)
 {
   int const dim = 2;
   Box3<real> const domain({0.,0.,0.}, {1.,1.,0.});
-  std::vector<tree::ID> const leaves{4,3,2,9,6,10,5};
+  tree::OwnedLeaves const leaves{4,3,2,9,6,10,5};
   tree::Point const base_pt(1, {2,2,0});
   BlockInfo B = create_block_info(dim, domain, leaves, base_pt);
   compare(B.global_ids, {4,3,2,9,6,10,5});
@@ -92,7 +92,7 @@ TEST(block_info, create_3D)
   int const dim = 3;
   Box3<real> const domain({0.,0.,0.}, {1.,1.,1.});
   tree::Point const base_pt(1, {2,2,2});
-  std::vector<tree::ID> const leaves{9,10,13,14,25,26,29,30,2,3,4,5,6,7,8};
+  tree::OwnedLeaves const leaves{9,10,13,14,25,26,29,30,2,3,4,5,6,7,8};
   BlockInfo B = create_block_info(dim, domain, leaves, base_pt);
   compare(B.global_ids, {9,10,13,14,25,26,29,30,2,3,4,5,6,7,8});
   compare(B.levels, {2,2,2,2,2,2,2,2,1,1,1,1,1,1,1});

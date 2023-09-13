@@ -1,3 +1,4 @@
+#include "dgt_cartesian.hpp"
 #include "dgt_mesh.hpp"
 #include "dgt_partitioning.hpp"
 
@@ -63,7 +64,7 @@ void Mesh::set_basis(Basis<View> basis)
   m_basis = basis;
 }
 
-std::vector<tree::ID> get_owned_leaves(
+tree::OwnedLeaves get_owned_leaves(
     mpicpp::comm* comm,
     tree::ZLeaves const& z_leaves)
 {
@@ -97,32 +98,81 @@ void Mesh::init(Grid3 const& block_grid)
   m_block_info = create_block_info(dim, m_domain, m_owned_leaves, base_pt);
 }
 
-static bool is_modal(std::string const& name, std::vector<Modal> const& fields)
+int Mesh::modal_index(std::string const& name)
 {
-  for (auto f : fields) {
-    if (f.name == name) return true;
+  for (std::size_t i = 0; i < m_modal.size(); ++i) {
+    if (m_modal[i].name == name) return int(i);
   }
-  return false;
+  return -1;
 }
 
-static void verify_doesnt_exist(
+void Mesh::add_modal(
     std::string const& name,
-    std::vector<Modal> const& fields)
+    int const nstored,
+    int const ncomps,
+    bool const with_flux)
 {
-  if (is_modal(name, fields)) {
+  verify();
+  if (modal_index(name) >= 0) {
     std::string const msg = fmt::format(
-        "dgt::Mesh::add_modal - field {} exists", name);
+        "dgt::Mesh::add_modal -> field {} already exists", name);
     throw std::runtime_error(msg);
   }
+  int const dim = m_basis.dim;
+  int const nmodes = m_basis.num_modes;
+  int const nface_pts = m_basis.num_face_pts;
+  int const ncells = get_num_cells(m_cell_grid);
+  int const nblocks = int(m_owned_leaves.size());
+  SolutionField f;
+  f.name = name;
+  f.solution.resize(nstored);
+  std::string const rname = fmt::format("{}_residual", name);
+  f.residual.create(rname, nblocks, ncells, ncomps, nmodes);
+  for (int soln_idx = 0; soln_idx < nstored; ++soln_idx) {
+    std::string const sname = fmt::format("{}_{}", name, soln_idx);
+    f.solution[soln_idx].create(sname, nblocks, ncells, ncomps, nmodes);
+  }
+  if (with_flux) {
+    for (int axis = 0; axis < dim; ++axis) {
+      int const nfaces = get_num_faces(m_cell_grid, axis);
+      std::string const axis_name = get_axis_name(axis);
+      std::string const fname = fmt::format("{}_flux_{}", name, axis_name);
+      f.fluxes[axis].create(fname, nblocks, nfaces, nface_pts, ncomps);
+    }
+  }
+  m_modal.push_back(f);
+  //TODO also initialize the communication pattern here
 }
 
-void Mesh::add_modal(std::string const& name, bool const with_flux)
+Field<real***> Mesh::get_solution(std::string const& name, int const soln_idx)
 {
-  verify_doesnt_exist(name, m_fields);
-  Modal f;
-  f.name = name;
-  f.has_flux = with_flux;
-  m_fields.push_back(f);
+  int const modal_idx = modal_index(name);
+  if (modal_idx < 0) {
+    std::string const msg = fmt::format(
+        "dgt::Mesh::get_solution -> field {} doesn't exist", name);
+    throw std::runtime_error(msg);
+  }
+  return m_modal[modal_idx].solution[soln_idx];
+}
+
+Vec3<Field<real***>> Mesh::get_flux(std::string const& name)
+{
+  int const modal_idx = modal_index(name);
+  if (modal_idx < 0) {
+    std::string const msg = fmt::format(
+        "dgt::Mesh::get_flux -> field {} doesn't exist", name);
+  }
+  return m_modal[modal_idx].fluxes;
+}
+
+Field<real***> Mesh::get_residual(std::string const& name)
+{
+  int const modal_idx = modal_index(name);
+  if (modal_idx < 0) {
+    std::string const msg = fmt::format(
+        "dgt::Mesh::get_residual -> field {} doesn't exist", name);
+  }
+  return m_modal[modal_idx].residual;
 }
 
 }

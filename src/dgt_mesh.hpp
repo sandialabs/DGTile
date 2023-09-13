@@ -25,11 +25,11 @@ class Mesh
 
     tree::Leaves m_leaves;
     tree::ZLeaves m_zleaves;
-    std::vector<tree::ID> m_owned_leaves;
+    tree::OwnedLeaves m_owned_leaves;
 
     BlockInfo m_block_info;
 
-    std::vector<Modal> m_fields;
+    std::vector<SolutionField> m_modal;
 
   public:
 
@@ -42,10 +42,29 @@ class Mesh
     void set_basis(Basis<View> m_basis);
 
     void verify();
+
     void init(Grid3 const& block_grid);
 
-    bool is_modal(std::string const& name);
-    void add_modal(std::string const& name, bool const with_flux = false);
+    int modal_index(std::string const& name);
+    void add_modal(
+        std::string const& name,
+        int const num_stored,
+        int const num_comps,
+        bool const with_flux = false);
+
+    mpicpp::comm* comm() { return m_comm; }
+    Box3<real> domain() const { return m_domain; }
+    Grid3 cell_grid() const { return m_cell_grid; }
+    Vec3<bool> periodic() const { return m_periodic; }
+    Basis<View> const& basis() const { return m_basis; }
+    tree::Leaves const& leaves() const { return m_leaves; }
+    tree::ZLeaves const& z_leaves() const { return m_zleaves; }
+    tree::OwnedLeaves const& owned_leaves() const { return m_owned_leaves; }
+    BlockInfo const& block_info() const { return m_block_info; }
+
+    Field<real***> get_solution(std::string const& name, int const soln_idx);
+    Vec3<Field<real***>> get_flux(std::string const& name);
+    Field<real***> get_residual(std::string const& name);
 
 };
 

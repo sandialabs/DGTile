@@ -3,6 +3,7 @@
 #include <fmt/core.h>
 
 #include "dgt_defines.hpp"
+#include "dgt_vec3.hpp"
 #include "dgt_view.hpp"
 
 namespace dgt {
@@ -96,13 +97,12 @@ class Field {
 
 };
 
-struct Modal
+struct SolutionField
 {
   std::string name = "";
-  bool has_flux = true;
-  Field<real***> modal;
+  std::vector<Field<real***>> solution;
   Field<real***> residual;
-  Vec3<Field<real***>> flux;
+  Vec3<Field<real***>> fluxes;
 };
 
 }

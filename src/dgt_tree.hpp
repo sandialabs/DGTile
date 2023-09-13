@@ -39,6 +39,7 @@ using Adjacencies = std::unordered_map<ID, Adjacent>;
 using Leaves = std::unordered_set<ID>;
 using Levels = std::vector<std::int8_t>;
 using Marks = std::vector<std::int8_t>;
+using OwnedLeaves = std::vector<ID>;
 using Periodic = Vec3<bool>;
 using ZLeaves = std::vector<ID>;
 
