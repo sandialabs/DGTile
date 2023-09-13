@@ -54,13 +54,8 @@ void test_view_sizes(BasisT const& B)
   EXPECT_EQ(B.modes[EVALUATION].grad_phis.extent(2), B.num_modes);
 }
 
-inline void test_basis(
+void test_basis(
     int const dim,
     int const p,
     int const q,
-    bool const tensor)
-{
-  auto B = build_basis<HostView>(dim, p, q, tensor);
-  test_integers(B, dim, p, q, tensor);
-  test_view_sizes(B);
-}
+    bool const tensor);

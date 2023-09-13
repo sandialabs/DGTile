@@ -234,17 +234,30 @@ DGT_METHOD ModeVector inline get_dmodes(
   return dphi;
 }
 
+template <class BasisT>
+DGT_METHOD inline Vec3<real> get_point(
+    BasisT const& B,
+    int const location,
+    int const pt)
+{
+  Vec3<real> xi = Vec3<real>::zero();
+  for (int axis = 0; axis < B.dim; ++axis) {
+    xi[axis] = B.modes[location].points(pt, axis);
+  }
+  return xi;
+}
+
 template <class ModalT, class BasisT>
 DGT_METHOD inline real eval(
     ModalT const U,
     int const cell,
     int const eq,
-    BasisT const B,
+    BasisT const& B,
     int const location,
     int const pt) {
-  real val = U(cell, eq, 0) * B.modes[location](pt, 0);
+  real val = U(cell, eq, 0) * B.modes[location].phis(pt, 0);
   for (int mode = 1; mode < B.num_modes; ++mode) {
-    val += U(cell, eq, mode) * B.modes[location](pt, mode);
+    val += U(cell, eq, mode) * B.modes[location].phis(pt, mode);
   }
   return val;
 }

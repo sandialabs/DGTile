@@ -193,3 +193,41 @@ TEST(dg, tensor_bounds)
   EXPECT_EQ(tensor_bounds(3, 3), Vec3<int>(4,4,4));
   EXPECT_EQ(tensor_bounds(3, 4), Vec3<int>(5,5,5));
 }
+
+static real function(int p, Vec3<real> const& x)
+{
+  real val = 1.;
+  if (p > 0) {
+    val +=
+      std::pow(x.x(), p) +
+      std::pow(x.y(), p) +
+      std::pow(x.z(), p);
+  }
+  return val;
+}
+
+static void test_integrates_polynomial(Basis<HostView> const& B)
+{
+  real integral = 0.;
+  for (int pt = 0; pt < B.num_cell_pts; ++pt) {
+    Vec3<real> const xi = get_point(B, basis_locations::CELL, pt);
+    real const f = function(B.p, xi);
+    real const wt = B.cell_weights(pt);
+    integral += f * wt;
+  }
+  if (B.p != 2) {
+    EXPECT_NEAR(integral, ipow(2, B.dim), 1.e-15);
+  }
+}
+
+void test_basis(
+    int const dim,
+    int const p,
+    int const q,
+    bool const tensor)
+{
+  auto B = build_basis<HostView>(dim, p, q, tensor);
+  test_integers(B, dim, p, q, tensor);
+  test_view_sizes(B);
+  test_integrates_polynomial(B);
+}
