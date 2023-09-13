@@ -5,10 +5,27 @@
 
 namespace example {
 
+static void check_valid_keywords(dgt::lua::table const& in)
+{
+  for (auto pair : in) {
+    std::string const key = dgt::lua::string(pair.first).value();
+    if (!((key == "name") ||
+          (key == "num_materials") ||
+          (key == "basis") ||
+          (key == "mesh"))) {
+      std::string const msg = fmt::format(
+          "dgt-example -> unknown key `{}`", key);
+      printf("%s\n", msg.c_str());
+      dgt::errors++;
+    }
+  }
+}
+
 State make_state(
     dgt::lua::table const& in,
     std::string const& file_name)
 {
+  check_valid_keywords(in);
   State result;
   result.comm = mpicpp::comm::world();
   result.input_file_name = file_name;
@@ -18,6 +35,10 @@ State make_state(
       in.get_table("mesh"),
       result.basis,
       &(result.comm));
+  result.mesh.add_modal("hydro", 2, 5);
+  if (dgt::errors > 0) {
+    throw std::runtime_error("dgt-example encountered errors");
+  }
   return result;
 }
 

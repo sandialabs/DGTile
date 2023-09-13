@@ -13,7 +13,6 @@ static std::string get_banner()
   return banner;
 }
 
-
 void run(State const& state)
 {
   if (state.comm.rank() == 0) {
