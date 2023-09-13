@@ -12,6 +12,7 @@ set(UNIT_TEST_SOURCES
   field.cpp
   for_each.cpp
   grid3.cpp
+  mesh.cpp
   main.cpp
   partitioning.cpp
   print.cpp

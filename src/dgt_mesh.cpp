@@ -144,6 +144,22 @@ void Mesh::add_modal(
   //TODO also initialize the communication pattern here
 }
 
+int Mesh::num_total_blocks() const
+{
+  return int(m_leaves.size());
+}
+
+int Mesh::num_owned_blocks() const
+{
+  return int(m_owned_leaves.size());
+}
+
+int Mesh::num_total_cells() const
+{
+  int const num_cells_per_block = get_num_cells(m_cell_grid);
+  return num_total_blocks() * num_cells_per_block;
+}
+
 Field<real***> Mesh::get_solution(std::string const& name, int const soln_idx)
 {
   int const modal_idx = modal_index(name);

@@ -62,6 +62,10 @@ class Mesh
     tree::OwnedLeaves const& owned_leaves() const { return m_owned_leaves; }
     BlockInfo const& block_info() const { return m_block_info; }
 
+    int num_total_blocks() const;
+    int num_owned_blocks() const;
+    int num_total_cells() const;
+
     Field<real***> get_solution(std::string const& name, int const soln_idx);
     Vec3<Field<real***>> get_flux(std::string const& name);
     Field<real***> get_residual(std::string const& name);
