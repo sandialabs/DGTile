@@ -13,12 +13,12 @@ static std::string get_banner()
   return banner;
 }
 
-void run(State const& state)
+void run(Input const& in)
 {
-  if (state.comm.rank() == 0) {
+  if (in.comm.rank() == 0) {
     printf("%s", get_banner().c_str());
-    printf(" > running: '%s'\n", state.name.c_str());
-    printf(" > from file: '%s'\n", state.input_file_name.c_str());
+    printf(" > running: '%s'\n", in.name.c_str());
+    printf(" > from file: '%s'\n", in.input_file_name.c_str());
   }
 }
 

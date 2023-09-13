@@ -8,16 +8,43 @@
 
 namespace example {
 
-struct State
+using namespace dgt;
+
+namespace inputs {
+
+struct Basis
+{
+  int polynomial_order = -1;
+  int quadrature_rule = -1;
+  bool tensor_product = true;
+};
+
+struct Time
+{
+  real cfl = 0.;
+  real end_time = 0.;
+};
+
+struct Mesh
+{
+  Grid3 cell_grid;
+  Box3<real> domain;
+  Vec3<bool> periodic;
+};
+
+}
+
+struct Input
 {
   mpicpp::comm comm;
   std::string name = "";
   std::string input_file_name = "";
-  dgt::Basis<dgt::View> basis;
-  dgt::Mesh mesh;
+  inputs::Basis basis;
+  inputs::Time time;
+  inputs::Mesh mesh;
 };
 
 void run_lua_file(std::string const& path);
-void run(State const& state);
+void run(Input const& in);
 
 }

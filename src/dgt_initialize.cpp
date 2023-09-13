@@ -5,8 +5,6 @@
 #include "dgt_defines.hpp"
 #include "dgt_initialize.hpp"
 
-int dgt::errors = 0;
-
 namespace dgt {
 
 void initialize(int argc, char** argv)

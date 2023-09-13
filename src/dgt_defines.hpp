@@ -18,8 +18,6 @@ static constexpr int RECV = 1;
 static constexpr int OWNED = 0;
 static constexpr int GHOST = 1;
 
-extern int errors;
-
 using real = double;
 
 }
