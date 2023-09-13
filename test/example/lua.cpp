@@ -1,5 +1,4 @@
 #include <dgt_lua.hpp>
-#include <dgt_lua_interface.hpp>
 
 #include "example.hpp"
 
@@ -30,11 +29,6 @@ State make_state(
   result.comm = mpicpp::comm::world();
   result.input_file_name = file_name;
   result.name = in.get_string("name");
-  result.basis = dgt::make_basis(in.get_table("basis"));
-  result.mesh = dgt::make_mesh(
-      in.get_table("mesh"),
-      result.basis,
-      &(result.comm));
   result.mesh.add_modal("hydro", 2, 5);
   if (dgt::errors > 0) {
     throw std::runtime_error("dgt-example encountered errors");

@@ -11,7 +11,6 @@ set(DGT_HEADERS
   dgt_grid3.hpp
   dgt_initialize.hpp
   dgt_lua.hpp
-  dgt_lua_interface.hpp
   dgt_macros.hpp
   dgt_mesh.hpp
   dgt_partitioning.hpp
@@ -32,7 +31,6 @@ set(DGT_SOURCES
   dgt_dg.cpp
   dgt_initialize.cpp
   dgt_lua.cpp
-  dgt_lua_interface.cpp
   dgt_mesh.cpp
   dgt_partitioning.cpp
   dgt_stl.cpp
