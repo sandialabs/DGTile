@@ -28,27 +28,33 @@ TEST(mesh, init_1D)
 {
   mpicpp::comm comm = mpicpp::comm::world();
   Mesh mesh = get_example_mesh(1, &comm);
+  EXPECT_EQ(mesh.dim(), 1);
   EXPECT_EQ(mesh.num_total_blocks(), 2);
   EXPECT_EQ(mesh.num_owned_blocks(), 2);
   EXPECT_EQ(mesh.num_total_cells(), 4);
+  EXPECT_EQ(mesh.num_owned_cells(), 4);
 }
 
 TEST(mesh, init_2D)
 {
   mpicpp::comm comm = mpicpp::comm::world();
   Mesh mesh = get_example_mesh(2, &comm);
+  EXPECT_EQ(mesh.dim(), 2);
   EXPECT_EQ(mesh.num_total_blocks(), 4);
   EXPECT_EQ(mesh.num_owned_blocks(), 4);
   EXPECT_EQ(mesh.num_total_cells(), 16);
+  EXPECT_EQ(mesh.num_owned_cells(), 16);
 }
 
 TEST(mesh, init_3D)
 {
   mpicpp::comm comm = mpicpp::comm::world();
   Mesh mesh = get_example_mesh(3, &comm);
+  EXPECT_EQ(mesh.dim(), 3);
   EXPECT_EQ(mesh.num_total_blocks(), 8);
   EXPECT_EQ(mesh.num_owned_blocks(), 8);
   EXPECT_EQ(mesh.num_total_cells(), 64);
+  EXPECT_EQ(mesh.num_owned_cells(), 64);
 }
 
 TEST(mesh, add_modal_field)
