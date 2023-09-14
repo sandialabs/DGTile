@@ -1,8 +1,8 @@
 #include <string>
 
-#include <dgt_dg.hpp>
-#include <dgt_mesh.hpp>
-#include <dgt_view.hpp>
+#include <dgt_box3.hpp>
+#include <dgt_grid3.hpp>
+#include <dgt_when.hpp>
 
 #include <mpicpp.hpp>
 
@@ -12,6 +12,13 @@ using namespace dgt;
 
 namespace inputs {
 
+struct Time
+{
+  real cfl = 0.;
+  real end_time = 0.;
+  WhenPtr to_terminal;
+};
+
 struct Basis
 {
   int polynomial_order = -1;
@@ -19,14 +26,10 @@ struct Basis
   bool tensor_product = true;
 };
 
-struct Time
-{
-  real cfl = 0.;
-  real end_time = 0.;
-};
 
 struct Mesh
 {
+  Grid3 block_grid;
   Grid3 cell_grid;
   Box3<real> domain;
   Vec3<bool> periodic;

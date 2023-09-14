@@ -28,8 +28,3 @@ TEST(defines, communication)
   EXPECT_EQ(OWNED, 0);
   EXPECT_EQ(GHOST, 1);
 }
-
-TEST(defines, errors)
-{
-  EXPECT_EQ(errors, 0);
-}
