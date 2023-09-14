@@ -2,6 +2,7 @@ set(EXAMPLE_SOURCES
   lua.cpp
   main.cpp
   run.cpp
+  setup.cpp
 )
 
 set_source_files_properties(${EXAMPLE_SOURCES} PROPERTIES LANGUAGE ${DGT_LANGUAGE})

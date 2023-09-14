@@ -4,8 +4,6 @@
 
 #include "example.hpp"
 
-#include <iostream> // debug
-
 namespace example {
 
 static int parsing_errors = 0;
@@ -156,14 +154,15 @@ Input make_input(
 {
   check_valid_keys(in, {
       "name",
+      "num_materials",
       "time",
       "basis",
       "mesh",
       "initial_conditions"});
   Input result;
-  result.comm = mpicpp::comm::world();
   result.input_file_name = file_name;
   result.name = in.get_string("name");
+  result.num_materials = in.get_integer("num_materials");
   result.time = parse_time(in.get_table("time"));
   result.basis = parse_basis(in.get_table("basis"));
   result.mesh = parse_mesh(in.get_table("mesh"));
@@ -180,11 +179,12 @@ extern "C" {
 static int lua_dgtile_run(lua_State* L) {
   return dgt::lua::function_wrapper(L,
     [](dgt::lua::stack s) {
+      mpicpp::comm comm = mpicpp::comm::world();
       auto dgtile_table = dgt::lua::table(s.getglobal("dgtile"));
       auto input_table = dgt::lua::table(s.function_argument(1, "dgtile.run"));
       std::string const file_name = dgtile_table.get_string("file");
       auto state = example::make_input(input_table, file_name);
-      run(state);
+      run(&comm, state);
       std::vector<dgt::lua::stack_object> results;
       return results;
     });
