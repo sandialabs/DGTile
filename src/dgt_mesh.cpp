@@ -160,8 +160,18 @@ int Mesh::num_owned_blocks() const
 
 int Mesh::num_total_cells() const
 {
-  int const num_cells_per_block = get_num_cells(m_cell_grid);
+  Subgrid3 const owned_cells = get_owned_cells(m_cell_grid);
+  Grid3 const owned_cell_grid(owned_cells.extents());
+  int const num_cells_per_block = get_num_cells(owned_cell_grid);
   return num_total_blocks() * num_cells_per_block;
+}
+
+int Mesh::num_owned_cells() const
+{
+  Subgrid3 const owned_cells = get_owned_cells(m_cell_grid);
+  Grid3 const owned_cell_grid(owned_cells.extents());
+  int const num_cells_per_block = get_num_cells(owned_cell_grid);
+  return num_owned_blocks() * num_cells_per_block;
 }
 
 Field<real***> Mesh::get_solution(std::string const& name, int const soln_idx)

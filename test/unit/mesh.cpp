@@ -56,8 +56,8 @@ TEST(mesh, add_modal_field)
   mpicpp::comm comm = mpicpp::comm::world();
   Mesh mesh = get_example_mesh(2, &comm);
   int const num_blocks = 4;
-  int const num_cells_per_block = 4;
-  int const num_faces_per_block = 6;
+  int const num_ghost_cells_per_block = 16;
+  int const num_ghost_faces_per_block = 20;
   int const num_modes = 4;
   int const num_face_pts = 2;
   int const num_stored = 2;
@@ -78,17 +78,17 @@ TEST(mesh, add_modal_field)
   EXPECT_EQ(F[X].get().size(), num_blocks);
   EXPECT_EQ(F[Y].get().size(), num_blocks);
   for (int block = 0; block < num_blocks; ++block) {
-    EXPECT_EQ(U0.get()[block].extent(0), num_cells_per_block);
-    EXPECT_EQ(U1.get()[block].extent(0), num_cells_per_block);
-    EXPECT_EQ(R.get()[block].extent(0), num_cells_per_block);
+    EXPECT_EQ(U0.get()[block].extent(0), num_ghost_cells_per_block);
+    EXPECT_EQ(U1.get()[block].extent(0), num_ghost_cells_per_block);
+    EXPECT_EQ(R.get()[block].extent(0), num_ghost_cells_per_block);
     EXPECT_EQ(U0.get()[block].extent(1), num_eqs);
     EXPECT_EQ(U1.get()[block].extent(1), num_eqs);
     EXPECT_EQ(R.get()[block].extent(1), num_eqs);
     EXPECT_EQ(U0.get()[block].extent(2), num_modes);
     EXPECT_EQ(U1.get()[block].extent(2), num_modes);
     EXPECT_EQ(R.get()[block].extent(2), num_modes);
-    EXPECT_EQ(F[X].get()[block].extent(0), num_faces_per_block);
-    EXPECT_EQ(F[Y].get()[block].extent(0), num_faces_per_block);
+    EXPECT_EQ(F[X].get()[block].extent(0), num_ghost_faces_per_block);
+    EXPECT_EQ(F[Y].get()[block].extent(0), num_ghost_faces_per_block);
     EXPECT_EQ(F[X].get()[block].extent(1), num_face_pts);
     EXPECT_EQ(F[Y].get()[block].extent(1), num_face_pts);
   }

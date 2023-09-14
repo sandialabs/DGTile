@@ -89,6 +89,13 @@ TEST(cartesian, get_num_faces)
   EXPECT_THROW((void)get_num_faces({5,0,5}, X), std::runtime_error);
 }
 
+TEST(cartesian, get_owned_cells)
+{
+  EXPECT_EQ(get_owned_cells({6,0,0}), Subgrid3({1,0,0}, {5,0,0}));
+  EXPECT_EQ(get_owned_cells({6,6,0}), Subgrid3({1,1,0}, {5,5,0}));
+  EXPECT_EQ(get_owned_cells({6,6,6}), Subgrid3({1,1,1}, {5,5,5}));
+}
+
 TEST(cartesian, get_cells_ghost_2D)
 {
   Grid3 const g(8,8,0);

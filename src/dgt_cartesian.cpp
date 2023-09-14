@@ -16,12 +16,6 @@ static int infer_dim(Grid3 const& cell_grid) {
   return dim;
 }
 
-int get_num_cells(Grid3 const& cell_grid)
-{
-  int const dim = infer_dim(cell_grid);
-  return generalize(dim, cell_grid).size();
-}
-
 Grid3 get_face_grid(Grid3 const& cell_grid, int const axis)
 {
   Vec3<int> const cell_extents = cell_grid.extents();
@@ -29,11 +23,30 @@ Grid3 get_face_grid(Grid3 const& cell_grid, int const axis)
   return Grid3(face_extents);
 }
 
+int get_num_cells(Grid3 const& cell_grid)
+{
+  int const dim = infer_dim(cell_grid);
+  return generalize(dim, cell_grid).size();
+}
+
 int get_num_faces(Grid3 const& cell_grid, int const axis)
 {
   int const dim = infer_dim(cell_grid);
   Grid3 const face_grid = get_face_grid(cell_grid, axis);
   return generalize(dim, face_grid).size();
+}
+
+Subgrid3 get_owned_cells(Grid3 const& cell_grid)
+{
+  int const dim = infer_dim(cell_grid);
+  Vec3<int> lower = Vec3<int>::zero();
+  Vec3<int> upper = Vec3<int>::zero();
+  Vec3<int> const ncells = cell_grid.extents();
+  for (int axis = 0; axis < dim; ++axis) {
+    lower[axis] = 1;
+    upper[axis] = ncells[axis] - 1;
+  }
+  return Subgrid3(lower, upper);
 }
 
 Subgrid3 get_cells(
