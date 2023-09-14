@@ -36,7 +36,6 @@ void setup(State& state, mpicpp::comm* comm, Input const& in)
   state.mesh.set_basis(basis);
   state.mesh.init(in.mesh.block_grid);
   state.mesh.print_stats();
-
   int const nstored = get_num_stored_solutions(basis.p);
   int const neqs = state.eqs.num_eqs();
   state.mesh.add_modal("hydro", nstored, neqs);

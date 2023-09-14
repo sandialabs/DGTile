@@ -11,6 +11,16 @@ using namespace dgt;
 
 namespace inputs {
 
+template <class T>
+struct function
+{
+  virtual T operator()(Vec3<real> const& x) = 0;
+  virtual ~function() = default;
+};
+
+template <class T>
+using function_ptr = std::unique_ptr<function<T>>;
+
 struct Time
 {
   real cfl = 0.;
@@ -33,6 +43,13 @@ struct Mesh
   Vec3<bool> periodic = {false, false, false};
 };
 
+struct InitialConditions
+{
+  std::vector<function_ptr<real>> densities;
+  std::vector<function_ptr<real>> pressures;
+  function_ptr<Vec3<real>> velocity;
+};
+
 }
 
 struct Input
@@ -43,6 +60,7 @@ struct Input
   inputs::Basis basis;
   inputs::Time time;
   inputs::Mesh mesh;
+  inputs::InitialConditions ics;
 };
 
 struct Equations
