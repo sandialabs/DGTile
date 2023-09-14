@@ -148,6 +148,11 @@ void Mesh::add_modal(
   //TODO also initialize the communication pattern here
 }
 
+int Mesh::dim() const
+{
+  return infer_dimension(m_cell_grid);
+}
+
 int Mesh::num_total_blocks() const
 {
   return int(m_leaves.size());
@@ -203,6 +208,48 @@ Field<real***> Mesh::get_residual(std::string const& name)
         "dgt::Mesh::get_residual -> field {} doesn't exist", name);
   }
   return m_modal[modal_idx].residual;
+}
+
+static Vec3<real> vec_min(Vec3<real> const& a, Vec3<real> const b)
+{
+  return (a.x() < b.x()) ? a : b;
+}
+
+static Vec3<real> vec_max(Vec3<real> const& a, Vec3<real> const& b)
+{
+  return (a.x() > b.x()) ? a : b;
+}
+
+template <class Op>
+static Vec3<real> const reduce_dx(
+    int const dim,
+    Box3<real> const& domain,
+    tree::ZLeaves const& z_leaves,
+    Op const& op)
+{
+  tree::Point const base_pt = tree::get_base_point(dim, z_leaves);
+  tree::ID const id = z_leaves[0];
+  Box3<real> const d0 = tree::get_domain(dim, id, base_pt, domain);
+  Vec3<real> result = d0.extents();
+  for (tree::ID const id : z_leaves) {
+    Box3<real> const d = tree::get_domain(dim, id, base_pt, domain);
+    Vec3<real> const dx = d.extents();
+    result = op(result, dx);
+  }
+  return result;
+}
+
+void Mesh::print_stats() const
+{
+  if (m_comm->rank()) return;
+  Vec3<real> const min = reduce_dx(dim(), m_domain, m_zleaves, vec_min);
+  Vec3<real> const max = reduce_dx(dim(), m_domain, m_zleaves, vec_max);
+  printf("mesh stats\n");
+  printf("----------\n");
+  printf("> blocks: %d\n", num_total_blocks());
+  printf("> cells: %d\n", num_total_cells());
+  printf("> minimum dx: [%e, %e, %e]\n", min.x(), min.y(), min.z());
+  printf("> maximum dx: [%e, %e, %e]\n", max.x(), max.y(), max.z());
 }
 
 }
