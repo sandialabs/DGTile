@@ -51,7 +51,11 @@ void Mesh::set_domain(Box3<real> const& domain)
 
 void Mesh::set_cell_grid(Grid3 const& cell_grid)
 {
-  m_cell_grid = cell_grid;
+  m_cell_grid.extents() = Vec3<int>::zero();
+  int const dim = infer_dimension(cell_grid);
+  for (int axis = 0; axis < dim; ++axis) {
+    m_cell_grid.extents()[axis] = cell_grid.extents()[axis] + 2;
+  }
 }
 
 void Mesh::set_periodic(Vec3<bool> const& periodic)

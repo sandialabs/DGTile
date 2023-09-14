@@ -2,6 +2,8 @@
 
 #include "example.hpp"
 
+#include <dgt_print.hpp> // debug
+
 namespace example {
 
 Equations::Equations(int const num_mats)
@@ -35,6 +37,17 @@ void setup(State& state, mpicpp::comm* comm, Input const& in)
   state.mesh.init(in.mesh.block_grid);
   int const nstored = get_num_stored_solutions(basis.p);
   int const neqs = state.eqs.num_eqs();
+
+
+
+  std::cout << "block_grid: " << in.mesh.block_grid << "\n";
+  std::cout << "cell_grid: " << in.mesh.cell_grid << "\n";
+  std::cout << "neqs: " << neqs << "\n";
+  std::cout << "nstored: " << nstored << "\n";
+  std::cout << "mesh.totalblocks: " << state.mesh.num_total_blocks() << "\n";
+  std::cout << "mesh.totalcells: " << state.mesh.num_total_cells() << "\n";
+
+
   state.mesh.add_modal("hydro", nstored, neqs);
 }
 

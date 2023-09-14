@@ -27,10 +27,10 @@ struct Basis
 
 struct Mesh
 {
-  Grid3 block_grid;
-  Grid3 cell_grid;
-  Box3<real> domain;
-  Vec3<bool> periodic;
+  Grid3 block_grid = {0,0,0};
+  Grid3 cell_grid = {0,0,0};
+  Box3<real> domain = {{0,0,0}, {0,0,0}};
+  Vec3<bool> periodic = {false, false, false};
 };
 
 }
