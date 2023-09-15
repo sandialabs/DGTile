@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "dgt_cartesian.hpp"
 #include "dgt_tree.hpp"
 
