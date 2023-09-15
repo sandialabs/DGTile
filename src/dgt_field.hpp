@@ -102,7 +102,7 @@ struct SolutionField
   std::string name = "";
   std::vector<Field<real***>> solution;
   Field<real***> residual;
-  Vec3<Field<real***>> fluxes;
+  Field<real***> fluxes[DIMENSIONS];
 };
 
 }

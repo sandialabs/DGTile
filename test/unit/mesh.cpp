@@ -72,17 +72,18 @@ TEST(mesh, add_modal_field)
   Field<real***> U0 = mesh.get_solution("hydro", 0);
   Field<real***> U1 = mesh.get_solution("hydro", 1);
   Field<real***> R = mesh.get_residual("hydro");
-  Vec3<Field<real***>> F = mesh.get_fluxes("hydro");
+  Field<real***> Fx = mesh.get_fluxes("hydro", X);
+  Field<real***> Fy = mesh.get_fluxes("hydro", Y);
   EXPECT_EQ(U0.name(), "hydro_0");
   EXPECT_EQ(U1.name(), "hydro_1");
   EXPECT_EQ(R.name(), "hydro_residual");
-  EXPECT_EQ(F[X].name(), "hydro_fluxes_X");
-  EXPECT_EQ(F[Y].name(), "hydro_fluxes_Y");
+  EXPECT_EQ(Fx.name(), "hydro_fluxes_X");
+  EXPECT_EQ(Fy.name(), "hydro_fluxes_Y");
   EXPECT_EQ(U0.get().size(), num_blocks);
   EXPECT_EQ(U1.get().size(), num_blocks);
   EXPECT_EQ(R.get().size(), num_blocks);
-  EXPECT_EQ(F[X].get().size(), num_blocks);
-  EXPECT_EQ(F[Y].get().size(), num_blocks);
+  EXPECT_EQ(Fx.get().size(), num_blocks);
+  EXPECT_EQ(Fy.get().size(), num_blocks);
   for (int block = 0; block < num_blocks; ++block) {
     EXPECT_EQ(U0.get()[block].extent(0), num_ghost_cells_per_block);
     EXPECT_EQ(U1.get()[block].extent(0), num_ghost_cells_per_block);
@@ -93,9 +94,9 @@ TEST(mesh, add_modal_field)
     EXPECT_EQ(U0.get()[block].extent(2), num_modes);
     EXPECT_EQ(U1.get()[block].extent(2), num_modes);
     EXPECT_EQ(R.get()[block].extent(2), num_modes);
-    EXPECT_EQ(F[X].get()[block].extent(0), num_ghost_faces_per_block);
-    EXPECT_EQ(F[Y].get()[block].extent(0), num_ghost_faces_per_block);
-    EXPECT_EQ(F[X].get()[block].extent(1), num_face_pts);
-    EXPECT_EQ(F[Y].get()[block].extent(1), num_face_pts);
+    EXPECT_EQ(Fx.get()[block].extent(0), num_ghost_faces_per_block);
+    EXPECT_EQ(Fy.get()[block].extent(0), num_ghost_faces_per_block);
+    EXPECT_EQ(Fx.get()[block].extent(1), num_face_pts);
+    EXPECT_EQ(Fy.get()[block].extent(1), num_face_pts);
   }
 }

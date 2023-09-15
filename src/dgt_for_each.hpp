@@ -40,12 +40,12 @@ class Kokkos4DFunctor
 
 template <class Functor>
 void kokkos_4D_for_each(
+    std::string const& name,
     int const scalar_first,
     int const scalar_last,
     Vec3<int> const& vec_first,
     Vec3<int> const& vec_last,
-    Functor const functor,
-    std::string const& name)
+    Functor const functor)
 {
   int const scalar_limits = scalar_last - scalar_first;
   Vec3<int> const vec_limits = vec_last - vec_first;
@@ -63,14 +63,14 @@ void kokkos_4D_for_each(
 
 template <class Functor>
 void for_each(
+    std::string const& name,
     int const n,
     Subgrid3 const& s,
-    Functor const f,
-    std::string const& name = "")
+    Functor const f)
 {
   int const dim = infer_dimension(s.upper());
   Subgrid3 const gs = generalize(dim, s);
-  kokkos_4D_for_each(0, n, gs.lower(), gs.upper(), f, name);
+  kokkos_4D_for_each(name, 0, n, gs.lower(), gs.upper(), f);
 }
 
 }

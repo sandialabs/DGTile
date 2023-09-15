@@ -91,13 +91,13 @@ static void test_4D_for_each(int const dim)
   int const nk = (dim > 2) ? 3 : 1;
   Grid3 const cell_grid(ni,nj,nk);
   View<real****> v("4d", ni, nj, nk, num_blocks);
-  auto functor = [=] (int const block, Vec3<int> const& cell_ijk) {
+  auto functor = [=] DGT_DEVICE (int const block, Vec3<int> const& cell_ijk) {
     int const i = cell_ijk.x();
     int const j = cell_ijk.y();
     int const k = cell_ijk.z();
     v(i,j,k,block) = 1.;
   };
-  for_each(num_blocks, cell_grid, functor, "4d_test");
+  for_each("4d_test", num_blocks, cell_grid, functor);
 }
 
 TEST(for_each, 4D_for_each_1D_grid)

@@ -69,7 +69,7 @@ class Mesh
     int num_owned_cells() const;
 
     Field<real***> get_solution(std::string const& name, int const soln_idx);
-    Vec3<Field<real***>> get_fluxes(std::string const& name);
+    Field<real***> get_fluxes(std::string const& name, int const axis);
     Field<real***> get_residual(std::string const& name);
 
     void print_stats() const;

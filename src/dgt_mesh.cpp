@@ -190,14 +190,14 @@ Field<real***> Mesh::get_solution(std::string const& name, int const soln_idx)
   return m_modal[modal_idx].solution[soln_idx];
 }
 
-Vec3<Field<real***>> Mesh::get_fluxes(std::string const& name)
+Field<real***> Mesh::get_fluxes(std::string const& name, int const axis)
 {
   int const modal_idx = modal_index(name);
   if (modal_idx < 0) {
     std::string const msg = fmt::format(
         "dgt::Mesh::get_fluxes -> field {} doesn't exist", name);
   }
-  return m_modal[modal_idx].fluxes;
+  return m_modal[modal_idx].fluxes[axis];
 }
 
 Field<real***> Mesh::get_residual(std::string const& name)
