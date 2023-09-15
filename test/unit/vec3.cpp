@@ -144,6 +144,14 @@ void test_volume()
 }
 
 template <class T>
+void test_dot()
+{
+  Vec3<T> const a(T(1),T(2),T(3));
+  Vec3<T> const b(T(3),T(2),T(1));
+  EXPECT_EQ(dot(a,b), T(10));
+}
+
+template <class T>
 void test_abs()
 {
   Vec3<T> const a = -Vec3<T>::ones();
@@ -340,6 +348,12 @@ TEST(vec3, comp_division)
 {
   test_comp_division<int>();
   test_comp_division<real>();
+}
+
+TEST(vec3, dot)
+{
+  test_dot<int>();
+  test_dot<real>();
 }
 
 TEST(vec3, abs)

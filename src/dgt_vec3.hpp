@@ -183,6 +183,12 @@ DGT_METHOD constexpr Vec3<T> comp_division(Vec3<T> const& a, Vec3<T> const& b)
 }
 
 template <class T>
+DGT_METHOD constexpr T dot(Vec3<T> const& a, Vec3<T> const& b)
+{
+  return a.x() * b.x() + a.y() * b.y() + a.z() * b.z();
+}
+
+template <class T>
 DGT_METHOD constexpr Vec3<T> abs(Vec3<T> const& v)
 {
   return Vec3<T>(std::abs(v.x()), std::abs(v.y()), std::abs(v.z()));
