@@ -50,6 +50,11 @@ struct InitialConditions
   function_ptr<Vec3<real>> velocity;
 };
 
+struct Materials
+{
+  std::vector<real> gammas;
+};
+
 }
 
 struct Input
@@ -60,6 +65,7 @@ struct Input
   inputs::Basis basis;
   inputs::Time time;
   inputs::Mesh mesh;
+  inputs::Materials materials;
   inputs::InitialConditions ics;
 };
 

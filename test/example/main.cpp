@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     if (std::filesystem::exists(input)) {
       example::run_lua_file(input);
     } else {
-      std::runtime_error(fmt::format("file {} doesn't exist", input));
+      throw std::runtime_error(fmt::format("file {} doesn't exist", input));
     }
   } catch (std::exception const& e) {
     printf("DGTile: caught exception->\n%s\n", e.what());

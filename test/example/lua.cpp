@@ -247,6 +247,24 @@ static inputs::InitialConditions parse_ics(
   return result;
 }
 
+inputs::Materials parse_materials(
+    lua::table const& in,
+    int const nmats)
+{
+  std::vector<std::string> valid_keys;
+  for (int mat = 0; mat < nmats; ++mat) {
+    valid_keys.push_back(fmt::format("gamma_{}", mat));
+  }
+  check_valid_keys(in, valid_keys);
+  inputs::Materials result;
+  result.gammas.resize(nmats);
+  for (int mat = 0;  mat < nmats; ++mat) {
+    auto const gamma_name = fmt::format("gamma_{}", mat);
+    result.gammas[mat] = in.get_number(gamma_name.c_str());
+  }
+  return result;
+}
+
 Input make_input(
     lua::table const& in,
     std::string const& file_name)
@@ -257,6 +275,7 @@ Input make_input(
       "time",
       "basis",
       "mesh",
+      "materials",
       "initial_conditions"});
   Input result;
   result.input_file_name = file_name;
@@ -265,6 +284,8 @@ Input make_input(
   result.time = parse_time(in.get_table("time"));
   result.basis = parse_basis(in.get_table("basis"));
   result.mesh = parse_mesh(in.get_table("mesh"));
+  result.materials = parse_materials(
+      in.get_table("materials"), result.num_materials);
   result.ics = parse_ics(
       in.get_table("initial_conditions"), result.num_materials);
   if (parsing_errors > 0) {
