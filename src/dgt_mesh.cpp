@@ -99,7 +99,10 @@ void Mesh::init(Grid3 const& block_grid)
   m_zleaves = tree::order(dim, m_leaves);
   m_owned_leaves = get_owned_leaves(m_comm, m_zleaves);
   tree::Point const base_pt = tree::get_base_point(dim, m_zleaves);
-  m_block_info = create_block_info(dim, m_domain, m_owned_leaves, base_pt);
+  m_block_info = build_block_info<View>(
+      dim, m_domain, m_owned_leaves, base_pt);
+  m_block_info_h = build_block_info<HostView>(
+      dim, m_domain, m_owned_leaves, base_pt);
 }
 
 int Mesh::modal_index(std::string const& name)

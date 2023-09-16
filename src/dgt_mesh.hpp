@@ -27,7 +27,8 @@ class Mesh
     tree::ZLeaves m_zleaves;
     tree::OwnedLeaves m_owned_leaves;
 
-    BlockInfo m_block_info;
+    BlockInfo<View> m_block_info;
+    BlockInfo<HostView> m_block_info_h;
 
     std::vector<SolutionField> m_modal;
 
@@ -60,7 +61,9 @@ class Mesh
     tree::Leaves const& leaves() const { return m_leaves; }
     tree::ZLeaves const& z_leaves() const { return m_zleaves; }
     tree::OwnedLeaves const& owned_leaves() const { return m_owned_leaves; }
-    BlockInfo const& block_info() const { return m_block_info; }
+    BlockInfo<View> const& block_info() const { return m_block_info; }
+    BlockInfo<HostView> const& block_info_h() const { return m_block_info_h; }
+
 
     int dim() const;
     int num_total_blocks() const;

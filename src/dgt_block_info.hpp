@@ -5,17 +5,19 @@
 
 namespace dgt {
 
+template <template <class> class ViewT>
 struct BlockInfo
 {
-  View<tree::ID*> global_ids;
-  View<std::int8_t*> levels;
-  View<Box3<real>*> domains;
-  View<Vec3<real>*> dxs;
-  View<real*> cell_detJs;
-  View<real*> face_detJs[DIMENSIONS];
+  ViewT<tree::ID*> global_ids;
+  ViewT<std::int8_t*> levels;
+  ViewT<Box3<real>*> domains;
+  ViewT<Vec3<real>*> dxs;
+  ViewT<real*> cell_detJs;
+  ViewT<real*> face_detJs[DIMENSIONS];
 };
 
-BlockInfo create_block_info(
+template <template <class> class ViewT>
+BlockInfo<ViewT> build_block_info(
     int const dim,
     Box3<real> const& domain,
     tree::OwnedLeaves const& ids,

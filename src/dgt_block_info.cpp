@@ -3,10 +3,10 @@
 
 namespace dgt {
 
-template <class T>
-View<T*> make_view(std::string const& name, std::vector<T> const& data)
+template <template <class> class ViewT, class T>
+ViewT<T*> make_view(std::string const& name, std::vector<T> const& data)
 {
-  View<T*> view(name, data.size());
+  ViewT<T*> view(name, data.size());
   HostView<T*> host_view(name, data.size());
   for (std::size_t i = 0; i < data.size(); ++i) {
     host_view[i] = data[i];
@@ -115,23 +115,36 @@ static std::vector<real> get_face_detJs(
   return detJs;
 }
 
-BlockInfo create_block_info(
+template <template <class> class ViewT>
+BlockInfo<ViewT> build_block_info(
   int const dim,
   Box3<real> const& domain,
-  std::vector<tree::ID> const& ids,
+  tree::OwnedLeaves const& ids,
   tree::Point const& base_pt)
 {
-  BlockInfo B;
-  B.global_ids = make_view("global_ids", get_global_ids(ids));
-  B.levels = make_view("levels", get_levels(dim, ids));
-  B.domains = make_view("domains", get_domains(dim, domain, ids, base_pt));
-  B.dxs = make_view("dxs", get_dxs(dim, domain, ids, base_pt));
-  B.cell_detJs = make_view("cell_detJs", get_cell_detJs(dim, domain, ids, base_pt));
+  BlockInfo<ViewT> B;
+  B.global_ids = make_view<ViewT>(
+      "global_ids", get_global_ids(ids));
+  B.levels = make_view<ViewT>(
+      "levels", get_levels(dim, ids));
+  B.domains = make_view<ViewT>(
+      "domains",get_domains(dim, domain, ids, base_pt));
+  B.dxs = make_view<ViewT>(
+      "dxs", get_dxs(dim, domain, ids, base_pt));
+  B.cell_detJs = make_view<ViewT>(
+      "cell_detJs", get_cell_detJs(dim, domain, ids, base_pt));
   for (int axis = 0; axis < dim; ++axis) {
     auto const name = "face_detJs" + get_axis_name(axis);
-    B.face_detJs[axis] = make_view(name, get_face_detJs(dim, axis, domain, ids, base_pt));
+    B.face_detJs[axis] = make_view<ViewT>(
+        name, get_face_detJs(dim, axis, domain, ids, base_pt));
   }
   return B;
 }
+
+template BlockInfo<View>
+build_block_info(int const, Box3<real> const&, tree::OwnedLeaves const&, tree::Point const&);
+
+template BlockInfo<HostView>
+build_block_info(int const, Box3<real> const&, tree::OwnedLeaves const&, tree::Point const&);
 
 }

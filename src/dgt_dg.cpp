@@ -288,7 +288,7 @@ Basis<ViewT> build_basis(
   return B;
 }
 
-template Basis<View> build_basis(int, int, int, bool);
-template Basis<HostView> build_basis(int, int, int, bool);
+template Basis<View> build_basis(int const, int const, int const, bool const);
+template Basis<HostView> build_basis(int const, int const, int const, bool const);
 
 }
