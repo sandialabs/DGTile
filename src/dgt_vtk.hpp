@@ -16,6 +16,11 @@ void write_vtr_start(
     real const time,
     int const step);
 
+template <class T>
+void write_field(
+    std::stringstream& stream,
+    std::string const& name,
+    VtkView<T> f);
 
 void write_vtr_end(std::stringstream& stream);
 

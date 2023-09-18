@@ -98,10 +98,13 @@ void setup(State& state, mpicpp::comm* comm, Input const& in)
 
 
   /// debug
-  std::stringstream a;
-  write_vtr_start(a, 0, state.mesh, 0., 0);
-  write_vtr_end(a);
-  std::cout << a.rdbuf() << "\n";
+  for (int block = 0; block < state.mesh.num_owned_blocks(); ++block) {
+    std::stringstream a;
+    write_vtr_start(a, 0, state.mesh, 0., 0);
+    write_vtr_end(a);
+    std::cout << a.rdbuf() << "\n";
+  }
+  std::cout << "---\n";
 
 }
 

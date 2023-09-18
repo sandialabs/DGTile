@@ -252,13 +252,36 @@ void write_vtr_start(
   write_vtr_field_data(stream, block, mesh, time, step);
   write_vtr_piece_start(stream, mesh);
   write_vtr_coordinates(stream, block, mesh);
+  stream << "<CellData>\n";
 }
 
 void write_vtr_end(std::stringstream& stream)
 {
+  stream << "</CellData>\n";
   stream << "</Piece>\n";
   stream << "</RectilinearGrid>\n";
   stream << "</VTKFile>\n";
 }
+
+template <class T> std::string vtk_type_name();
+template <> std::string vtk_type_name<int>() { return "Int32"; }
+template <> std::string vtk_type_name<float>() { return "Float32"; }
+template <> std::string vtk_type_name<double>() { return "Float64"; }
+
+template <class T>
+void write_field(
+    std::stringstream& stream,
+    std::string const& name,
+    VtkView<T> f)
+{
+  int const ncomps = f.d_view.extent(1);
+  write_data_start(stream, vtk_type_name<T>(), name, ncomps);
+  write_data(stream, f, true);
+  write_data_end(stream);
+}
+
+template void write_field<int>(std::stringstream&, std::string const&, VtkView<int>);
+template void write_field<float>(std::stringstream&, std::string const&, VtkView<float>);
+template void write_field<real>(std::stringstream&, std::string const&, VtkView<real>);
 
 }
