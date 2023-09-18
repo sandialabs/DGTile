@@ -105,8 +105,7 @@ void setup(State& state, mpicpp::comm* comm, Input const& in)
   apply_initial_conditions(state, in);
 
 
-
-
+  write_out(in, state, 0);
 
 }
 

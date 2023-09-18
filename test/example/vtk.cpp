@@ -16,12 +16,18 @@ static void write_mesh(
   int const nblocks = mesh.num_owned_blocks();
   for (int block = 0; block < nblocks; ++block) {
     std::stringstream stream;
-    std::filesystem::path block_path = path;
-    block_path /= fmt::format("{}.vtr", block);
+    std::filesystem::path const block_path = path / fmt::format("{}.vtr", block);
     dgt::vtk::write_vtr_start(stream, block, mesh, state.time, state.step);
     dgt::vtk::write_vtr_end(stream);
     dgt::write_stream(block_path, stream);
   }
+  if (state.mesh.comm()->rank() == 0) {
+    std::filesystem::path const vtm_path = path / "blocks.vtm";
+    std::stringstream stream;
+    dgt::vtk::write_vtm(stream, "", mesh.num_total_blocks());
+    dgt::write_stream(vtm_path, stream);
+  }
+
 
   (void)soln_idx;
 }
