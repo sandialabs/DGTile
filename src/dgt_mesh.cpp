@@ -63,9 +63,10 @@ void Mesh::set_periodic(Vec3<bool> const& periodic)
   m_periodic = periodic;
 }
 
-void Mesh::set_basis(Basis<View> basis)
+void Mesh::set_basis(int const p, int const q, bool const tensor)
 {
-  m_basis = basis;
+  m_basis = build_basis<View>(dim(), p, q, tensor);
+  m_basis_h = build_basis<HostView>(dim(), p, q, tensor);
 }
 
 tree::OwnedLeaves get_owned_leaves(
@@ -225,28 +226,25 @@ static Vec3<real> vec_max(Vec3<real> const& a, Vec3<real> const& b)
 
 template <class Op>
 static Vec3<real> const reduce_dx(
-    int const dim,
-    Box3<real> const& domain,
-    tree::ZLeaves const& z_leaves,
+    mpicpp::comm* comm,
+    HostView<Vec3<real>*> dxs,
     Op const& op)
 {
-  tree::Point const base_pt = tree::get_base_point(dim, z_leaves);
-  tree::ID const id = z_leaves[0];
-  Box3<real> const d0 = tree::get_domain(dim, id, base_pt, domain);
-  Vec3<real> result = d0.extents();
-  for (tree::ID const id : z_leaves) {
-    Box3<real> const d = tree::get_domain(dim, id, base_pt, domain);
-    Vec3<real> const dx = d.extents();
-    result = op(result, dx);
+  Vec3<real> result = dxs[0];
+  for (std::size_t i = 0; i < dxs.size(); ++i) {
+    result = op(result, dxs[i]);
   }
+  mpicpp::request req = comm->iallreduce(
+      &(result[0]), DIMENSIONS, mpicpp::op::sum());
+  req.wait();
   return result;
 }
 
 void Mesh::print_stats() const
 {
   if (m_comm->rank()) return;
-  Vec3<real> const min = reduce_dx(dim(), m_domain, m_zleaves, vec_min);
-  Vec3<real> const max = reduce_dx(dim(), m_domain, m_zleaves, vec_max);
+  Vec3<real> const min = reduce_dx(m_comm, m_block_info_h.dxs, vec_min);
+  Vec3<real> const max = reduce_dx(m_comm, m_block_info_h.dxs, vec_max);
   printf("mesh stats\n");
   printf("----------\n");
   printf("> blocks: %d\n", num_total_blocks());

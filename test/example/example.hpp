@@ -75,10 +75,10 @@ struct Equations
   int offsets[NVAR];
   Equations() = default;
   Equations(int const num_mats);
-  int rho(int const mat) { return offsets[RHO] + mat; }
-  int mmtm() { return offsets[MMTM]; }
-  int ener() { return offsets[ENER]; }
-  int num_eqs() { return offsets[ENER] + 1; }
+  DGT_METHOD int rho(int const mat) { return offsets[RHO] + mat; }
+  DGT_METHOD int mmtm() const { return offsets[MMTM]; }
+  DGT_METHOD int ener() const { return offsets[ENER]; }
+  DGT_METHOD int num_eqs() const{ return offsets[ENER] + 1; }
 };
 
 struct State
@@ -86,6 +86,12 @@ struct State
   Equations eqs;
   Mesh mesh;
 };
+
+DGT_ALWAYS_INLINE DGT_HOST_DEVICE inline
+real get_rho_e_from_p(real const p, real const gamma)
+{
+  return p / (gamma - 1.);
+}
 
 void run_lua_file(std::string const& path);
 void run(mpicpp::comm* comm, Input const& in);

@@ -6,7 +6,6 @@ using namespace dgt;
 
 static Mesh get_example_mesh(int const dim, mpicpp::comm* comm)
 {
-  Basis<View> basis = build_basis<View>(dim, 1, 2, true);
   Grid3 cell_grid(0,0,0);
   Grid3 block_grid(0,0,0);
   Box3<real> domain({0,0,0},{0,0,0});
@@ -19,7 +18,7 @@ static Mesh get_example_mesh(int const dim, mpicpp::comm* comm)
   mesh.set_comm(comm);
   mesh.set_domain(domain);
   mesh.set_cell_grid(cell_grid);
-  mesh.set_basis(basis);
+  mesh.set_basis(1, 2, true);
   mesh.init(block_grid);
   return mesh;
 }

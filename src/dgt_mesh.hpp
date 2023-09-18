@@ -22,6 +22,7 @@ class Mesh
     Vec3<bool> m_periodic = {false, false, false};
 
     Basis<View> m_basis;
+    Basis<HostView> m_basis_h;
 
     tree::Leaves m_leaves;
     tree::ZLeaves m_zleaves;
@@ -40,7 +41,7 @@ class Mesh
     void set_domain(Box3<real> const& domain);
     void set_cell_grid(Grid3 const& cell_grid);
     void set_periodic(Vec3<bool> const& periodic);
-    void set_basis(Basis<View> m_basis);
+    void set_basis(int const p, int const q, bool const tensor);
 
     void verify();
 
@@ -57,13 +58,15 @@ class Mesh
     Box3<real> domain() const { return m_domain; }
     Grid3 cell_grid() const { return m_cell_grid; }
     Vec3<bool> periodic() const { return m_periodic; }
-    Basis<View> const& basis() const { return m_basis; }
     tree::Leaves const& leaves() const { return m_leaves; }
     tree::ZLeaves const& z_leaves() const { return m_zleaves; }
     tree::OwnedLeaves const& owned_leaves() const { return m_owned_leaves; }
+
+    Basis<View> const& basis() const { return m_basis; }
+    Basis<HostView> const& basis_h() const { return m_basis_h; }
+
     BlockInfo<View> const& block_info() const { return m_block_info; }
     BlockInfo<HostView> const& block_info_h() const { return m_block_info_h; }
-
 
     int dim() const;
     int num_total_blocks() const;
