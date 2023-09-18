@@ -2,12 +2,10 @@
 
 #include <gtest/gtest.h>
 
+#include <dgt_print.hpp> // debug
+
 using namespace dgt;
 
-//TODO: really need to make sure this gets fixed with
-// new changes to block info
-
-#if 0
 template <class ViewT>
 void compare(ViewT view, std::vector<typename ViewT::value_type> const& expected)
 {
@@ -25,15 +23,16 @@ TEST(block_info, build_1D_host)
   Box3<real> const domain({0.,0.,0.}, {1.,0.,0.});
   tree::OwnedLeaves const leaves{3,4,2};
   tree::Point const base_pt(1, {2,0,0});
-  BlockInfo<HostView> B =
-    build_block_info<HostView>(dim, domain, leaves, base_pt);
-  compare(B.global_ids, {3,4,2});
+  Grid3 const ghost_cell_grid(3,0,0);
+  BlockInfo<HostView> B = build_block_info<HostView>(
+    dim, ghost_cell_grid, domain, leaves, base_pt);
+  compare(B.ids, {3,4,2});
   compare(B.levels, {2,2,1});
   compare(B.domains, {
-      {{0.,   0., 0.}, {0.25, 0., 0.}},
-      {{0.25, 0., 0.}, {0.5,  0., 0.}},
-      {{0.5,  0., 0.}, {1.,   0., 0.}} });
-  compare(B.dxs, {
+      {{-0.25, 0., 0.}, {0.5,  0., 0.}},
+      {{ 0.,   0., 0.}, {0.75, 0., 0.}},
+      {{ 0.,   0., 0.}, {1.5,  0., 0.}} });
+  compare(B.cell_dxs, {
       {0.25, 0., 0.},
       {0.25, 0., 0.},
       {0.5,  0., 0.} });
@@ -47,14 +46,16 @@ TEST(block_info, build_1D_device)
   Box3<real> const domain({0.,0.,0.}, {1.,0.,0.});
   tree::OwnedLeaves const leaves{3,4,2};
   tree::Point const base_pt(1, {2,0,0});
-  BlockInfo<View> B = build_block_info<View>(dim, domain, leaves, base_pt);
-  compare(B.global_ids, {3,4,2});
+  Grid3 const ghost_cell_grid(3,0,0);
+  BlockInfo<View> B = build_block_info<View>(
+    dim, ghost_cell_grid, domain, leaves, base_pt);
+  compare(B.ids, {3,4,2});
   compare(B.levels, {2,2,1});
   compare(B.domains, {
-      {{0.,   0., 0.}, {0.25, 0., 0.}},
-      {{0.25, 0., 0.}, {0.5,  0., 0.}},
-      {{0.5,  0., 0.}, {1.,   0., 0.}} });
-  compare(B.dxs, {
+      {{-0.25, 0., 0.}, {0.5,  0., 0.}},
+      {{ 0.,   0., 0.}, {0.75, 0., 0.}},
+      {{ 0.,   0., 0.}, {1.5,  0., 0.}} });
+  compare(B.cell_dxs, {
       {0.25, 0., 0.},
       {0.25, 0., 0.},
       {0.5,  0., 0.} });
@@ -68,18 +69,20 @@ TEST(block_info, build_2D_host)
   Box3<real> const domain({0.,0.,0.}, {1.,1.,0.});
   tree::OwnedLeaves const leaves{4,3,2,9,6,10,5};
   tree::Point const base_pt(1, {2,2,0});
-  BlockInfo<HostView> B = build_block_info<HostView>(dim, domain, leaves, base_pt);
-  compare(B.global_ids, {4,3,2,9,6,10,5});
+  Grid3 const ghost_cell_grid(3,3,0);
+  BlockInfo<HostView> B = build_block_info<HostView>(
+      dim, ghost_cell_grid, domain, leaves, base_pt);
+  compare(B.ids, {4,3,2,9,6,10,5});
   compare(B.levels, {1,1,1,2,2,2,2});
   compare(B.domains, {
-      {{0.5,  0.5,  0.}, {1.,   1.,   0.}},
-      {{0.,   0.5,  0.}, {0.5,  1.,   0.}},
-      {{0.5,  0.,   0.}, {1.,   0.5,  0.}},
-      {{0.,   0.25, 0.}, {0.25, 0.5,  0.}},
-      {{0.25, 0.,   0.}, {0.5,  0.25, 0.}},
-      {{0.25, 0.25, 0.}, {0.5,  0.5,  0.}},
-      {{0.,   0.,   0.}, {0.25, 0.25, 0.}} });
-  compare(B.dxs, {
+      {{0.,     0.,   0.}, {1.5,  1.5,  0.}},
+      {{-0.5,   0.,   0.}, {1.,   1.5,  0.}},
+      {{0.,    -0.5,  0.}, {1.5,  1.,   0.}},
+      {{-0.25,  0.,   0.}, {0.5,  0.75, 0.}},
+      {{0.,    -0.25, 0.}, {0.75, 0.5,  0.}},
+      {{0.,     0.,   0.}, {0.75, 0.75, 0.}},
+      {{-0.25, -0.25, 0.}, {0.5,  0.5,  0.}} });
+  compare(B.cell_dxs, {
       {0.5,  0.5,  0.},
       {0.5,  0.5,  0.},
       {0.5,  0.5,  0.},
@@ -119,18 +122,20 @@ TEST(block_info, build_2D_device)
   Box3<real> const domain({0.,0.,0.}, {1.,1.,0.});
   tree::OwnedLeaves const leaves{4,3,2,9,6,10,5};
   tree::Point const base_pt(1, {2,2,0});
-  BlockInfo<View> B = build_block_info<View>(dim, domain, leaves, base_pt);
-  compare(B.global_ids, {4,3,2,9,6,10,5});
+  Grid3 const ghost_cell_grid(3,3,0);
+  BlockInfo<View> B = build_block_info<View>(
+      dim, ghost_cell_grid, domain, leaves, base_pt);
+  compare(B.ids, {4,3,2,9,6,10,5});
   compare(B.levels, {1,1,1,2,2,2,2});
   compare(B.domains, {
-      {{0.5,  0.5,  0.}, {1.,   1.,   0.}},
-      {{0.,   0.5,  0.}, {0.5,  1.,   0.}},
-      {{0.5,  0.,   0.}, {1.,   0.5,  0.}},
-      {{0.,   0.25, 0.}, {0.25, 0.5,  0.}},
-      {{0.25, 0.,   0.}, {0.5,  0.25, 0.}},
-      {{0.25, 0.25, 0.}, {0.5,  0.5,  0.}},
-      {{0.,   0.,   0.}, {0.25, 0.25, 0.}} });
-  compare(B.dxs, {
+      {{0.,     0.,   0.}, {1.5,  1.5,  0.}},
+      {{-0.5,   0.,   0.}, {1.,   1.5,  0.}},
+      {{0.,    -0.5,  0.}, {1.5,  1.,   0.}},
+      {{-0.25,  0.,   0.}, {0.5,  0.75, 0.}},
+      {{0.,    -0.25, 0.}, {0.75, 0.5,  0.}},
+      {{0.,     0.,   0.}, {0.75, 0.75, 0.}},
+      {{-0.25, -0.25, 0.}, {0.5,  0.5,  0.}} });
+  compare(B.cell_dxs, {
       {0.5,  0.5,  0.},
       {0.5,  0.5,  0.},
       {0.5,  0.5,  0.},
@@ -164,6 +169,7 @@ TEST(block_info, build_2D_device)
       0.125 });
 }
 
+#if 0
 TEST(block_info, build_3D_host)
 {
   int const dim = 3;
