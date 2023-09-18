@@ -75,22 +75,23 @@ struct Equations
   int offsets[NVAR];
   Equations() = default;
   Equations(int const num_mats);
-  DGT_METHOD int rho(int const mat) { return offsets[RHO] + mat; }
-  DGT_METHOD int mmtm() const { return offsets[MMTM]; }
+  DGT_METHOD int rho(int const mat) const { return offsets[RHO] + mat; }
+  DGT_METHOD int mmtm(int const axis) const { return offsets[MMTM] + axis; }
   DGT_METHOD int ener() const { return offsets[ENER]; }
   DGT_METHOD int num_eqs() const{ return offsets[ENER] + 1; }
 };
 
 struct State
 {
+  View<real*> eos;
   Equations eqs;
   Mesh mesh;
 };
 
 DGT_ALWAYS_INLINE DGT_HOST_DEVICE inline
-real get_rho_e_from_p(real const p, real const gamma)
+real get_e_from_rho_p(real const rho, real const p, real const gamma)
 {
-  return p / (gamma - 1.);
+  return p / (rho*(gamma - 1.));
 }
 
 void run_lua_file(std::string const& path);
