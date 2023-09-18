@@ -86,6 +86,9 @@ struct State
   View<real*> eos;
   Equations eqs;
   Mesh mesh;
+  real time = 0.;
+  real dt = 0.;
+  int step = 0;
 };
 
 DGT_ALWAYS_INLINE DGT_HOST_DEVICE inline
@@ -97,5 +100,6 @@ real get_e_from_rho_p(real const rho, real const p, real const gamma)
 void run_lua_file(std::string const& path);
 void run(mpicpp::comm* comm, Input const& in);
 void setup(State& state, mpicpp::comm* comm, Input const& in);
+void write_out(Input const& in, State const& state, int soln_idx);
 
 }

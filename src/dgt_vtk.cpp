@@ -8,6 +8,7 @@
 #include "dgt_vtk.hpp"
 
 namespace dgt {
+namespace vtk {
 
 static void check_q(int const q)
 {
@@ -284,4 +285,5 @@ template void write_field<int>(std::stringstream&, std::string const&, VtkView<i
 template void write_field<float>(std::stringstream&, std::string const&, VtkView<float>);
 template void write_field<real>(std::stringstream&, std::string const&, VtkView<real>);
 
+}
 }

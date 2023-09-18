@@ -1,6 +1,8 @@
 #pragma once
 
+#include <filesystem>
 #include <iostream>
+#include <sstream>
 
 #include "dgt_grid3.hpp"
 #include "dgt_subgrid3.hpp"
@@ -57,5 +59,9 @@ inline std::ostream& operator<<(std::ostream& os, tree::Point const& pt) {
   os << "[" << pt.level << "], " << pt.ijk;
   return os;
 }
+
+void write_stream(
+    std::filesystem::path const& path,
+    std::stringstream const& stream);
 
 }

@@ -4,9 +4,6 @@
 
 #include "example.hpp"
 
-#include <dgt_print.hpp> // debug
-#include <dgt_vtk.hpp> // debug
-
 namespace example {
 
 Equations::Equations(int const num_mats)
@@ -21,6 +18,16 @@ static int get_num_stored_solutions(int const p)
 {
   static constexpr int table[max_polynomial_order+1] = {1, 2, 2, 3};
   return table[p];
+}
+
+static void setup_eos(State& state, Input const& in)
+{
+  HostView<real*> eos_h("eos", in.num_materials);
+  state.eos = View<real*>("eos", in.num_materials);
+  for (int mat = 0; mat < in.num_materials; ++mat) {
+    eos_h[mat] = in.materials.gammas[mat];
+  }
+  Kokkos::deep_copy(state.eos, eos_h);
 }
 
 static void apply_initial_conditions(State& state, Input const& in)
@@ -91,20 +98,15 @@ void setup(State& state, mpicpp::comm* comm, Input const& in)
   state.mesh.set_basis(p, q, tensor);
   state.mesh.init(in.mesh.block_grid);
   state.mesh.print_stats();
+  setup_eos(state, in);
   int const nstored = get_num_stored_solutions(p);
   int const neqs = state.eqs.num_eqs();
   state.mesh.add_modal("hydro", nstored, neqs);
   apply_initial_conditions(state, in);
 
 
-  /// debug
-  for (int block = 0; block < state.mesh.num_owned_blocks(); ++block) {
-    std::stringstream a;
-    write_vtr_start(a, 0, state.mesh, 0., 0);
-    write_vtr_end(a);
-    std::cout << a.rdbuf() << "\n";
-  }
-  std::cout << "---\n";
+
+
 
 }
 

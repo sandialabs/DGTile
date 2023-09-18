@@ -2,9 +2,13 @@
 
 #include <Kokkos_DualView.hpp>
 
+#include "dgt_defines.hpp"
+
 namespace dgt {
 
 class Mesh;
+
+namespace vtk {
 
 template <class T>
 using VtkView = Kokkos::DualView<T**, Kokkos::LayoutRight>;
@@ -17,11 +21,12 @@ void write_vtr_start(
     int const step);
 
 template <class T>
-void write_field(
+void write_vtr_field(
     std::stringstream& stream,
     std::string const& name,
     VtkView<T> f);
 
 void write_vtr_end(std::stringstream& stream);
 
+}
 }

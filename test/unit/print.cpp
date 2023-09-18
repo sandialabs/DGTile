@@ -63,3 +63,11 @@ TEST(print, point)
   tree::Point const pt(4, {4,5,6});
   std::cout << pt << "\n";
 }
+
+TEST(print, write_stream)
+{
+  std::stringstream a;
+  a << "hi\n";
+  a << "bye\n";
+  write_stream("out_stream", a);
+}
