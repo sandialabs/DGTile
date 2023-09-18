@@ -45,6 +45,21 @@ TEST(cartesian, permute)
   EXPECT_EQ(permute(Z, Z), Y);
 }
 
+TEST(cartesian, get_cell_center)
+{
+  EXPECT_EQ(get_cell_center({0,0,0}, {0.,0.,0.}, {1.,0.,0.}), Vec3<real>(0.5, 0., 0.));
+  EXPECT_EQ(get_cell_center({0,0,0}, {0.,0.,0.}, {1.,1.,0.}), Vec3<real>(0.5, 0.5, 0.));
+  EXPECT_EQ(get_cell_center({0,0,0}, {0.,0.,0.}, {1.,1.,1.}), Vec3<real>(0.5, 0.5, 0.5));
+  EXPECT_EQ(get_cell_center({1,1,1}, {0.,0.,0.}, {1.,1.,1.}), Vec3<real>(1.5, 1.5, 1.5));
+}
+
+TEST(cartesian, map_to_physical)
+{
+  EXPECT_EQ(map_to_physical({0,0,0}, {0.,0.,0.}, {1.,0.,0.}, {0.,0.,0.}), Vec3<real>(0.5,0.,0.));
+  EXPECT_EQ(map_to_physical({0,0,0}, {0.,0.,0.}, {1.,1.,0.}, {0.,0.,0.}), Vec3<real>(0.5,0.5,0.));
+  EXPECT_EQ(map_to_physical({0,0,0}, {0.,0.,0.}, {1.,1.,1.}, {0.,0.,0.}), Vec3<real>(0.5,0.5,0.5));
+}
+
 TEST(cartesian, get_axis_name)
 {
   EXPECT_EQ(get_axis_name(X), "X");

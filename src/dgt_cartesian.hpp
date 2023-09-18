@@ -49,6 +49,30 @@ DGT_METHOD inline int permute(int const ijk, int const axis)
     -1;
 }
 
+DGT_METHOD inline Vec3<real> get_cell_center(
+    Vec3<int> const& cell_ijk,
+    Vec3<real> const& origin,
+    Vec3<real> const& dx)
+{
+  return Vec3<real>(
+      origin.x() + (cell_ijk.x() + 0.5) * dx.x(),
+      origin.y() + (cell_ijk.y() + 0.5) * dx.y(),
+      origin.z() + (cell_ijk.z() + 0.5) * dx.z());
+}
+
+DGT_METHOD inline Vec3<real> map_to_physical(
+    Vec3<int> const& cell_ijk,
+    Vec3<real> const& origin,
+    Vec3<real> const& dx,
+    Vec3<real> const& xi)
+{
+  Vec3<real> const center = get_cell_center(cell_ijk, origin, dx);
+  return Vec3<real>(
+      center.x() + 0.5 * xi.x() * dx.x(),
+      center.y() + 0.5 * xi.y() * dx.y(),
+      center.z() + 0.5 * xi.z() * dx.z());
+}
+
 std::string inline get_axis_name(int const axis)
 {
   return

@@ -49,7 +49,7 @@ static void apply_initial_conditions(State& state, Input const& in)
       }
     };
     seq_for_each(cell_grid, functor);
-    Kokkos::deep_copy(U[block], U_host);
+    Kokkos::deep_copy(U.get_view(block), U_host);
   }
 }
 
