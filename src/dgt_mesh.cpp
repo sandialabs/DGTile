@@ -101,9 +101,9 @@ void Mesh::init(Grid3 const& block_grid)
   m_owned_leaves = get_owned_leaves(m_comm, m_zleaves);
   tree::Point const base_pt = tree::get_base_point(dim, m_zleaves);
   m_block_info = build_block_info<View>(
-      dim, m_domain, m_owned_leaves, base_pt);
+      dim, m_cell_grid, m_domain, m_owned_leaves, base_pt);
   m_block_info_h = build_block_info<HostView>(
-      dim, m_domain, m_owned_leaves, base_pt);
+      dim, m_cell_grid, m_domain, m_owned_leaves, base_pt);
 }
 
 int Mesh::modal_index(std::string const& name)
@@ -243,14 +243,14 @@ static Vec3<real> const reduce_dx(
 void Mesh::print_stats() const
 {
   if (m_comm->rank()) return;
-  Vec3<real> const min = reduce_dx(m_comm, m_block_info_h.dxs, vec_min);
-  Vec3<real> const max = reduce_dx(m_comm, m_block_info_h.dxs, vec_max);
+  Vec3<real> const min = reduce_dx(m_comm, m_block_info_h.cell_dxs, vec_min);
+  Vec3<real> const max = reduce_dx(m_comm, m_block_info_h.cell_dxs, vec_max);
   printf("mesh stats\n");
   printf("----------\n");
   printf("> blocks: %d\n", num_total_blocks());
   printf("> cells: %d\n", num_total_cells());
-  printf("> minimum dx: [%e, %e, %e]\n", min.x(), min.y(), min.z());
-  printf("> maximum dx: [%e, %e, %e]\n", max.x(), max.y(), max.z());
+  printf("> minimum cell dx: [%e, %e, %e]\n", min.x(), min.y(), min.z());
+  printf("> maximum cell dx: [%e, %e, %e]\n", max.x(), max.y(), max.z());
 }
 
 }

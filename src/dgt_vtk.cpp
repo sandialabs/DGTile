@@ -208,9 +208,9 @@ static void write_coordinate(
   check_q(q);
   int const num_pts = get_nviz_cells(mesh)[axis] + 1;
   Box3<real> const block_domain = mesh.block_info_h().domains[block];
-  Vec3<real> const cell_dx = mesh.block_info_h().dxs[block];
-  real const o = block_domain.lower()[axis] + block_dx[axis];
-  real const dx = block_dx[axis] / q;
+  Vec3<real> const cell_dx = mesh.block_info_h().cell_dxs[block];
+  real const o = block_domain.lower()[axis] + cell_dx[axis];
+  real const dx = cell_dx[axis] / q;
   real const q4 = std::sqrt(30.)/36.;
   VtkView<float> coord;
   Kokkos::resize(coord, num_pts, 1);
@@ -220,11 +220,6 @@ static void write_coordinate(
     {0., -2./9., 2./9., 0.},
     {0., -q4,    0.,    q4}
   };
-
-
-  std::cout << "DXXXXX\n";
-  std::cout << dx << "\n";
-
   for (int i = 0; i < num_pts; ++i) {
     int const mod = i % q;
     coord.h_view(i, 0) = o + i*dx + offset[q-1][mod]*dx;

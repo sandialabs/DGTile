@@ -4,6 +4,8 @@
 
 #include "example.hpp"
 
+#include "dgt_print.hpp" // debug
+
 namespace example {
 
 Equations::Equations(int const num_mats)
@@ -48,7 +50,7 @@ static void apply_initial_conditions(State& state, Input const& in)
   for (int block = 0; block < nblocks; ++block) {
     Kokkos::deep_copy(U_host, 0.);
     Vec3<real> const origin = info.domains[block].lower();
-    Vec3<real> const dx = info.dxs[block];
+    Vec3<real> const dx = info.cell_dxs[block];
     auto functor = [&] (Vec3<int> const& cell_ijk) {
       int const cell = cell_grid.index(cell_ijk);
       for (int pt = 0; pt < B.num_cell_pts; ++pt) {
@@ -104,7 +106,7 @@ void setup(State& state, mpicpp::comm* comm, Input const& in)
   state.mesh.add_modal("hydro", nstored, neqs);
   apply_initial_conditions(state, in);
 
-
+  // debug
   write_out(in, state, 0);
 
 }
