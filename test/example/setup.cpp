@@ -5,6 +5,7 @@
 #include "example.hpp"
 
 #include <dgt_print.hpp> // debug
+#include <dgt_vtk.hpp> // debug
 
 namespace example {
 
@@ -94,6 +95,14 @@ void setup(State& state, mpicpp::comm* comm, Input const& in)
   int const neqs = state.eqs.num_eqs();
   state.mesh.add_modal("hydro", nstored, neqs);
   apply_initial_conditions(state, in);
+
+
+  /// debug
+  std::stringstream a;
+  write_vtr_start(a, 0, state.mesh, 0., 0);
+  write_vtr_end(a);
+  std::cout << a.rdbuf() << "\n";
+
 }
 
 }

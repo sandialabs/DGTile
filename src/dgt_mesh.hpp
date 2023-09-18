@@ -55,6 +55,7 @@ class Mesh
         bool const with_flux = true);
 
     mpicpp::comm* comm() { return m_comm; }
+    mpicpp::comm const* comm() const { return m_comm; }
     Box3<real> domain() const { return m_domain; }
     Grid3 cell_grid() const { return m_cell_grid; }
     Vec3<bool> periodic() const { return m_periodic; }
