@@ -28,5 +28,10 @@ void write_vtr_field(
 
 void write_vtr_end(std::stringstream& stream);
 
+void write_vtm(
+    std::stringstream& stream,
+    std::string const& prefix,
+    int const num_blocks);
+
 }
 }

@@ -208,8 +208,8 @@ static void write_coordinate(
   check_q(q);
   int const num_pts = get_nviz_cells(mesh)[axis] + 1;
   Box3<real> const block_domain = mesh.block_info_h().domains[block];
-  Vec3<real> const block_dx = mesh.block_info_h().dxs[block];
-  real const o = block_domain.lower()[axis];
+  Vec3<real> const cell_dx = mesh.block_info_h().dxs[block];
+  real const o = block_domain.lower()[axis] + block_dx[axis];
   real const dx = block_dx[axis] / q;
   real const q4 = std::sqrt(30.)/36.;
   VtkView<float> coord;
@@ -220,6 +220,11 @@ static void write_coordinate(
     {0., -2./9., 2./9., 0.},
     {0., -q4,    0.,    q4}
   };
+
+
+  std::cout << "DXXXXX\n";
+  std::cout << dx << "\n";
+
   for (int i = 0; i < num_pts; ++i) {
     int const mod = i % q;
     coord.h_view(i, 0) = o + i*dx + offset[q-1][mod]*dx;
@@ -284,6 +289,38 @@ void write_field(
 template void write_field<int>(std::stringstream&, std::string const&, VtkView<int>);
 template void write_field<float>(std::stringstream&, std::string const&, VtkView<float>);
 template void write_field<real>(std::stringstream&, std::string const&, VtkView<real>);
+
+static void write_vtm_header(std::stringstream& stream) {
+  stream << "<VTKFile type=\"vtkMultiBlockDataSet\" ";
+  stream << "version=\"1.0\">\n";
+  stream << "<vtkMultiBlockDataSet>\n";
+}
+
+static void write_vtm_source_file(
+    std::stringstream& stream,
+    int const i,
+    std::string const& file) {
+  stream << "<DataSet index=\"" << i << "\" ";
+  stream << "file=\"" << file << "\"/>\n";
+}
+
+static void write_vtm_end(std::stringstream& stream) {
+  stream << "</vtkMultiBlockDataSet>\n";
+  stream << "</VTKFile>";
+}
+
+void write_vtm(
+    std::stringstream& stream,
+    std::string const& prefix,
+    int const num_blocks)
+{
+  write_vtm_header(stream);
+  for (int block = 0; block < num_blocks; ++block) {
+    std::string const file = fmt::format("{}{}.vtr", prefix, block);
+    write_vtm_source_file(stream, block, file);
+  }
+  write_vtm_end(stream);
+}
 
 }
 }
