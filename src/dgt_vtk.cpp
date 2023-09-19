@@ -27,10 +27,9 @@ static void write_vtr_header(std::stringstream& stream)
   stream << "header_type=\"UInt64\">\n";
 }
 
-static Vec3<int> get_nviz_cells(Mesh const& mesh)
+static Vec3<int> get_nviz_cells(Grid3 const& cell_grid, int const q)
 {
-  int const q = mesh.basis().q;
-  Subgrid3 const owned_cells = get_owned_cells(mesh.cell_grid());
+  Subgrid3 const owned_cells = get_owned_cells(cell_grid);
   Vec3<int> const ncells = owned_cells.extents();
   Vec3<int> const nviz_cells = q * ncells;
   return nviz_cells;
@@ -38,7 +37,9 @@ static Vec3<int> get_nviz_cells(Mesh const& mesh)
 
 void write_vtr_rectilinear_start(std::stringstream& stream, Mesh const& mesh)
 {
-  Vec3<int> const nviz_cells = get_nviz_cells(mesh);
+  int const q = mesh.basis().q;
+  Grid3 const cell_grid = mesh.cell_grid();
+  Vec3<int> const nviz_cells = get_nviz_cells(cell_grid, q);
   stream << "<RectilinearGrid WholeExtent=\"";
   stream << "0 " << nviz_cells.x() << " ";
   stream << "0 " << nviz_cells.y() << " ";
@@ -166,7 +167,9 @@ static void write_vtr_piece_start(
     std::stringstream& stream,
     Mesh const& mesh)
 {
-  Vec3<int> const nviz_cells = get_nviz_cells(mesh);
+  int const q = mesh.basis().q;
+  Grid3 const cell_grid = mesh.cell_grid();
+  Vec3<int> const nviz_cells = get_nviz_cells(cell_grid, q);
   stream << "<Piece Extent=\"";
   stream << "0 " << nviz_cells.x() << " ";
   stream << "0 " << nviz_cells.y() << " ";
@@ -206,7 +209,7 @@ static void write_coordinate(
   std::string const axis_name = get_axis_name(axis);
   int const q = mesh.basis().q;
   check_q(q);
-  int const num_pts = get_nviz_cells(mesh)[axis] + 1;
+  int const num_pts = get_nviz_cells(mesh.cell_grid(), q)[axis] + 1;
   Box3<real> const block_domain = mesh.block_info_h().domains[block];
   Vec3<real> const cell_dx = mesh.block_info_h().cell_dxs[block];
   real const o = block_domain.lower()[axis] + cell_dx[axis];
@@ -270,7 +273,7 @@ template <> std::string vtk_type_name<float>() { return "Float32"; }
 template <> std::string vtk_type_name<double>() { return "Float64"; }
 
 template <class T>
-void write_field(
+void write_vtr_field(
     std::stringstream& stream,
     std::string const& name,
     VtkView<T> f)
@@ -281,9 +284,9 @@ void write_field(
   write_data_end(stream);
 }
 
-template void write_field<int>(std::stringstream&, std::string const&, VtkView<int>);
-template void write_field<float>(std::stringstream&, std::string const&, VtkView<float>);
-template void write_field<real>(std::stringstream&, std::string const&, VtkView<real>);
+template void write_vtr_field<int>(std::stringstream&, std::string const&, VtkView<int>);
+template void write_vtr_field<float>(std::stringstream&, std::string const&, VtkView<float>);
+template void write_vtr_field<real>(std::stringstream&, std::string const&, VtkView<real>);
 
 static void write_vtm_header(std::stringstream& stream) {
   stream << "<VTKFile type=\"vtkMultiBlockDataSet\" ";
@@ -315,6 +318,11 @@ void write_vtm(
     write_vtm_source_file(stream, block, file);
   }
   write_vtm_end(stream);
+}
+
+Grid3 get_viz_cell_grid(Grid3 const& cell_grid, int const q)
+{
+  return Grid3(get_nviz_cells(cell_grid, q));
 }
 
 }

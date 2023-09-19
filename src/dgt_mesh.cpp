@@ -106,7 +106,7 @@ void Mesh::init(Grid3 const& block_grid)
       dim, m_cell_grid, m_domain, m_owned_leaves, base_pt);
 }
 
-int Mesh::modal_index(std::string const& name)
+int Mesh::modal_index(std::string const& name) const
 {
   for (std::size_t i = 0; i < m_modal.size(); ++i) {
     if (m_modal[i].name == name) return int(i);
@@ -183,7 +183,7 @@ int Mesh::num_owned_cells() const
   return num_owned_blocks() * num_cells_per_block;
 }
 
-Field<real***> Mesh::get_solution(std::string const& name, int const soln_idx)
+Field<real***>& Mesh::get_solution(std::string const& name, int const soln_idx)
 {
   int const modal_idx = modal_index(name);
   if (modal_idx < 0) {
@@ -194,7 +194,7 @@ Field<real***> Mesh::get_solution(std::string const& name, int const soln_idx)
   return m_modal[modal_idx].solution[soln_idx];
 }
 
-Field<real***> Mesh::get_fluxes(std::string const& name, int const axis)
+Field<real***>& Mesh::get_fluxes(std::string const& name, int const axis)
 {
   int const modal_idx = modal_index(name);
   if (modal_idx < 0) {
@@ -204,7 +204,42 @@ Field<real***> Mesh::get_fluxes(std::string const& name, int const axis)
   return m_modal[modal_idx].fluxes[axis];
 }
 
-Field<real***> Mesh::get_residual(std::string const& name)
+Field<real***>& Mesh::get_residual(std::string const& name)
+{
+  int const modal_idx = modal_index(name);
+  if (modal_idx < 0) {
+    std::string const msg = fmt::format(
+        "dgt::Mesh::get_residual -> field {} doesn't exist", name);
+  }
+  return m_modal[modal_idx].residual;
+}
+
+Field<real***> const& Mesh::get_solution(
+    std::string const& name,
+    int const soln_idx) const
+{
+  int const modal_idx = modal_index(name);
+  if (modal_idx < 0) {
+    std::string const msg = fmt::format(
+        "dgt::Mesh::get_solution -> field {} doesn't exist", name);
+    throw std::runtime_error(msg);
+  }
+  return m_modal[modal_idx].solution[soln_idx];
+}
+
+Field<real***> const& Mesh::get_fluxes(
+    std::string const& name,
+    int const axis) const
+{
+  int const modal_idx = modal_index(name);
+  if (modal_idx < 0) {
+    std::string const msg = fmt::format(
+        "dgt::Mesh::get_fluxes -> field {} doesn't exist", name);
+  }
+  return m_modal[modal_idx].fluxes[axis];
+}
+
+Field<real***> const& Mesh::get_residual(std::string const& name) const
 {
   int const modal_idx = modal_index(name);
   if (modal_idx < 0) {

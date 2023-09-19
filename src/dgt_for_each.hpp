@@ -25,7 +25,7 @@ DGT_ALWAYS_INLINE inline constexpr void seq_for_each(
 }
 
 template <class Functor>
-DGT_ALWAYS_INLINE inline constexpr void inner_for_each(
+DGT_ALWAYS_INLINE DGT_HOST_DEVICE inline constexpr void inner_for_each(
     Subgrid3 const& s,
     Functor const& functor)
 {

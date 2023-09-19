@@ -29,8 +29,12 @@ class Field {
     Field() = default;
 
     std::string name() const { return m_name; }
+
     accessor_t get() { return m_accessor; }
+    accessor_t const& get() const { return m_accessor; }
+
     view_t get_view(int const block) { return m_storage[block]; }
+    view_t const& get_view(int const block) const { return m_storage[block]; }
 
     template <class Q = T>
     typename std::enable_if_t<View<Q>::rank == 1>

@@ -33,5 +33,7 @@ void write_vtm(
     std::string const& prefix,
     int const num_blocks);
 
+[[nodiscard]] Grid3 get_viz_cell_grid(Grid3 const& cell_grid, int const q);
+
 }
 }

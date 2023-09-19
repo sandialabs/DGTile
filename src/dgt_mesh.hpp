@@ -47,7 +47,7 @@ class Mesh
 
     void init(Grid3 const& block_grid);
 
-    int modal_index(std::string const& name);
+    int modal_index(std::string const& name) const;
     void add_modal(
         std::string const& name,
         int const num_stored,
@@ -75,9 +75,13 @@ class Mesh
     int num_total_cells() const;
     int num_owned_cells() const;
 
-    Field<real***> get_solution(std::string const& name, int const soln_idx);
-    Field<real***> get_fluxes(std::string const& name, int const axis);
-    Field<real***> get_residual(std::string const& name);
+    Field<real***>& get_solution(std::string const& name, int const soln_idx);
+    Field<real***>& get_fluxes(std::string const& name, int const axis);
+    Field<real***>& get_residual(std::string const& name);
+
+    Field<real***> const& get_solution(std::string const& name, int const soln_idx) const;
+    Field<real***> const& get_fluxes(std::string const& name, int const axis) const;
+    Field<real***> const& get_residual(std::string const& name) const;
 
     void print_stats() const;
 
