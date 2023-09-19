@@ -2,8 +2,6 @@
 
 #include <gtest/gtest.h>
 
-#include <dgt_print.hpp> // debug
-
 using namespace dgt;
 
 template <class ViewT>
@@ -26,7 +24,7 @@ TEST(block_info, build_1D_host)
   Grid3 const ghost_cell_grid(3,0,0);
   BlockInfo<HostView> B = build_block_info<HostView>(
     dim, ghost_cell_grid, domain, leaves, base_pt);
-  compare(B.ids, {3,4,2});
+  compare(B.tree_ids, {3,4,2});
   compare(B.levels, {2,2,1});
   compare(B.domains, {
       {{-0.25, 0., 0.}, {0.5,  0., 0.}},
@@ -49,7 +47,7 @@ TEST(block_info, build_1D_device)
   Grid3 const ghost_cell_grid(3,0,0);
   BlockInfo<View> B = build_block_info<View>(
     dim, ghost_cell_grid, domain, leaves, base_pt);
-  compare(B.ids, {3,4,2});
+  compare(B.tree_ids, {3,4,2});
   compare(B.levels, {2,2,1});
   compare(B.domains, {
       {{-0.25, 0., 0.}, {0.5,  0., 0.}},
@@ -72,7 +70,7 @@ TEST(block_info, build_2D_host)
   Grid3 const ghost_cell_grid(3,3,0);
   BlockInfo<HostView> B = build_block_info<HostView>(
       dim, ghost_cell_grid, domain, leaves, base_pt);
-  compare(B.ids, {4,3,2,9,6,10,5});
+  compare(B.tree_ids, {4,3,2,9,6,10,5});
   compare(B.levels, {1,1,1,2,2,2,2});
   compare(B.domains, {
       {{0.,     0.,   0.}, {1.5,  1.5,  0.}},
@@ -125,7 +123,7 @@ TEST(block_info, build_2D_device)
   Grid3 const ghost_cell_grid(3,3,0);
   BlockInfo<View> B = build_block_info<View>(
       dim, ghost_cell_grid, domain, leaves, base_pt);
-  compare(B.ids, {4,3,2,9,6,10,5});
+  compare(B.tree_ids, {4,3,2,9,6,10,5});
   compare(B.levels, {1,1,1,2,2,2,2});
   compare(B.domains, {
       {{0.,     0.,   0.}, {1.5,  1.5,  0.}},
@@ -169,33 +167,34 @@ TEST(block_info, build_2D_device)
       0.125 });
 }
 
-#if 0
 TEST(block_info, build_3D_host)
 {
   int const dim = 3;
   Box3<real> const domain({0.,0.,0.}, {1.,1.,1.});
   tree::Point const base_pt(1, {2,2,2});
+  Grid3 const ghost_cell_grid(3,3,3);
   tree::OwnedLeaves const leaves{9,10,13,14,25,26,29,30,2,3,4,5,6,7,8};
-  BlockInfo<HostView> B = build_block_info<HostView>(dim, domain, leaves, base_pt);
-  compare(B.global_ids, {9,10,13,14,25,26,29,30,2,3,4,5,6,7,8});
+  BlockInfo<HostView> B = build_block_info<HostView>(
+      dim, ghost_cell_grid, domain, leaves, base_pt);
+  compare(B.tree_ids, {9,10,13,14,25,26,29,30,2,3,4,5,6,7,8});
   compare(B.levels, {2,2,2,2,2,2,2,2,1,1,1,1,1,1,1});
   compare(B.domains, {
-      {{0, 0, 0}, {0.25, 0.25, 0.25}},
-      {{0.25, 0, 0}, {0.5, 0.25, 0.25}},
-      {{0, 0.25, 0}, {0.25, 0.5, 0.25}},
-      {{0.25, 0.25, 0}, {0.5, 0.5, 0.25}},
-      {{0, 0, 0.25}, {0.25, 0.25, 0.5}},
-      {{0.25, 0, 0.25}, {0.5, 0.25, 0.5}},
-      {{0, 0.25, 0.25}, {0.25, 0.5, 0.5}},
-      {{0.25, 0.25, 0.25}, {0.5, 0.5, 0.5}},
-      {{0.5, 0, 0}, {1, 0.5, 0.5}},
-      {{0, 0.5, 0}, {0.5, 1, 0.5}},
-      {{0.5, 0.5, 0}, {1, 1, 0.5}},
-      {{0, 0, 0.5}, {0.5, 0.5, 1}},
-      {{0.5, 0, 0.5}, {1, 0.5, 1}},
-      {{0, 0.5, 0.5}, {0.5, 1, 1}},
-      {{0.5, 0.5, 0.5}, {1, 1, 1}} });
-  compare(B.dxs, {
+      {{-0.25, -0.25, -0.25}, {0.5,  0.5,  0.5}},
+      {{ 0.,   -0.25, -0.25}, {0.75, 0.5,  0.5}},
+      {{-0.25,  0,    -0.25}, {0.5,  0.75, 0.5}},
+      {{ 0.,    0.,   -0.25}, {0.75, 0.75, 0.5}},
+      {{-0.25, -0.25,  0.},   {0.5,  0.5,  0.75}},
+      {{ 0.,   -0.25,  0.},   {0.75, 0.5,  0.75}},
+      {{-0.25,  0.,    0.},   {0.5,  0.75, 0.75}},
+      {{ 0.,    0.,    0.},   {0.75, 0.75, 0.75}},
+      {{ 0.,   -0.5,  -0.5},  {1.5,  1.,   1.}},
+      {{-0.5,   0.,   -0.5},  {1,    1.5,  1.}},
+      {{ 0.,    0.,   -0.5},  {1.5,  1.5,  1.}},
+      {{-0.5,  -0.5,   0.},   {1.,   1.,   1.5}},
+      {{ 0.,   -0.5,   0.},   {1.5,  1.,   1.5}},
+      {{-0.5,   0.,    0.},   {1.,   1.5,  1.5}},
+      {{ 0.,    0.,    0.},   {1.5,  1.5,  1.5}} });
+  compare(B.cell_dxs, {
       {0.25, 0.25, 0.25},
       {0.25, 0.25, 0.25},
       {0.25, 0.25, 0.25},
@@ -253,27 +252,29 @@ TEST(block_info, build_3D_device)
   int const dim = 3;
   Box3<real> const domain({0.,0.,0.}, {1.,1.,1.});
   tree::Point const base_pt(1, {2,2,2});
+  Grid3 const ghost_cell_grid(3,3,3);
   tree::OwnedLeaves const leaves{9,10,13,14,25,26,29,30,2,3,4,5,6,7,8};
-  BlockInfo<View> B = build_block_info<View>(dim, domain, leaves, base_pt);
-  compare(B.global_ids, {9,10,13,14,25,26,29,30,2,3,4,5,6,7,8});
+  BlockInfo<View> B = build_block_info<View>(
+      dim, ghost_cell_grid, domain, leaves, base_pt);
+  compare(B.tree_ids, {9,10,13,14,25,26,29,30,2,3,4,5,6,7,8});
   compare(B.levels, {2,2,2,2,2,2,2,2,1,1,1,1,1,1,1});
   compare(B.domains, {
-      {{0, 0, 0}, {0.25, 0.25, 0.25}},
-      {{0.25, 0, 0}, {0.5, 0.25, 0.25}},
-      {{0, 0.25, 0}, {0.25, 0.5, 0.25}},
-      {{0.25, 0.25, 0}, {0.5, 0.5, 0.25}},
-      {{0, 0, 0.25}, {0.25, 0.25, 0.5}},
-      {{0.25, 0, 0.25}, {0.5, 0.25, 0.5}},
-      {{0, 0.25, 0.25}, {0.25, 0.5, 0.5}},
-      {{0.25, 0.25, 0.25}, {0.5, 0.5, 0.5}},
-      {{0.5, 0, 0}, {1, 0.5, 0.5}},
-      {{0, 0.5, 0}, {0.5, 1, 0.5}},
-      {{0.5, 0.5, 0}, {1, 1, 0.5}},
-      {{0, 0, 0.5}, {0.5, 0.5, 1}},
-      {{0.5, 0, 0.5}, {1, 0.5, 1}},
-      {{0, 0.5, 0.5}, {0.5, 1, 1}},
-      {{0.5, 0.5, 0.5}, {1, 1, 1}} });
-  compare(B.dxs, {
+      {{-0.25, -0.25, -0.25}, {0.5,  0.5,  0.5}},
+      {{ 0.,   -0.25, -0.25}, {0.75, 0.5,  0.5}},
+      {{-0.25,  0,    -0.25}, {0.5,  0.75, 0.5}},
+      {{ 0.,    0.,   -0.25}, {0.75, 0.75, 0.5}},
+      {{-0.25, -0.25,  0.},   {0.5,  0.5,  0.75}},
+      {{ 0.,   -0.25,  0.},   {0.75, 0.5,  0.75}},
+      {{-0.25,  0.,    0.},   {0.5,  0.75, 0.75}},
+      {{ 0.,    0.,    0.},   {0.75, 0.75, 0.75}},
+      {{ 0.,   -0.5,  -0.5},  {1.5,  1.,   1.}},
+      {{-0.5,   0.,   -0.5},  {1,    1.5,  1.}},
+      {{ 0.,    0.,   -0.5},  {1.5,  1.5,  1.}},
+      {{-0.5,  -0.5,   0.},   {1.,   1.,   1.5}},
+      {{ 0.,   -0.5,   0.},   {1.5,  1.,   1.5}},
+      {{-0.5,   0.,    0.},   {1.,   1.5,  1.5}},
+      {{ 0.,    0.,    0.},   {1.5,  1.5,  1.5}} });
+  compare(B.cell_dxs, {
       {0.25, 0.25, 0.25},
       {0.25, 0.25, 0.25},
       {0.25, 0.25, 0.25},
@@ -325,4 +326,3 @@ TEST(block_info, build_3D_device)
   compare(B.face_detJs[Y], face_detJs);
   compare(B.face_detJs[Z], face_detJs);
 }
-#endif

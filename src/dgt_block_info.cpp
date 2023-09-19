@@ -156,7 +156,7 @@ BlockInfo<ViewT> build_block_info(
   auto const domains = get_domains(dim, cell_grid, domain, ids, base_pt);
   auto const cell_dxs = get_cell_dxs(dim, cell_grid, domain, ids, base_pt);
   auto const cell_detJs = get_cell_detJs(dim, cell_grid, domain, ids, base_pt);
-  B.ids = make_view<ViewT>("block_info.ids", ids);
+  B.tree_ids = make_view<ViewT>("block_info.tree_ids", ids);
   B.levels = make_view<ViewT>("block_info.levels", levels);
   B.domains = make_view<ViewT>("block_info.domains", domains);
   B.cell_dxs = make_view<ViewT>("block_info.cell_dxs", cell_dxs);

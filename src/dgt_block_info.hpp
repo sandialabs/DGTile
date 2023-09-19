@@ -8,7 +8,7 @@ namespace dgt {
 template <template <class> class ViewT>
 struct BlockInfo
 {
-  ViewT<tree::ID*> ids;
+  ViewT<tree::ID*> tree_ids;
   ViewT<std::int8_t*> levels;
   ViewT<Box3<real>*> domains;
   ViewT<Vec3<real>*> cell_dxs;
