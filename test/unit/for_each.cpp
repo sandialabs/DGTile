@@ -3,6 +3,8 @@
 
 #include <gtest/gtest.h>
 
+#include <dgt_print.hpp> // debug
+
 using namespace dgt;
 
 TEST(for_each, sequenced_invalid_grid)
@@ -83,6 +85,39 @@ TEST(for_each, sequenced_offset_grid_3D)
   EXPECT_EQ(sum, 27);
 }
 
+static void test_3D_for_each(int const dim)
+{
+  int const ni = (dim > 0) ? 3 : 1;
+  int const nj = (dim > 1) ? 3 : 1;
+  int const nk = (dim > 2) ? 3 : 1;
+  Grid3 const cell_grid(ni,nj,nk);
+  View<real***> v("3d", ni, nj, nk);
+  auto functor = [=] DGT_DEVICE (Vec3<int> const& cell_ijk) {
+    int const i = cell_ijk.x();
+    int const j = cell_ijk.y();
+    int const k = cell_ijk.z();
+    v(i,j,k) = 1.;
+  };
+  for_each("3d_for_each_test", cell_grid, functor);
+  real const result = sum(v);
+  EXPECT_EQ(result, real(v.size()));
+}
+
+TEST(for_each, 3D_for_each_1D_grid)
+{
+  test_3D_for_each(1);
+}
+
+TEST(for_each, 3D_for_each_2D_grid)
+{
+  test_3D_for_each(2);
+}
+
+TEST(for_each, 3D_for_each_3D_grid)
+{
+  test_3D_for_each(3);
+}
+
 static void test_4D_for_each(int const dim)
 {
   int const num_blocks = 4;
@@ -97,7 +132,9 @@ static void test_4D_for_each(int const dim)
     int const k = cell_ijk.z();
     v(i,j,k,block) = 1.;
   };
-  for_each("4d_test", num_blocks, cell_grid, functor);
+  for_each("4d_for_each_test", num_blocks, cell_grid, functor);
+  real const result = sum(v);
+  EXPECT_EQ(result, real(v.size()));
 }
 
 TEST(for_each, 4D_for_each_1D_grid)
@@ -113,4 +150,23 @@ TEST(for_each, 4D_for_each_2D_grid)
 TEST(for_each, 4D_for_each_3D_grid)
 {
   test_4D_for_each(3);
+}
+
+static void test_inner_for_each()
+{
+  Grid3 const cell_grid(3,3,3);
+  Grid3 const inner_grid(2,2,2);
+  auto functor = [=] DGT_DEVICE (Vec3<int> const& cell_ijk) {
+    (void)cell_ijk;
+    inner_for_each(inner_grid,
+    [&] (Vec3<int> const& inner_ijk) DGT_ALWAYS_INLINE {
+       (void)inner_ijk;
+    });
+  };
+  for_each("inner_for_each_test", cell_grid, functor);
+}
+
+TEST(for_each, inner_for_each)
+{
+  test_inner_for_each();
 }

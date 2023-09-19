@@ -23,6 +23,7 @@ set(UNIT_TEST_SOURCES
   tree_uniform.cpp
   vec.cpp
   vec3.cpp
+  view.cpp
   when.cpp
 )
 

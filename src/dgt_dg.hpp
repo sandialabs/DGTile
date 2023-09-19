@@ -250,14 +250,15 @@ DGT_METHOD inline Vec3<real> get_point(
 template <class ModalT, class BasisT>
 DGT_METHOD inline real eval(
     ModalT const U,
+    int const block,
     int const cell,
     int const eq,
     BasisT const& B,
     int const location,
     int const pt) {
-  real val = U(cell, eq, 0) * B.modes[location].phis(pt, 0);
+  real val = U[block](cell, eq, 0) * B.modes[location].phis(pt, 0);
   for (int mode = 1; mode < B.num_modes; ++mode) {
-    val += U(cell, eq, mode) * B.modes[location].phis(pt, mode);
+    val += U[block](cell, eq, mode) * B.modes[location].phis(pt, mode);
   }
   return val;
 }
