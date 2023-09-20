@@ -66,13 +66,13 @@ dgt::vtk::VtkView<real> get_variable(
     inner_for_each(ginner_grid,
     [&] (Vec3<int> const& inner_ijk) DGT_ALWAYS_INLINE {
       int const pt = ginner_grid.index(inner_ijk);
-      Vec3<int> const viz_cell_ijk = (B.q+1) * owned_ijk + inner_ijk;
+      Vec3<int> const viz_cell_ijk = (B.q * owned_ijk) + inner_ijk;
       int const viz_cell = gviz_cell_grid.index(viz_cell_ijk);
       auto const val = function(data, cell, pt, mat);
       assign_variable(var, viz_cell, val);
     });
   };
-  for_each("vtk::get_variable", cell_grid, functor);
+  for_each("vtk::get_variable", owned_cells, functor);
   return var;
 }
 
