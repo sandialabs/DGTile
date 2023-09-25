@@ -293,8 +293,12 @@ static std::vector<bool> get_2to1_refines(
       for (int dir = 0; dir < ndirs; ++dir) {
         Point adj_pt = get_adj_pt(pt, axis, dir);
         bool const in = contains(base.depth, p3a::subgrid3(base.ijk), adj_pt);
-        if ((!in) && (periodic[axis])) {
-          adj_pt = make_adj_periodic(adj_pt, base, axis, dir);
+        if (!in) {
+          if (periodic[axis]) {
+            adj_pt = make_adj_periodic(adj_pt, base, axis, dir);
+          } else {
+            continue;
+          }
         }
         Node* adj = tree.find(adj_pt);
         if (!adj){
@@ -314,7 +318,7 @@ static std::vector<bool> get_2to1_refines(
   return refines;
 }
 
-static void ensure_tree_is_2to1(
+void ensure_tree_is_2to1(
     mpicpp::comm* comm,
     Tree& tree,
     p3a::vector3<bool> const& periodic) {

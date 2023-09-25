@@ -11,6 +11,7 @@ namespace dgt {
 struct Basis;
 class Mesh;
 class Node;
+class Tree;
 
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
 p3a::vector3<int> get_local(int which_child) {
@@ -131,6 +132,11 @@ void do_restriction(
     p3a::grid3 const& to_grid,
     p3a::subgrid3 const& from_subgrid,
     p3a::subgrid3 const& to_fine_subgrid);
+
+void ensure_tree_is_2to1(
+    mpicpp::comm* comm,
+    Tree& tree,
+    p3a::vector3<bool> const& periodic);
 
 void modify(Mesh& mesh, std::vector<int8_t> const& marks);
 
