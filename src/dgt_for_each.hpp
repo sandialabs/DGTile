@@ -66,6 +66,48 @@ class Kokkos4DFunctor
     }
 };
 
+auto inline kokkos_3D_policy(
+    Vec3<int> const& first,
+    Vec3<int> const& last)
+{
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  return Kokkos::MDRangePolicy<
+    Kokkos::IndexType<int>,
+    Kokkos::Rank<3, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>(
+        {first.x(), first.y(), first.z()},
+        {last.x(), last.y(), last.z()});
+#else
+  return Kokkos::MDRangePolicy<
+    Kokkos::IndexType<int>,
+    Kokkos::Rank<3, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>(
+        {first.x(), first.y(), first.z()},
+        {last.x(), last.y(), last.z()},
+        {1, 1, 1});
+#endif
+}
+
+auto inline kokkos_4D_policy(
+    int const sfirst,
+    int const slast,
+    Vec3<int> const& vfirst,
+    Vec3<int> const& vlast)
+{
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  return Kokkos::MDRangePolicy<
+    Kokkos::IndexType<int>,
+    Kokkos::Rank<4, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>(
+        {vfirst.x(), vfirst.y(), vfirst.z(), sfirst},
+        {vlast.x(), vlast.y(), vlast.z(), slast});
+#else
+  return Kokkos::MDRangePolicy<
+    Kokkos::IndexType<int>,
+    Kokkos::Rank<4, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>(
+        {vfirst.x(), vfirst.y(), vfirst.z(), sfirst},
+        {vlast.x(), vlast.y(), vlast.z(), slast},
+        {1, 1, 1, 1});
+#endif
+}
+
 template <class Functor>
 void kokkos_3D_for_each(
     std::string const& name,
@@ -75,12 +117,7 @@ void kokkos_3D_for_each(
 {
   Vec3<int> const vec_limits = vec_last - vec_first;
   if (vec_limits.volume() <= 0) return;
-  using kokkos_policy = Kokkos::MDRangePolicy<
-    Kokkos::IndexType<int>,
-    Kokkos::Rank<3, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>;
-  kokkos_policy policy_impl(
-      {vec_first.x(), vec_first.y(), vec_first.z()},
-      {vec_last.x(), vec_last.y(), vec_last.z()});
+  auto policy_impl = kokkos_3D_policy(vec_first, vec_last);
   Kokkos3DFunctor functor_impl(functor);
   Kokkos::parallel_for(name, policy_impl, functor_impl);
 }
@@ -98,12 +135,8 @@ void kokkos_4D_for_each(
   Vec3<int> const vec_limits = vec_last - vec_first;
   if (scalar_limits <= 0) return;
   if (vec_limits.volume() <= 0) return;
-  using kokkos_policy = Kokkos::MDRangePolicy<
-    Kokkos::IndexType<int>,
-    Kokkos::Rank<4, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>;
-  kokkos_policy policy_impl(
-      {vec_first.x(), vec_first.y(), vec_first.z(), scalar_first},
-      {vec_last.x(), vec_last.y(), vec_last.z(), scalar_last});
+  auto policy_impl = kokkos_4D_policy(
+      scalar_first, scalar_last, vec_first, vec_last);
   Kokkos4DFunctor functor_impl(functor);
   Kokkos::parallel_for(name, policy_impl, functor_impl);
 }

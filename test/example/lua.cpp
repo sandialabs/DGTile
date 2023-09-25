@@ -151,7 +151,16 @@ static inputs::Mesh parse_mesh(lua::table const& in)
 struct lua_scalar : inputs::function<real>
 {
   lua::function f;
-  lua_scalar(lua::function const& f_in) : f(f_in) {}
+  lua_scalar(lua::function const& f_in) : f(f_in)
+  {
+    auto f_results = f(0.,0.,0.);
+    if (f_results.size() != 1) {
+      auto const msg = fmt::format(
+          "example[{}]-> function must be a scalar", f_in.name());
+      printf("%s\n", msg.c_str());
+      parsing_errors++;
+    }
+  }
   ~lua_scalar() override {}
   real operator()(Vec3<real> const& x) override {
     auto f_results = f(x.x(), x.y(), x.z());
@@ -163,7 +172,15 @@ struct lua_scalar : inputs::function<real>
 struct lua_vector : inputs::function<Vec3<real>>
 {
   lua::function f;
-  lua_vector(lua::function const& f_in) : f(f_in) {}
+  lua_vector(lua::function const& f_in) : f(f_in) {
+    auto f_results = f(0.,0.,0.);
+    if (f_results.size() != 3) {
+      auto const msg = fmt::format(
+          "example[{}]-> function must be a vector", f_in.name());
+      printf("%s\n", msg.c_str());
+      parsing_errors++;
+    }
+  }
   ~lua_vector() override {}
   Vec3<real> operator()(Vec3<real> const& x) override {
     auto f_results = f(x.x(), x.y(), x.z());
