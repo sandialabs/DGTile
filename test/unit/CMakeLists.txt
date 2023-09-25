@@ -16,6 +16,7 @@ set(UNIT_TEST_SOURCES
   main.cpp
   partitioning.cpp
   print.cpp
+  reduce.cpp
   stl.cpp
   subgrid3.cpp
   tree.cpp

@@ -15,6 +15,7 @@ set(DGT_HEADERS
   dgt_mesh.hpp
   dgt_partitioning.hpp
   dgt_print.hpp
+  dgt_reduce.hpp
   dgt_stl.hpp
   dgt_subgrid3.hpp
   dgt_tree.hpp
