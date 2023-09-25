@@ -21,7 +21,7 @@ static std::vector<std::int8_t> get_levels(
     int const dim,
     std::vector<tree::ID> const& ids)
 {
-  std::vector<std::int8_t> levels(ids.size());
+  std::vector<std::int8_t> levels(ids.size(), std::int8_t(0));
   for (std::size_t i = 0; i < ids.size(); ++i) {
     tree::ID const id = ids[i];
     levels[i] = tree::get_level(dim, id);
@@ -66,7 +66,8 @@ static std::vector<Box3<real>> get_domains(
     std::vector<tree::ID> const& ids,
     tree::Point const& base_pt)
 {
-  std::vector<Box3<real>> domains(ids.size());
+  std::vector<Box3<real>> domains(
+      ids.size(), Box3<real>(Vec3<real>::zero(), Vec3<real>::zero()));
   for (std::size_t i = 0; i < ids.size(); ++i) {
     tree::ID const id = ids[i];
     Vec3<real> const dx = get_dx(dim, cell_grid, domain, base_pt, id);
@@ -85,7 +86,7 @@ static std::vector<Vec3<real>> get_cell_dxs(
     std::vector<tree::ID> const& ids,
     tree::Point const& base_pt)
 {
-  std::vector<Vec3<real>> cell_dxs(ids.size());
+  std::vector<Vec3<real>> cell_dxs(ids.size(), Vec3<real>::zero());
   for (std::size_t i = 0; i < ids.size(); ++i) {
     tree::ID const id = ids[i];
     cell_dxs[i] = get_dx(dim, cell_grid, domain, base_pt, id);
@@ -117,7 +118,7 @@ static std::vector<real> get_cell_detJs(
     std::vector<tree::ID> const& ids,
     tree::Point const& base_pt)
 {
-  std::vector<real> detJs(ids.size());
+  std::vector<real> detJs(ids.size(), 0.);
   for (std::size_t i = 0; i < ids.size(); ++i) {
     tree::ID const id = ids[i];
     Vec3<real> const dx = get_dx(dim, cell_grid, domain, base_pt, id);
@@ -134,7 +135,7 @@ static std::vector<real> get_face_detJs(
     std::vector<tree::ID> const& ids,
     tree::Point const& base_pt)
 {
-  std::vector<real> detJs(ids.size());
+  std::vector<real> detJs(ids.size(), 0.);
   for (std::size_t i = 0; i < ids.size(); ++i) {
     tree::ID const id = ids[i];
     Vec3<real> const dx = get_dx(dim, cell_grid, domain, base_pt, id);
