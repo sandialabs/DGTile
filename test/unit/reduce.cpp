@@ -10,7 +10,6 @@ static void test_4D_reduce()
 {
   int const nblocks = 4;
   Grid3 const cell_grid(3,3,3);
-  real result = 0.;
   auto functor = [=] DGT_HOST_DEVICE (
       int const block,
       Vec3<int> const& cell_ijk,
@@ -19,7 +18,8 @@ static void test_4D_reduce()
     (void)cell_ijk;
     result += 1.;
   };
-  reduce_for_each("4D_reduce", nblocks, cell_grid, functor, result);
+  real result = 0.;
+  reduce_for_each<real>("4D_reduce", nblocks, cell_grid, functor, Kokkos::Sum<real>(result));
   EXPECT_EQ(result, 108);
 }
 

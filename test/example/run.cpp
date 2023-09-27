@@ -53,6 +53,10 @@ void run(mpicpp::comm* comm, Input const& in)
   echo_input_file(in);
   State state;
   setup(state, comm, in);
+
+  // begin the loop here
+  real const dt = compute_dt(in, state);
+
 }
 
 }

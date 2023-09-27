@@ -1,6 +1,7 @@
 set(EXAMPLE_SOURCES
   lua.cpp
   main.cpp
+  physics.cpp
   run.cpp
   setup.cpp
   vtk.cpp

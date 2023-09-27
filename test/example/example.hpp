@@ -101,5 +101,6 @@ void run_lua_file(std::string const& path);
 void run(mpicpp::comm* comm, Input const& in);
 void setup(State& state, mpicpp::comm* comm, Input const& in);
 void write_out(Input const& in, State const& state, int soln_idx);
+real compute_dt(Input const& in, State const& state);
 
 }
