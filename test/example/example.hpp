@@ -7,6 +7,8 @@
 
 namespace example {
 
+static constexpr int num_max_mat = 3;
+
 using namespace dgt;
 
 namespace inputs {

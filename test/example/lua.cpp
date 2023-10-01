@@ -14,7 +14,7 @@ static void check_string_key(
 {
   if (pair.first.type() != LUA_TSTRING) {
     throw std::runtime_error(fmt::format(
-          "example:[{}]-> key must be a string", in.name()));
+          "{}-> key must be a string", in.name()));
   }
 }
 
@@ -27,10 +27,19 @@ static void check_valid_keys(
     std::string const key = lua::string(pair.first).value();
     if (std::count(keys.begin(), keys.end(), key)) continue;
     auto const msg =
-      fmt::format("example[{}]-> unknown key `{}`", in.name(), key);
+      fmt::format("{}-> unknown key `{}`", in.name(), key);
     fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
   }
+}
+
+static void cond_err(
+    lua::table const& in,
+    std::string const& condition)
+{
+  auto const msg = fmt::format("{}.{}", in.name(), condition);
+  fprintf(stderr, "%s\n", msg.c_str());
+  parsing_errors++;
 }
 
 static WhenPtr make_single_when(lua::table const& in)
@@ -65,8 +74,7 @@ static WhenPtr make_single_when(lua::table const& in)
     real const frequency = in.get_number("frequency");
     result = std::make_shared<AtExactTimePeriodically>(frequency);
   } else {
-    auto const msg = fmt::format(
-        "example[{}]-> unknown kind `{}`", in.name(), kind);
+    auto const msg = fmt::format("{}-> unknown kind `{}`", in.name(), kind);
     fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
   }
@@ -78,8 +86,7 @@ WhenPtr make_when(lua::table const& in)
   WhenPtr result = std::make_shared<AtNever>();
   in.check_type(LUA_TTABLE);
   if (in.size() < 1) {
-    auto const msg = fmt::format(
-        "example[{}]-> invalid table size", in.name());
+    auto const msg = fmt::format("{}-> invalid table size", in.name());
     fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
   }
@@ -101,6 +108,8 @@ static inputs::Time parse_time(lua::table const& in)
   result.cfl = in.get_number("cfl");
   result.end_time = in.get_number("end_time");
   result.to_terminal = make_when(in.get_or_table("to_terminal"));
+  if (result.cfl < 0) cond_err(in, "cfl < 0");
+  if (result.end_time < 0) cond_err(in, "end_time < 0");
   return result;
 }
 
@@ -111,9 +120,20 @@ static inputs::Basis parse_basis(lua::table const& in)
       "quadrature_rule",
       "tensor_product"});
   inputs::Basis result;
-  result.polynomial_order = in.get_integer("polynomial_order");
-  result.quadrature_rule = in.get_integer("quadrature_rule");
-  result.tensor_product = in.get_boolean("tensor_product");
+  int const mp = max_polynomial_order;
+  int const mq = max_1D_quadrature_points;
+  std::string const smp = std::to_string(mp);
+  std::string const smq = std::to_string(mq);
+  int const p = in.get_integer("polynomial_order");
+  int const q = in.get_integer("quadrature_rule");
+  bool const tensor = in.get_boolean("tensor_product");
+  result.polynomial_order = p;
+  result.quadrature_rule = q;
+  result.tensor_product = tensor;
+  if (p < 0) cond_err(in, "polynomial_order < 0");
+  if (p > mp) cond_err(in, "polynomial_order > " + smp);
+  if (q < 1) cond_err(in, "quadrature_rule < 1");
+  if (q > mq) cond_err(in, "quadrature_rule > " + smq);
   return result;
 }
 
@@ -128,11 +148,18 @@ static void parse_mesh_axis(
       "min",
       "max",
       "periodic"});
-  result.block_grid.extents()[axis] = in.get_integer("num_blocks");
-  result.cell_grid.extents()[axis] = in.get_integer("num_cells");
-  result.domain.lower()[axis] = in.get_number("min");
-  result.domain.upper()[axis] = in.get_number("max");
+  int const nblocks = in.get_integer("num_blocks");
+  int const ncells = in.get_integer("num_cells");
+  int const min = in.get_number("min");
+  int const max = in.get_number("max");
+  result.block_grid.extents()[axis] = nblocks;
+  result.cell_grid.extents()[axis] = ncells;
+  result.domain.lower()[axis] = min;
+  result.domain.upper()[axis] = max;
   result.periodic[axis] = in.get_or("periodic", false);
+  if (nblocks < 0) cond_err(in, "num_blocks < 0");
+  if (ncells < 0) cond_err(in, "num_cells < 0");
+  if (min > max) cond_err(in, "min > max");
 }
 
 static inputs::Mesh parse_mesh(lua::table const& in)
@@ -155,8 +182,7 @@ struct lua_scalar : inputs::function<real>
   {
     auto f_results = f(0.,0.,0.);
     if (f_results.size() != 1) {
-      auto const msg = fmt::format(
-          "example[{}]-> function must be a scalar", f_in.name());
+      auto const msg = fmt::format("{}-> function must be a scalar", f_in.name());
       fprintf(stderr, "%s\n", msg.c_str());
       parsing_errors++;
     }
@@ -175,8 +201,7 @@ struct lua_vector : inputs::function<Vec3<real>>
   lua_vector(lua::function const& f_in) : f(f_in) {
     auto f_results = f(0.,0.,0.);
     if (f_results.size() != 3) {
-      auto const msg = fmt::format(
-          "example[{}]-> function must be a vector", f_in.name());
+      auto const msg = fmt::format("{}-> function must be a vector", f_in.name());
       fprintf(stderr, "%s\n", msg.c_str());
       parsing_errors++;
     }
@@ -197,8 +222,7 @@ inputs::function_ptr<real> make_scalar_function(
 {
   auto object = in.get_optional(key.c_str());
   if (!object.has_value()) {
-    auto const msg = fmt::format(
-        "example[{}]-> key `{}` doesn't exist", in.name(), key);
+    auto const msg = fmt::format("{}-> key `{}` doesn't exist", in.name(), key);
     fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
     return nullptr;
@@ -209,7 +233,7 @@ inputs::function_ptr<real> make_scalar_function(
     return std::make_unique<lua_scalar>(f);
   } else {
     auto const msg = fmt::format(
-        "example[{}]-> key `{}` isn't a lua function", in.name(), key);
+        "{}-> key `{}` isn't a lua function", in.name(), key);
     fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
     return nullptr;
@@ -222,8 +246,7 @@ inputs::function_ptr<Vec3<real>> make_vector_function(
 {
   auto object = in.get_optional(key.c_str());
   if (!object.has_value()) {
-    auto const msg = fmt::format(
-        "example[{}]-> key `{}` doesn't exist", in.name(), key);
+    auto const msg = fmt::format("{}-> key `{}` doesn't exist", in.name(), key);
     fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
     return nullptr;
@@ -234,7 +257,7 @@ inputs::function_ptr<Vec3<real>> make_vector_function(
     return std::make_unique<lua_vector>(f);
   } else {
     auto const msg = fmt::format(
-        "example[{}]-> key `{}` isn't a lua function", in.name(), key);
+        "{}-> key `{}` isn't a lua function", in.name(), key);
     fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
     return nullptr;
@@ -282,6 +305,20 @@ inputs::Materials parse_materials(
   return result;
 }
 
+static void parse_top(
+    Input& result,
+    lua::table const& in)
+{
+  std::string const name = in.get_string("name");
+  int const nmat = in.get_integer("num_materials");
+  std::string const smax = std::to_string(num_max_mat);
+  result.name = name;
+  result.num_materials = nmat;
+  if (name == "") cond_err(in, "name unset");
+  if (nmat < 0) cond_err(in, "num_materials < 0");
+  if (nmat > num_max_mat) cond_err(in, "num_materials > " + smax);
+}
+
 Input make_input(
     lua::table const& in,
     std::string const& file_name)
@@ -296,8 +333,7 @@ Input make_input(
       "initial_conditions"});
   Input result;
   result.input_file_name = file_name;
-  result.name = in.get_string("name");
-  result.num_materials = in.get_integer("num_materials");
+  parse_top(result, in);
   result.time = parse_time(in.get_table("time"));
   result.basis = parse_basis(in.get_table("basis"));
   result.mesh = parse_mesh(in.get_table("mesh"));
