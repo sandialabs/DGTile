@@ -18,7 +18,7 @@ static void write_data_start(
     std::stringstream& stream,
     std::string const& type,
     std::string const& name,
-    int ncomps)
+    int const ncomps)
 {
   stream << "<";
   stream << "DataArray type=\"" << type << "\" ";

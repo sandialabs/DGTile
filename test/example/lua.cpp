@@ -28,7 +28,7 @@ static void check_valid_keys(
     if (std::count(keys.begin(), keys.end(), key)) continue;
     auto const msg =
       fmt::format("example[{}]-> unknown key `{}`", in.name(), key);
-    printf("%s\n", msg.c_str());
+    fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
   }
 }
@@ -67,7 +67,7 @@ static WhenPtr make_single_when(lua::table const& in)
   } else {
     auto const msg = fmt::format(
         "example[{}]-> unknown kind `{}`", in.name(), kind);
-    printf("%s\n", msg.c_str());
+    fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
   }
   return result;
@@ -80,7 +80,7 @@ WhenPtr make_when(lua::table const& in)
   if (in.size() < 1) {
     auto const msg = fmt::format(
         "example[{}]-> invalid table size", in.name());
-    printf("%s\n", msg.c_str());
+    fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
   }
   for (lua_Integer i = 1; i <= in.size(); ++i) {
@@ -157,7 +157,7 @@ struct lua_scalar : inputs::function<real>
     if (f_results.size() != 1) {
       auto const msg = fmt::format(
           "example[{}]-> function must be a scalar", f_in.name());
-      printf("%s\n", msg.c_str());
+      fprintf(stderr, "%s\n", msg.c_str());
       parsing_errors++;
     }
   }
@@ -177,7 +177,7 @@ struct lua_vector : inputs::function<Vec3<real>>
     if (f_results.size() != 3) {
       auto const msg = fmt::format(
           "example[{}]-> function must be a vector", f_in.name());
-      printf("%s\n", msg.c_str());
+      fprintf(stderr, "%s\n", msg.c_str());
       parsing_errors++;
     }
   }
@@ -199,7 +199,7 @@ inputs::function_ptr<real> make_scalar_function(
   if (!object.has_value()) {
     auto const msg = fmt::format(
         "example[{}]-> key `{}` doesn't exist", in.name(), key);
-    printf("%s\n", msg.c_str());
+    fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
     return nullptr;
   }
@@ -210,7 +210,7 @@ inputs::function_ptr<real> make_scalar_function(
   } else {
     auto const msg = fmt::format(
         "example[{}]-> key `{}` isn't a lua function", in.name(), key);
-    printf("%s\n", msg.c_str());
+    fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
     return nullptr;
   }
@@ -224,7 +224,7 @@ inputs::function_ptr<Vec3<real>> make_vector_function(
   if (!object.has_value()) {
     auto const msg = fmt::format(
         "example[{}]-> key `{}` doesn't exist", in.name(), key);
-    printf("%s\n", msg.c_str());
+    fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
     return nullptr;
   }
@@ -235,7 +235,7 @@ inputs::function_ptr<Vec3<real>> make_vector_function(
   } else {
     auto const msg = fmt::format(
         "example[{}]-> key `{}` isn't a lua function", in.name(), key);
-    printf("%s\n", msg.c_str());
+    fprintf(stderr, "%s\n", msg.c_str());
     parsing_errors++;
     return nullptr;
   }

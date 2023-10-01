@@ -1,8 +1,8 @@
 set(EXAMPLE_SOURCES
   lua.cpp
   main.cpp
-  physics.cpp
   run.cpp
+  physics.cpp
   setup.cpp
   vtk.cpp
 )
