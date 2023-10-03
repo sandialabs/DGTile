@@ -311,12 +311,12 @@ static void parse_top(
 {
   std::string const name = in.get_string("name");
   int const nmat = in.get_integer("num_materials");
-  std::string const smax = std::to_string(num_max_mat);
+  std::string const smax = std::to_string(nmax_mat);
   result.name = name;
   result.num_materials = nmat;
   if (name == "") cond_err(in, "name unset");
   if (nmat < 0) cond_err(in, "num_materials < 0");
-  if (nmat > num_max_mat) cond_err(in, "num_materials > " + smax);
+  if (nmat > nmax_mat) cond_err(in, "num_materials > " + smax);
 }
 
 Input make_input(

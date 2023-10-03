@@ -24,12 +24,9 @@ static int get_num_stored_solutions(int const p)
 
 static void setup_eos(State& state, Input const& in)
 {
-  HostView<real*> eos_h("eos", in.num_materials);
-  state.eos = View<real*>("eos", in.num_materials);
   for (int mat = 0; mat < in.num_materials; ++mat) {
-    eos_h[mat] = in.materials.gammas[mat];
+    state.eos[mat] = EoS(in.materials.gammas[mat]);
   }
-  Kokkos::deep_copy(state.eos, eos_h);
 }
 
 static void apply_initial_conditions(State& state, Input const& in)
@@ -39,6 +36,7 @@ static void apply_initial_conditions(State& state, Input const& in)
   int const nmats = in.num_materials;
   int const nblocks = mesh.num_owned_blocks();
   Equations const& eqs = state.eqs;
+  Array<EoS, nmax_mat> const eos = state.eos;
   Field<real***> U_field = mesh.get_solution("hydro", 0);
   Grid3 const cell_grid = mesh.cell_grid();
   int const ncells = generalize(mesh.dim(), cell_grid).size();
@@ -62,7 +60,7 @@ static void apply_initial_conditions(State& state, Input const& in)
         for (int mat = 0; mat < nmats; ++mat) {
           real const rho = ics.densities[mat]->operator()(x);
           real const p = ics.pressures[mat]->operator()(x);
-          real const e = get_e_from_rho_p(rho, p, mats.gammas[mat]);
+          real const e = eos[mat].e_from_rho_p(rho, p);
           real const En = rho * e + half_v2;
           rho_bulk += rho;
           for (int mode = 0; mode < B.num_modes; ++mode) {

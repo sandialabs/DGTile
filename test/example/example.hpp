@@ -1,13 +1,12 @@
 #include <string>
 
+#include <dgt_array.hpp>
 #include <dgt_mesh.hpp>
 #include <dgt_when.hpp>
 
 #include <mpicpp.hpp>
 
 namespace example {
-
-static constexpr int num_max_mat = 3;
 
 using namespace dgt;
 
@@ -59,6 +58,8 @@ struct Materials
 
 }
 
+static constexpr int nmax_mat = 3;
+
 struct Input
 {
   std::string name = "";
@@ -83,21 +84,28 @@ struct Equations
   DGT_METHOD int num_eqs() const{ return offsets[ENER] + 1; }
 };
 
+struct EoS
+{
+  private:
+    real m_gamma = 0.;
+  public:
+    EoS() = default;
+    EoS(real gamma) : m_gamma(gamma) {}
+    DGT_METHOD real e_from_rho_p(real const rho, real const p) const
+    {
+      return p / (rho*(m_gamma-1.));
+    }
+};
+
 struct State
 {
-  View<real*> eos;
+  Array<EoS, nmax_mat> eos;
   Equations eqs;
   Mesh mesh;
   real time = 0.;
   real dt = 0.;
   int step = 0;
 };
-
-DGT_ALWAYS_INLINE DGT_HOST_DEVICE inline
-real get_e_from_rho_p(real const rho, real const p, real const gamma)
-{
-  return p / (rho*(gamma - 1.));
-}
 
 void run_lua_file(std::string const& path);
 void run(mpicpp::comm* comm, Input const& in);

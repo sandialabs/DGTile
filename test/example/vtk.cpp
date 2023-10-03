@@ -33,7 +33,7 @@ struct Data
 {
   typename Field<real***>::accessor_t U;
   Basis<View> B;
-  View<real*> eos;
+  Array<EoS, nmax_mat> eos;
   Equations eqs;
   int block;
 };

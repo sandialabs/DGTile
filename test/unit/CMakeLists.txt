@@ -1,4 +1,5 @@
 set(UNIT_TEST_SOURCES
+  array.cpp
   base64.cpp
   block_info.cpp
   bounds.cpp
