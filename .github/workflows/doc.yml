@@ -1,6 +1,10 @@
-name: documentation
+name: doc
 
-on: [push]
+on:
+  push:
+    paths:
+      - 'doc/**'
+      - '.github/workflows/**'
 
 permissions:
   contents: write
