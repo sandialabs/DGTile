@@ -52,6 +52,7 @@ static void apply_initial_conditions(State& state, Input const& in)
     auto functor = [&] (Vec3<int> const& cell_ijk) {
       int const cell = cell_grid.index(cell_ijk);
       for (int pt = 0; pt < B.num_cell_pts; ++pt) {
+        real const wt = B.cell_weights(pt);
         Vec3<real> const xi = get_point(B, CELL, pt);
         Vec3<real> const x = map_to_physical(cell_ijk, origin, dx, xi);
         Vec3<real> const v = ics.velocity->operator()(x);
@@ -66,17 +67,17 @@ static void apply_initial_conditions(State& state, Input const& in)
           for (int mode = 0; mode < B.num_modes; ++mode) {
             real const phi = B.modes[CELL].phis(pt, mode);
             real const M_inv = 1. / B.mass(mode);
-            U_host(cell, eqs.rho(mat), mode) += rho * phi * M_inv;
-            U_host(cell, eqs.ener(), mode) += En * phi * M_inv;
+            U_host(cell, eqs.rho(mat), mode) += rho * phi * wt * M_inv;
+            U_host(cell, eqs.ener(), mode) += En * phi * wt * M_inv;
           }
         }
         Vec3<real> const mmtm = rho_bulk * v;
         for (int mode = 0; mode < B.num_modes; ++mode) {
           real const phi = B.modes[CELL].phis(pt, mode);
           real const M_inv = 1. / B.mass(mode);
-          U_host(cell, eqs.mmtm(X), mode) += mmtm.x() * phi * M_inv;
-          U_host(cell, eqs.mmtm(Y), mode) += mmtm.y() * phi * M_inv;
-          U_host(cell, eqs.mmtm(Z), mode) += mmtm.z() * phi * M_inv;
+          U_host(cell, eqs.mmtm(X), mode) += mmtm.x() * phi * wt * M_inv;
+          U_host(cell, eqs.mmtm(Y), mode) += mmtm.y() * phi * wt * M_inv;
+          U_host(cell, eqs.mmtm(Z), mode) += mmtm.z() * phi * wt * M_inv;
         }
       }
     };
