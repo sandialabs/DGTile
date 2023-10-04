@@ -42,6 +42,19 @@ static void echo_input_file(Input const& in)
   out_file.close();
 }
 
+static void handle_step_output(Input const& in, State const& state)
+{
+  if (state.mesh.comm()->rank()) return;
+  auto const when = in.time.to_terminal;
+  int const step = state.step;
+  real const time = state.time;
+  real const dt = state.dt;
+  if (!when->now(step, time)) return;
+  std::string const msg = fmt::format(
+      "[step]: {} [time]: {} [dt]: {}", step, time, dt);
+  printf("%s\n", msg.c_str());
+}
+
 void run(mpicpp::comm* comm, Input const& in)
 {
   if (comm->rank() == 0) {
@@ -55,7 +68,9 @@ void run(mpicpp::comm* comm, Input const& in)
   setup(state, comm, in);
 
   // begin the loop here
-  real const dt = compute_dt(in, state);
+  state.dt = compute_dt(in, state);
+  handle_step_output(in, state);
+  compute_fluxes(state, 0);
 
 }
 

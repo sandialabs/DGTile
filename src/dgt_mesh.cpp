@@ -280,8 +280,7 @@ void Mesh::print_stats() const
   if (m_comm->rank()) return;
   Vec3<real> const min = reduce_dx(m_comm, m_block_info_h.cell_dxs, vec_min);
   Vec3<real> const max = reduce_dx(m_comm, m_block_info_h.cell_dxs, vec_max);
-  printf("mesh stats\n");
-  printf("----------\n");
+  printf("mesh stats:\n");
   printf("> blocks: %d\n", num_total_blocks());
   printf("> cells: %d\n", num_total_cells());
   printf("> minimum cell dx: [%e, %e, %e]\n", min.x(), min.y(), min.z());

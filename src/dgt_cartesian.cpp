@@ -51,6 +51,13 @@ Subgrid3 get_owned_cells(Grid3 const& cell_grid)
   return Subgrid3(lower, upper);
 }
 
+Subgrid3 get_owned_faces(Grid3 const& cell_grid, int const axis)
+{
+  Subgrid3 faces = get_owned_cells(cell_grid);
+  faces.upper()[axis] += 1;
+  return faces;
+}
+
 Subgrid3 get_cells(
     int const ownership,
     Grid3 const& cell_grid,

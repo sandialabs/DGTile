@@ -59,7 +59,7 @@ struct Input
 {
   std::string name = "";
   std::string input_file_name = "";
-  int gamma = -1;
+  real gamma = -1;
   inputs::Basis basis;
   inputs::Time time;
   inputs::Mesh mesh;
@@ -101,5 +101,6 @@ void run(mpicpp::comm* comm, Input const& in);
 void setup(State& state, mpicpp::comm* comm, Input const& in);
 void write_out(Input const& in, State const& state, int soln_idx);
 real compute_dt(Input const& in, State const& state);
+void compute_fluxes(State& state, int const soln_idx);
 
 }

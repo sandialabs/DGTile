@@ -27,7 +27,6 @@ DGT_METHOD inline Vec3<real> get_vec3(
 
 real compute_dt(Input const& in, State const& state)
 {
-
   Mesh const& mesh = state.mesh;
   int const dim = mesh.dim();
   int const nblocks = mesh.num_owned_blocks();
@@ -37,7 +36,6 @@ real compute_dt(Input const& in, State const& state)
   BlockInfo<View> const blocks = mesh.block_info();
   real const factor = 2*mesh.basis().p + 1;
   auto const U_field = mesh.get_solution("hydro", 0).get();
-
   auto functor = [=] DGT_HOST_DEVICE (
       int const block,
       Vec3<int> const& cell_ijk,
@@ -59,14 +57,37 @@ real compute_dt(Input const& in, State const& state)
     real const cell_dt = 1./(factor*dvdx);
     dt = std::min(dt, cell_dt);
   };
-
   real dt = DBL_MAX;
   reduce_for_each<real>("dt",
       nblocks, owned_cells, functor, Kokkos::Min<real>(dt));
-
   real const cfl = in.time.cfl;
   return cfl * dt;
+}
 
+static void compute_fluxes(State& state, int const soln_idx, int const axis)
+{
+  Mesh& mesh = state.mesh;
+  int const num_blocks = mesh.num_owned_blocks();
+  Grid3 const cell_grid = mesh.cell_grid();
+  Grid3 const face_grid = get_face_grid(cell_grid, axis);
+  Subgrid3 const owned_faces = get_owned_faces(cell_grid, axis);
+  auto const U = mesh.get_solution("hydro", soln_idx).get();
+  auto const F = mesh.get_fluxes("hydro", axis).get();
+  auto functor = [=] DGT_DEVICE (
+      int const block,
+      Vec3<int> const& face_ijk) DGT_ALWAYS_INLINE
+  {
+    int const face = face_grid.index(face_ijk);
+  };
+  std::string const name = fmt::format("fluxes{}", get_axis_name(axis));
+  for_each(name, num_blocks, owned_faces, functor);
+}
+
+void compute_fluxes(State& state, int const soln_idx)
+{
+  for (int axis = 0; axis < state.mesh.dim(); ++axis) {
+    compute_fluxes(state, soln_idx, axis);
+  }
 }
 
 }

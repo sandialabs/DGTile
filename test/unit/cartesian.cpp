@@ -111,6 +111,16 @@ TEST(cartesian, get_owned_cells)
   EXPECT_EQ(get_owned_cells({6,6,6}), Subgrid3({1,1,1}, {5,5,5}));
 }
 
+TEST(cartesian, get_owned_faces)
+{
+  EXPECT_EQ(get_owned_faces({6,0,0}, X), Subgrid3({1,0,0}, {6,0,0}));
+  EXPECT_EQ(get_owned_faces({6,6,0}, X), Subgrid3({1,1,0}, {6,5,0}));
+  EXPECT_EQ(get_owned_faces({6,6,0}, Y), Subgrid3({1,1,0}, {5,6,0}));
+  EXPECT_EQ(get_owned_faces({6,6,6}, X), Subgrid3({1,1,1}, {6,5,5}));
+  EXPECT_EQ(get_owned_faces({6,6,6}, Y), Subgrid3({1,1,1}, {5,6,5}));
+  EXPECT_EQ(get_owned_faces({6,6,6}, Z), Subgrid3({1,1,1}, {5,5,6}));
+}
+
 TEST(cartesian, get_cells_ghost_2D)
 {
   Grid3 const g(8,8,0);
