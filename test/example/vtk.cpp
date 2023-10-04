@@ -33,8 +33,7 @@ struct Data
 {
   typename Field<real***>::accessor_t U;
   Basis<View> B;
-  Array<EoS, nmax_mat> eos;
-  Equations eqs;
+  EoS eos;
   int block;
 };
 
@@ -44,8 +43,7 @@ dgt::vtk::VtkView<real> get_variable(
     State const& state,
     int const block,
     int const num_comps,
-    int const soln_idx,
-    int const mat = 0)
+    int const soln_idx)
 {
   Mesh const& mesh = state.mesh;
   Basis<View> const& B = mesh.basis();
@@ -59,7 +57,7 @@ dgt::vtk::VtkView<real> get_variable(
   auto const U = mesh.get_solution("hydro", soln_idx).get();
   dgt::vtk::VtkView<real> var;
   Kokkos::resize(var, gviz_cell_grid.size(), num_comps);
-  Data data = {U, B, state.eos, state.eqs, block};
+  Data data = {U, B, state.eos, block};
   auto functor = [=] DGT_HOST_DEVICE (Vec3<int> const& cell_ijk) {
     int const cell = cell_grid.index(cell_ijk);
     Vec3<int> const owned_ijk = cell_ijk - ghost_offset;
@@ -68,7 +66,7 @@ dgt::vtk::VtkView<real> get_variable(
       int const pt = ginner_grid.index(inner_ijk);
       Vec3<int> const viz_cell_ijk = (B.q * owned_ijk) + inner_ijk;
       int const viz_cell = gviz_cell_grid.index(viz_cell_ijk);
-      auto const val = function(data, cell, pt, mat);
+      auto const val = function(data, cell, pt);
       assign_variable(var, viz_cell, val);
     });
   };
@@ -83,10 +81,9 @@ struct density
   DGT_METHOD inline real operator()(
       Data const& d,
       int const cell,
-      int const pt,
-      int const mat) const
+      int const pt) const
   {
-    return eval(d.U, d.block, cell, d.eqs.rho(mat), d.B, CELL, pt);
+    return eval(d.U, d.block, cell, DENS, d.B, CELL, pt);
   }
 };
 

@@ -4,7 +4,7 @@
 input = {
 
   name = "advection",
-  num_materials = 1,
+  gamma = 1.4,
 
   time = {
     cfl = 0.9,
@@ -23,16 +23,12 @@ input = {
     Y = {num_blocks = 2, num_cells = 10, min = 0., max = 1.},
   },
 
-  materials = {
-    gamma_0 = 1.4
-  },
-
   initial_conditions = {
-    density_0 = function(x,y,z)
+    density = function(x,y,z)
       xi = x + y + z
       return 1. + 0.1*math.sin(2*math.pi*xi)
     end,
-    pressure_0 = function(x,y,z)
+    pressure = function(x,y,z)
       return 2.
     end,
     velocity = function(x,y,z)

@@ -46,42 +46,24 @@ struct Mesh
 
 struct InitialConditions
 {
-  std::vector<function_ptr<real>> densities;
-  std::vector<function_ptr<real>> pressures;
+  function_ptr<real> density;
+  function_ptr<real> pressure;
   function_ptr<Vec3<real>> velocity;
-};
-
-struct Materials
-{
-  std::vector<real> gammas;
 };
 
 }
 
-static constexpr int nmax_mat = 3;
+enum {DENS=0, MMTM=1, ENER=4, NEQ=5};
 
 struct Input
 {
   std::string name = "";
   std::string input_file_name = "";
-  int num_materials = -1;
+  int gamma = -1;
   inputs::Basis basis;
   inputs::Time time;
   inputs::Mesh mesh;
-  inputs::Materials materials;
   inputs::InitialConditions ics;
-};
-
-struct Equations
-{
-  enum {RHO, MMTM, ENER, NVAR};
-  int offsets[NVAR];
-  Equations() = default;
-  Equations(int const num_mats);
-  DGT_METHOD int rho(int const mat) const { return offsets[RHO] + mat; }
-  DGT_METHOD int mmtm(int const axis) const { return offsets[MMTM] + axis; }
-  DGT_METHOD int ener() const { return offsets[ENER]; }
-  DGT_METHOD int num_eqs() const{ return offsets[ENER] + 1; }
 };
 
 struct EoS
@@ -93,14 +75,13 @@ struct EoS
     EoS(real gamma) : m_gamma(gamma) {}
     DGT_METHOD real e_from_rho_p(real const rho, real const p) const
     {
-      return p / (rho*(m_gamma-1.));
+      return p/(rho*(m_gamma-1.));
     }
 };
 
 struct State
 {
-  Array<EoS, nmax_mat> eos;
-  Equations eqs;
+  EoS eos;
   Mesh mesh;
   real time = 0.;
   real dt = 0.;

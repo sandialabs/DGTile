@@ -4,17 +4,7 @@
 
 #include "example.hpp"
 
-#include "dgt_print.hpp" // debug
-
 namespace example {
-
-Equations::Equations(int const num_mats)
-{
-  std::fill_n(offsets, NVAR, -1);
-  offsets[RHO] = 0;
-  offsets[MMTM] = num_mats;
-  offsets[ENER] = num_mats + DIMENSIONS;
-}
 
 static int get_num_stored_solutions(int const p)
 {
@@ -22,29 +12,19 @@ static int get_num_stored_solutions(int const p)
   return table[p];
 }
 
-static void setup_eos(State& state, Input const& in)
-{
-  for (int mat = 0; mat < in.num_materials; ++mat) {
-    state.eos[mat] = EoS(in.materials.gammas[mat]);
-  }
-}
-
 static void apply_initial_conditions(State& state, Input const& in)
 {
   static constexpr int CELL = basis_locations::CELL;
   Mesh& mesh = state.mesh;
-  int const nmats = in.num_materials;
   int const nblocks = mesh.num_owned_blocks();
-  Equations const& eqs = state.eqs;
-  Array<EoS, nmax_mat> const eos = state.eos;
   Field<real***> U_field = mesh.get_solution("hydro", 0);
   Grid3 const cell_grid = mesh.cell_grid();
   int const ncells = generalize(mesh.dim(), cell_grid).size();
+  EoS const& eos = state.eos;
   inputs::InitialConditions const& ics = in.ics;
-  inputs::Materials const mats = in.materials;
   Basis<HostView> const& B = mesh.basis_h();
   BlockInfo<HostView> const& info = mesh.block_info_h();
-  HostView<real***> U_host("U_ic", ncells, eqs.num_eqs(), B.num_modes);
+  HostView<real***> U_host("U_ic", ncells, NEQ, B.num_modes);
   for (int block = 0; block < nblocks; ++block) {
     Kokkos::deep_copy(U_host, 0.);
     Vec3<real> const origin = info.domains[block].lower();
@@ -55,29 +35,21 @@ static void apply_initial_conditions(State& state, Input const& in)
         real const wt = B.cell_weights(pt);
         Vec3<real> const xi = get_point(B, CELL, pt);
         Vec3<real> const x = map_to_physical(cell_ijk, origin, dx, xi);
+        real const rho = ics.density->operator()(x);
+        real const p = ics.pressure->operator()(x);
         Vec3<real> const v = ics.velocity->operator()(x);
+        Vec3<real> const mmtm = rho * v;
+        real const e = eos.e_from_rho_p(rho, p);
         real const half_v2 = 0.5 * dot(v, v);
-        real rho_bulk = 0.;
-        for (int mat = 0; mat < nmats; ++mat) {
-          real const rho = ics.densities[mat]->operator()(x);
-          real const p = ics.pressures[mat]->operator()(x);
-          real const e = eos[mat].e_from_rho_p(rho, p);
-          real const En = rho * e + half_v2;
-          rho_bulk += rho;
-          for (int mode = 0; mode < B.num_modes; ++mode) {
-            real const phi = B.modes[CELL].phis(pt, mode);
-            real const M_inv = 1. / B.mass(mode);
-            U_host(cell, eqs.rho(mat), mode) += rho * phi * wt * M_inv;
-            U_host(cell, eqs.ener(), mode) += En * phi * wt * M_inv;
-          }
-        }
-        Vec3<real> const mmtm = rho_bulk * v;
+        real const En = rho * e + half_v2;
         for (int mode = 0; mode < B.num_modes; ++mode) {
           real const phi = B.modes[CELL].phis(pt, mode);
           real const M_inv = 1. / B.mass(mode);
-          U_host(cell, eqs.mmtm(X), mode) += mmtm.x() * phi * wt * M_inv;
-          U_host(cell, eqs.mmtm(Y), mode) += mmtm.y() * phi * wt * M_inv;
-          U_host(cell, eqs.mmtm(Z), mode) += mmtm.z() * phi * wt * M_inv;
+          U_host(cell, DENS, mode) += rho * phi * wt * M_inv;
+          U_host(cell, ENER, mode) += En * phi * wt * M_inv;
+          U_host(cell, MMTM + X, mode) += mmtm.x() * phi * wt * M_inv;
+          U_host(cell, MMTM + Y, mode) += mmtm.x() * phi * wt * M_inv;
+          U_host(cell, MMTM + Z, mode) += mmtm.x() * phi * wt * M_inv;
         }
       }
     };
@@ -91,7 +63,6 @@ void setup(State& state, mpicpp::comm* comm, Input const& in)
   int const p = in.basis.polynomial_order;
   int const q = in.basis.quadrature_rule;
   bool const tensor = in.basis.tensor_product;
-  state.eqs = Equations(in.num_materials);
   state.mesh.set_comm(comm);
   state.mesh.set_domain(in.mesh.domain);
   state.mesh.set_cell_grid(in.mesh.cell_grid);
@@ -99,10 +70,9 @@ void setup(State& state, mpicpp::comm* comm, Input const& in)
   state.mesh.set_basis(p, q, tensor);
   state.mesh.init(in.mesh.block_grid);
   state.mesh.print_stats();
-  setup_eos(state, in);
+  state.eos = EoS(in.gamma);
   int const nstored = get_num_stored_solutions(p);
-  int const neqs = state.eqs.num_eqs();
-  state.mesh.add_modal("hydro", nstored, neqs);
+  state.mesh.add_modal("hydro", nstored, NEQ);
   apply_initial_conditions(state, in);
 
   // debug

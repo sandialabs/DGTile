@@ -264,44 +264,16 @@ inputs::function_ptr<Vec3<real>> make_vector_function(
   }
 }
 
-static inputs::InitialConditions parse_ics(
-    lua::table const& in,
-    int const nmats)
+static inputs::InitialConditions parse_ics(lua::table const& in)
 {
-  std::vector<std::string> valid_keys = {"velocity"};
-  for (int mat = 0; mat < nmats; ++mat) {
-    valid_keys.push_back(fmt::format("density_{}", mat));
-    valid_keys.push_back(fmt::format("pressure_{}", mat));
-  }
-  check_valid_keys(in, valid_keys);
+  check_valid_keys(in, {
+      "density",
+      "pressure",
+      "velocity"});
   inputs::InitialConditions result;
-  result.densities.resize(nmats);
-  result.pressures.resize(nmats);
+  result.density = make_scalar_function(in, "density");
+  result.pressure = make_scalar_function(in, "pressure");
   result.velocity = make_vector_function(in, "velocity");
-  for (int mat = 0; mat < nmats; ++mat) {
-    auto const rho_name = fmt::format("density_{}", mat);
-    auto const p_name = fmt::format("pressure_{}", mat);
-    result.densities[mat] = make_scalar_function(in, rho_name);
-    result.pressures[mat] = make_scalar_function(in, p_name);
-  }
-  return result;
-}
-
-inputs::Materials parse_materials(
-    lua::table const& in,
-    int const nmats)
-{
-  std::vector<std::string> valid_keys;
-  for (int mat = 0; mat < nmats; ++mat) {
-    valid_keys.push_back(fmt::format("gamma_{}", mat));
-  }
-  check_valid_keys(in, valid_keys);
-  inputs::Materials result;
-  result.gammas.resize(nmats);
-  for (int mat = 0;  mat < nmats; ++mat) {
-    auto const gamma_name = fmt::format("gamma_{}", mat);
-    result.gammas[mat] = in.get_number(gamma_name.c_str());
-  }
   return result;
 }
 
@@ -309,14 +281,10 @@ static void parse_top(
     Input& result,
     lua::table const& in)
 {
-  std::string const name = in.get_string("name");
-  int const nmat = in.get_integer("num_materials");
-  std::string const smax = std::to_string(nmax_mat);
-  result.name = name;
-  result.num_materials = nmat;
-  if (name == "") cond_err(in, "name unset");
-  if (nmat < 0) cond_err(in, "num_materials < 0");
-  if (nmat > nmax_mat) cond_err(in, "num_materials > " + smax);
+  result.name = in.get_string("name");
+  result.gamma = in.get_number("gamma");
+  if (result.name == "") cond_err(in, "name unset");
+  if (result.gamma < 0) cond_err(in, "gamma < 0");
 }
 
 Input make_input(
@@ -325,11 +293,10 @@ Input make_input(
 {
   check_valid_keys(in, {
       "name",
-      "num_materials",
+      "gamma",
       "time",
       "basis",
       "mesh",
-      "materials",
       "initial_conditions"});
   Input result;
   result.input_file_name = file_name;
@@ -337,10 +304,7 @@ Input make_input(
   result.time = parse_time(in.get_table("time"));
   result.basis = parse_basis(in.get_table("basis"));
   result.mesh = parse_mesh(in.get_table("mesh"));
-  result.materials = parse_materials(
-      in.get_table("materials"), result.num_materials);
-  result.ics = parse_ics(
-      in.get_table("initial_conditions"), result.num_materials);
+  result.ics = parse_ics(in.get_table("initial_conditions"));
   if (parsing_errors > 0) {
     throw std::runtime_error("example-> encountered errors when parsing");
   }

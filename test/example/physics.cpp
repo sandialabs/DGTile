@@ -10,7 +10,6 @@ namespace example {
 real compute_dt(Input const& in, State const& state)
 {
   Mesh const& mesh = state.mesh;
-  int const num_materials = in.num_materials;
   int const nblocks = mesh.num_owned_blocks();
   Grid3 const cell_grid = mesh.cell_grid();
   Subgrid3 const owned_cells = get_owned_cells(cell_grid);
