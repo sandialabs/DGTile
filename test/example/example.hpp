@@ -77,6 +77,14 @@ struct EoS
     {
       return p/(rho*(m_gamma-1.));
     }
+    DGT_METHOD real p_from_rho_e(real const rho, real const e) const
+    {
+      return rho*e*(m_gamma-1.);
+    }
+    DGT_METHOD real c_from_rho_p(real const rho, real const p) const
+    {
+      return std::sqrt(m_gamma*p/rho);
+    }
 };
 
 struct State
