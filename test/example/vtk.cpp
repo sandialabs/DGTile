@@ -74,16 +74,69 @@ dgt::vtk::VtkView<real> get_variable(
   return var;
 }
 
-static constexpr int CELL = basis_locations::CELL;
+static constexpr int CELL_LOC = basis_locations::CELL;
 
 struct density
 {
-  DGT_METHOD inline real operator()(
-      Data const& d,
-      int const cell,
-      int const pt) const
+  DGT_METHOD inline real operator()(Data const& d, int const cell, int const pt) const
   {
-    return eval(d.U, d.block, cell, DENS, d.B, CELL, pt);
+    return eval(d.U, d.block, cell, DENS, d.B, CELL_LOC, pt);
+  }
+};
+
+struct momentum
+{
+  DGT_METHOD inline Vec3<real> operator()(Data const& d, int const cell, int const pt) const
+  {
+    return eval_vec3(d.U, d.block, cell, MMTM, d.B, CELL_LOC, pt);
+  }
+};
+
+struct total_energy
+{
+  DGT_METHOD inline real operator()(Data const& d, int const cell, int const pt) const
+  {
+    return eval(d.U, d.block, cell, ENER, d.B, CELL_LOC, pt);
+  }
+};
+
+struct velocity
+{
+  density f_rho;
+  momentum f_mmtm;
+  DGT_METHOD inline Vec3<real> operator()(Data const& d, int const cell, int const pt) const
+  {
+    real const rho = f_rho(d, cell, pt);
+    Vec3<real> const mmtm = f_mmtm(d, cell, pt);
+    return mmtm / rho;
+  }
+};
+
+struct internal_energy
+{
+  density f_rho;
+  velocity f_v;
+  total_energy f_En;
+  DGT_METHOD inline real operator()(Data const& d, int const cell, int const pt) const
+  {
+    real const rho = f_rho(d, cell, pt);
+    real const En = f_En(d, cell, pt);
+    Vec3<real> const v = f_v(d, cell, pt);
+    real const half_v2 = 0.5*dot(v,v);
+    return En/rho - half_v2;
+  }
+};
+
+struct pressure
+{
+  density f_rho;
+  internal_energy f_e;
+  DGT_METHOD inline real operator()(Data const& d, int const cell, int const pt) const
+  {
+    real const rho = f_rho(d, cell, pt);
+    real const e = f_e(d, cell, pt);
+    real const p = d.eos.p_from_rho_e(rho, e);
+    return p;
   }
 };
 
@@ -95,14 +148,21 @@ static void write_mesh(
   Mesh const& mesh = state.mesh;
   int const nblocks = mesh.num_owned_blocks();
   density f_rho;
+  momentum f_mmtm;
+  total_energy f_En;
+  internal_energy f_e;
+  pressure f_p;
+  velocity f_v;
   for (int block = 0; block < nblocks; ++block) {
     std::stringstream stream;
     std::filesystem::path const block_path = path / fmt::format("{}.vtr", block);
     dgt::vtk::write_vtr_start(stream, block, mesh, state.time, state.step);
-
-    // TODO debug this
-    dgt::vtk::write_vtr_field(stream, "rho", get_variable(f_rho, state, block, 1, soln_idx));
-
+    dgt::vtk::write_vtr_field(stream, "density", get_variable(f_rho, state, block, 1, soln_idx));
+    dgt::vtk::write_vtr_field(stream, "momentum", get_variable(f_mmtm, state, block, DIMENSIONS, soln_idx));
+    dgt::vtk::write_vtr_field(stream, "total_energy", get_variable(f_En, state, block, 1, soln_idx));
+    dgt::vtk::write_vtr_field(stream, "internal_energy", get_variable(f_e, state, block, DIMENSIONS, soln_idx));
+    dgt::vtk::write_vtr_field(stream, "pressure", get_variable(f_p, state, block, DIMENSIONS, soln_idx));
+    dgt::vtk::write_vtr_field(stream, "velocity", get_variable(f_v, state, block, DIMENSIONS, soln_idx));
     dgt::vtk::write_vtr_end(stream);
     dgt::write_stream(block_path, stream);
   }
@@ -112,9 +172,6 @@ static void write_mesh(
     dgt::vtk::write_vtm(stream, "", mesh.num_total_blocks());
     dgt::write_stream(vtm_path, stream);
   }
-
-
-  (void)soln_idx;
 }
 
 void write_out(Input const& in, State const& state, int soln_idx)

@@ -255,10 +255,44 @@ DGT_METHOD inline real eval(
     int const eq,
     BasisT const& B,
     int const location,
-    int const pt) {
+    int const pt)
+{
   real val = U[block](cell, eq, 0) * B.modes[location].phis(pt, 0);
   for (int mode = 1; mode < B.num_modes; ++mode) {
     val += U[block](cell, eq, mode) * B.modes[location].phis(pt, mode);
+  }
+  return val;
+}
+
+template <class ModalT, class BasisT>
+DGT_METHOD inline Vec3<real> eval_vec3(
+    ModalT const U,
+    int const block,
+    int const cell,
+    int const eq,
+    BasisT const& B,
+    int const location,
+    int const pt)
+{
+  Vec3<real> val;
+  for (int axis = 0 ; axis < 3; ++axis) {
+    val[axis] = eval(U, block, cell, eq + axis, B, location, pt);
+  }
+  return val;
+}
+
+template <int N, class ModalT, class BasisT>
+DGT_METHOD inline Vec<real, N> eval(
+    ModalT const U,
+    int const block,
+    int const cell,
+    BasisT const& B,
+    int const location,
+    int const pt)
+{
+  Vec<real, N> val;
+  for (int eq = 0; eq < N; ++eq) {
+    val[eq] = eval(U, block, cell, eq, B, location, pt);
   }
   return val;
 }

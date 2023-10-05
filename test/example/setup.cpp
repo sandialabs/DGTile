@@ -41,15 +41,15 @@ static void apply_initial_conditions(State& state, Input const& in)
         Vec3<real> const mmtm = rho * v;
         real const e = eos.e_from_rho_p(rho, p);
         real const half_v2 = 0.5 * dot(v, v);
-        real const En = rho * e + half_v2;
+        real const En = rho*e + rho*half_v2;
         for (int mode = 0; mode < B.num_modes; ++mode) {
           real const phi = B.modes[CELL].phis(pt, mode);
           real const M_inv = 1. / B.mass(mode);
           U_host(cell, DENS, mode) += rho * phi * wt * M_inv;
-          U_host(cell, ENER, mode) += En * phi * wt * M_inv;
           U_host(cell, MMTM + X, mode) += mmtm.x() * phi * wt * M_inv;
           U_host(cell, MMTM + Y, mode) += mmtm.x() * phi * wt * M_inv;
           U_host(cell, MMTM + Z, mode) += mmtm.x() * phi * wt * M_inv;
+          U_host(cell, ENER, mode) += En * phi * wt * M_inv;
         }
       }
     };
