@@ -7,7 +7,7 @@
 
 DGTile is a C++17 adaptive mesh library meant to support explicit
 discontinuous Galerkin finite element applications on high performance
-computing machines.
+computers.
 
 ## Dependencies
 
