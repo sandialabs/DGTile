@@ -328,6 +328,16 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_Z_3D)
   EXPECT_EQ(adjacencies[ID(0)][1].ijk_offset, Vec3<std::int8_t>(0,0, 1));
 }
 
+TEST(tree_uniform, get_adjacencies_single_block_periodic_XYZ_3D)
+{
+  int const dim = 3;
+  Leaves const leaves = create(dim, {1,1,1});
+  Periodic const periodic(true, true, true);
+  Point const base_pt = get_base_point(dim, leaves);
+  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
+  EXPECT_EQ(adjacencies.size(), 26);
+}
+
 TEST(tree_uniform, write_vtu_failure)
 {
   int const dim = 3;

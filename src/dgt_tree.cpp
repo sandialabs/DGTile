@@ -7,13 +7,6 @@
 namespace dgt {
 namespace tree {
 
-static bool operator==(Point const& a, Point const& b)
-{
-  return
-    (a.level == b.level) &&
-    (a.ijk == b.ijk);
-}
-
 ID get_level_offset(int const dim, int const level)
 {
   ID const num = (ID(1) << (dim * level)) - 1;
@@ -261,14 +254,9 @@ static Point make_periodic(
     Vec3<int> const& offset,
     Box3<int> const& bounds)
 {
-  if (periodic == Vec3<bool>::zero()) return pt;
   Point result = pt;
   for (int axis = 0; axis < dim; ++axis) {
-    if (!periodic[axis]) {
-      if (pt.ijk[axis] < bounds.lower()[axis]) return pt;
-      if (pt.ijk[axis] > bounds.upper()[axis]) return pt;
-      continue;
-    }
+    if (!periodic[axis]) continue;
     if (offset[axis] == -1) result.ijk[axis] = bounds.upper()[axis];
     if (offset[axis] ==  1) result.ijk[axis] = bounds.lower()[axis];
   }
@@ -347,14 +335,15 @@ static AdjImpl get_adj(
   Point const pt = get_point(dim, global_id);
   Box3<int> const bounds = get_grid_bounds(pt.level, base_pt);
   Subgrid3 const grid = dimensionalize(dim, offset_grid);
+  bool const skip_periodic = (periodic == Vec3<bool>::zero());
   auto functor = [&] (Vec3<int> const& offset) {
     if (offset == Vec3<int>::zero()) return;
     Point adj_pt(pt.level, pt.ijk + offset);
     if (!is_in(dim, adj_pt, bounds)) {
-      Point const pt = make_periodic(adj_pt, dim, periodic, offset, bounds);
-      bool const not_periodic = (pt == adj_pt);
-      if (not_periodic) return;
-      else adj_pt = pt;
+      if (skip_periodic) return;
+      Point const ppt = make_periodic(adj_pt, dim, periodic, offset, bounds);
+      if (!is_in(dim, ppt, bounds)) return;
+      else adj_pt = ppt;
     }
     ID const adj_id = get_global_id(dim, adj_pt);
     if (is_leaf(adj_id, leaves)) {
