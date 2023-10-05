@@ -47,8 +47,8 @@ static void apply_initial_conditions(State& state, Input const& in)
           real const M_inv = 1. / B.mass(mode);
           U_host(cell, DENS, mode) += rho * phi * wt * M_inv;
           U_host(cell, MMTM + X, mode) += mmtm.x() * phi * wt * M_inv;
-          U_host(cell, MMTM + Y, mode) += mmtm.x() * phi * wt * M_inv;
-          U_host(cell, MMTM + Z, mode) += mmtm.x() * phi * wt * M_inv;
+          U_host(cell, MMTM + Y, mode) += mmtm.y() * phi * wt * M_inv;
+          U_host(cell, MMTM + Z, mode) += mmtm.z() * phi * wt * M_inv;
           U_host(cell, ENER, mode) += En * phi * wt * M_inv;
         }
       }

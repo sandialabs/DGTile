@@ -32,7 +32,7 @@ input = {
       return 2.
     end,
     velocity = function(x,y,z)
-      return 1.,1.,1.
+      return 1.,1.,0.
     end
   },
 

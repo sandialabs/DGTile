@@ -135,8 +135,7 @@ struct pressure
   {
     real const rho = f_rho(d, cell, pt);
     real const e = f_e(d, cell, pt);
-    real const p = d.eos.p_from_rho_e(rho, e);
-    return p;
+    return d.eos.p_from_rho_e(rho, e);
   }
 };
 
@@ -160,8 +159,8 @@ static void write_mesh(
     dgt::vtk::write_vtr_field(stream, "density", get_variable(f_rho, state, block, 1, soln_idx));
     dgt::vtk::write_vtr_field(stream, "momentum", get_variable(f_mmtm, state, block, DIMENSIONS, soln_idx));
     dgt::vtk::write_vtr_field(stream, "total_energy", get_variable(f_En, state, block, 1, soln_idx));
-    dgt::vtk::write_vtr_field(stream, "internal_energy", get_variable(f_e, state, block, DIMENSIONS, soln_idx));
-    dgt::vtk::write_vtr_field(stream, "pressure", get_variable(f_p, state, block, DIMENSIONS, soln_idx));
+    dgt::vtk::write_vtr_field(stream, "internal_energy", get_variable(f_e, state, block, 1, soln_idx));
+    dgt::vtk::write_vtr_field(stream, "pressure", get_variable(f_p, state, block, 1, soln_idx));
     dgt::vtk::write_vtr_field(stream, "velocity", get_variable(f_v, state, block, DIMENSIONS, soln_idx));
     dgt::vtk::write_vtr_end(stream);
     dgt::write_stream(block_path, stream);
