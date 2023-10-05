@@ -92,6 +92,51 @@ real compute_dt(Input const& in, State const& state)
   return cfl * dt;
 }
 
+DGT_METHOD inline Vec<real, NEQ> get_hllc_flux(
+    Vec<real, NEQ> const U[DIRECTIONS],
+    Vec<real, NEQ> const F[DIRECTIONS],
+    real const p[DIRECTIONS],
+    real const c[DIRECTIONS],
+    int const axis)
+{
+  real rho[DIRECTIONS], v[DIRECTIONS], s[DIRECTIONS];
+  Vec<real, NEQ> U_star[DIRECTIONS], F_star[DIRECTIONS];
+  for (int dir = 0; dir < DIRECTIONS; ++dir) {
+    rho[dir] = U[dir][DENS];
+    v[dir] = U[dir][MMTM + axis] / rho[dir];
+  }
+  s[LEFT] = std::min(v[LEFT] - c[LEFT], v[RIGHT] - c[RIGHT]);
+  s[RIGHT] = std::max(v[LEFT] + c[LEFT], v[RIGHT] + c[RIGHT]);
+  real const term1 = p[RIGHT] - p[LEFT];
+  real const term2 = rho[LEFT] * (s[LEFT] - v[LEFT]);
+  real const term3 = rho[RIGHT] * (s[RIGHT] - v[RIGHT]);
+  real const num = term1 + v[LEFT] * term2 - v[RIGHT] * term3;
+  real const den = term2 - term3;
+  real s_star = 0.;
+  if (den != 0.) s_star = num / den;
+  else s_star = v[RIGHT] - v[LEFT];
+  int const mpar = MMTM + permute(X, axis);
+  int const mtr1 = MMTM + permute(Y, axis);
+  int const mtr2 = MMTM + permute(Z, axis);
+  for (int dir = 0; dir < DIRECTIONS; ++dir) {
+    real const fac = (s[dir] - v[dir]) / (s[dir] - s_star);
+    U_star[dir][DENS] = fac * U[dir][DENS];
+    U_star[dir][mpar] = fac * U[dir][DENS] * s_star;
+    U_star[dir][mtr1] = fac * U[dir][mtr1];
+    U_star[dir][mtr2] = fac * U[dir][mtr2];
+    U_star[dir][ENER] = fac * (U[dir][ENER] + (s_star - v[dir]) *
+        (rho[dir] * s_star + p[dir]/(s[dir] - v[dir])));
+    for (int eq = 0; eq < NEQ; ++eq) {
+      F_star[dir][eq] = F[dir][eq] + s[dir] * (U_star[dir][eq] - U[dir][eq]);
+    }
+  }
+  if (s[LEFT] > 0.) return F[LEFT];
+  else if ((s[LEFT] <= 0) && (0. < s_star)) return F_star[LEFT];
+  else if ((s_star <= 0.) && (0. <= s[RIGHT])) return F_star[RIGHT];
+  else if (s[RIGHT] < 0.) return F[RIGHT];
+  else abort();
+}
+
 static void compute_fluxes(State& state, int const soln_idx, int const axis)
 {
   Mesh& mesh = state.mesh;
@@ -123,6 +168,7 @@ static void compute_fluxes(State& state, int const soln_idx, int const axis)
         c[dir] = eos.c_from_rho_p(U[dir][DENS], p[dir]);
         F[dir] = get_physical_flux(U[dir], p[dir], axis);
       }
+      F_hat = get_hllc_flux(U, F, p, c, axis);
       for (int eq = 0; eq < NEQ; ++eq) {
         flux[block](face, pt, eq) = F_hat[eq];
       }
