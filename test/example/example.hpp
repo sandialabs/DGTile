@@ -102,5 +102,6 @@ void setup(State& state, mpicpp::comm* comm, Input const& in);
 void write_out(Input const& in, State const& state, int soln_idx);
 real compute_dt(Input const& in, State const& state);
 void compute_fluxes(State& state, int const soln_idx);
+void compute_vol_integral(State& state, int const soln_idx);
 
 }

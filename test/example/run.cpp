@@ -71,6 +71,7 @@ void run(mpicpp::comm* comm, Input const& in)
   state.dt = compute_dt(in, state);
   handle_step_output(in, state);
   compute_fluxes(state, 0);
+  compute_vol_integral(state, 0);
 
 }
 
