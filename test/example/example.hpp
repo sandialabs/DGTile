@@ -104,5 +104,7 @@ real compute_dt(Input const& in, State const& state);
 void compute_fluxes(State& state, int const soln_idx);
 void compute_vol_integral(State& state, int const soln_idx);
 void compute_side_integral(State& state);
+void advance_explicitly(
+    State& state, int const from_idx, int const to_idx, real const dt);
 
 }

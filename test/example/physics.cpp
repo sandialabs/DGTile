@@ -272,4 +272,38 @@ void compute_face_integral(State& state)
   for_each("face_integral", num_blocks, owned_cells, functor);
 }
 
+void advance_explicitly(
+    State& state,
+    int const from_idx,
+    int const to_idx,
+    real const dt)
+{
+  Mesh& mesh = state.mesh;
+  int const num_blocks = mesh.num_owned_blocks();
+  Grid3 const cell_grid = mesh.cell_grid();
+  Subgrid3 const owned_cells = get_owned_cells(cell_grid);
+  auto const B = mesh.basis();
+  auto const block_info = mesh.block_info();
+  auto const R = mesh.get_residual("hydro").get();
+  auto from = mesh.get_solution("hydro", from_idx).get();
+  auto to = mesh.get_solution("hydro", to_idx).get();
+  auto functor = [=] DGT_DEVICE(
+      int const block,
+      Vec3<int> const& cell_ijk)
+  {
+    int const cell = cell_grid.index(cell_ijk);
+    real const detJ = block_info.cell_detJs[block];
+    for (int mode = 0; mode < B.num_modes; ++mode) {
+      real const mass = detJ * B.mass[mode];
+      real const fac = dt / mass;
+      for (int eq = 0; eq < NEQ; ++eq) {
+        real const from_eq = from[block](cell, eq, mode);
+        real const R_eq = R[block](cell, eq, mode);
+        to[block](cell, eq, mode) = from_eq + fac * R_eq;
+      }
+    }
+  };
+  for_each("explicit_advance", num_blocks, owned_cells, functor);
+}
+
 }
