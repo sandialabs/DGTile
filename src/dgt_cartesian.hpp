@@ -73,6 +73,20 @@ DGT_METHOD inline Vec3<real> map_to_physical(
       center.z() + 0.5 * xi.z() * dx.z());
 }
 
+DGT_METHOD inline bool is_cell_ghost(
+    int const dim,
+    Grid3 const& cell_grid,
+    Vec3<int> const& cell_ijk)
+{
+  for (int axis = 0; axis < dim; ++axis) {
+    int const min = 0;
+    int const max = cell_grid.extents()[axis] - 1;
+    if (cell_ijk[axis] == min) return true;
+    if (cell_ijk[axis] == max) return true;
+  }
+  return false;
+}
+
 std::string inline get_axis_name(int const axis)
 {
   return

@@ -244,20 +244,6 @@ static void write_vtr_coordinates(
   stream << "</Coordinates>\n";
 }
 
-static bool is_ghost(
-    int const dim,
-    Vec3<int> const& cell_ijk,
-    Grid3 const& cell_grid)
-{
-  for (int axis = 0; axis < dim; ++axis) {
-    int const min = 0;
-    int const max = cell_grid.extents()[axis]-1;
-    if (cell_ijk[axis] == min) return true;
-    if (cell_ijk[axis] == max) return true;
-  }
-  return false;
-}
-
 static void write_vtr_ghost(
     std::stringstream& stream,
     Mesh const& mesh)
@@ -273,7 +259,8 @@ static void write_vtr_ghost(
   Kokkos::resize(ghost, gviz_cell_grid.size(), 1);
   auto functor = [&] (Vec3<int> const& cell_ijk) {
     std::int8_t val = 0;
-    if (is_ghost(dim, cell_ijk, cell_grid)) val = 1;
+    bool const is = is_cell_ghost(dim, cell_grid, cell_ijk);
+    if (is) val = 1;
     inner_for_each(ginner_grid,
     [&] (Vec3<int> const& inner_ijk) DGT_ALWAYS_INLINE {
       Vec3<int> const viz_cell_ijk = (q*cell_ijk) + inner_ijk;

@@ -60,6 +60,24 @@ TEST(cartesian, map_to_physical)
   EXPECT_EQ(map_to_physical({0,0,0}, {0.,0.,0.}, {1.,1.,1.}, {0.,0.,0.}), Vec3<real>(0.5,0.5,0.5));
 }
 
+TEST(cartesian, is_cell_ghost)
+{
+  EXPECT_EQ(is_cell_ghost(1, {10,0,0}, {0,0,0}), true);
+  EXPECT_EQ(is_cell_ghost(1, {10,0,0}, {3,0,0}), false);
+  EXPECT_EQ(is_cell_ghost(1, {10,0,0}, {9,0,0}), true);
+  EXPECT_EQ(is_cell_ghost(2, {10,10,0}, {0,0,0}), true);
+  EXPECT_EQ(is_cell_ghost(2, {10,10,0}, {0,1,0}), true);
+  EXPECT_EQ(is_cell_ghost(2, {10,10,0}, {9,9,0}), true);
+  EXPECT_EQ(is_cell_ghost(2, {10,10,0}, {9,6,0}), true);
+  EXPECT_EQ(is_cell_ghost(2, {10,10,0}, {1,1,0}), false);
+  EXPECT_EQ(is_cell_ghost(2, {10,10,0}, {5,5,0}), false);
+  EXPECT_EQ(is_cell_ghost(3, {10,10,10}, {0,0,0}), true);
+  EXPECT_EQ(is_cell_ghost(3, {10,10,10}, {0,1,8}), true);
+  EXPECT_EQ(is_cell_ghost(3, {10,10,10}, {9,9,9}), true);
+  EXPECT_EQ(is_cell_ghost(3, {10,10,10}, {1,1,1}), false);
+  EXPECT_EQ(is_cell_ghost(3, {10,10,10}, {3,4,5}), false);
+}
+
 TEST(cartesian, get_axis_name)
 {
   EXPECT_EQ(get_axis_name(X), "X");
