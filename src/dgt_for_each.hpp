@@ -70,20 +70,12 @@ auto inline kokkos_3D_policy(
     Vec3<int> const& first,
     Vec3<int> const& last)
 {
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  return Kokkos::MDRangePolicy<
-    Kokkos::IndexType<int>,
-    Kokkos::Rank<3, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>(
-        {first.x(), first.y(), first.z()},
-        {last.x(), last.y(), last.z()});
-#else
   return Kokkos::MDRangePolicy<
     Kokkos::IndexType<int>,
     Kokkos::Rank<3, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>(
         {first.x(), first.y(), first.z()},
         {last.x(), last.y(), last.z()},
-        {1, 1, 1});
-#endif
+        {64, 1, 1});
 }
 
 auto inline kokkos_4D_policy(
@@ -92,20 +84,12 @@ auto inline kokkos_4D_policy(
     Vec3<int> const& vfirst,
     Vec3<int> const& vlast)
 {
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  return Kokkos::MDRangePolicy<
-    Kokkos::IndexType<int>,
-    Kokkos::Rank<4, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>(
-        {vfirst.x(), vfirst.y(), vfirst.z(), sfirst},
-        {vlast.x(), vlast.y(), vlast.z(), slast});
-#else
   return Kokkos::MDRangePolicy<
     Kokkos::IndexType<int>,
     Kokkos::Rank<4, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>(
         {vfirst.x(), vfirst.y(), vfirst.z(), sfirst},
         {vlast.x(), vlast.y(), vlast.z(), slast},
-        {1, 1, 1, 1});
-#endif
+        {64, 1, 1, 1});
 }
 
 template <class Functor>
