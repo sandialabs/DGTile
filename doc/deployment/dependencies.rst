@@ -15,9 +15,7 @@ fmt
 `{fmt}` is a modern formatting library. It is used in DGTile to format string
 messages.
 
-The `{fmt}` repository is hosted `here`_.
-
-.. _here: https://github.com/fmtlib/fmt
+The `{fmt}` repository is hosted at `<https://github.com/fmtlib/fmt>`_.
 
 To obtain the repository:
 
@@ -57,9 +55,7 @@ googletest
 `GTest` is a test framework. It is used in DGTile to support unit testing
 of all externally facing methods.
 
-The `GTest` repository is hosted `here`_.
-
-.. _here: https://github.com/google/googletest
+The `GTest` repository is hosted at `<https://github.com/google/googletest>`_.
 
 To obtain the repository:
 
