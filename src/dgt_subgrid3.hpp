@@ -53,7 +53,6 @@ class Subgrid3
 
     DGT_METHOD constexpr int size() const
     {
-      if (m_box.upper().volume() == -1) return -1;
       return extents().volume();
     }
 
