@@ -172,20 +172,46 @@ static std::int64_t pack_buffer_method_b(Data& data)
   return t;
 }
 
-static std::int64_t pack_buffer_method_c()
+DGT_METHOD bool contains(
+    Subgrid3 const& s,
+    Vec3<int> const& ijk)
 {
-  return 1;
-#if 0
+  return
+    ijk.x() >= s.lower().x() &&
+    ijk.y() >= s.lower().y() &&
+    ijk.z() >= s.lower().z() &&
+    ijk.x() < s.upper().x() &&
+    ijk.y() < s.upper().y() &&
+    ijk.z() < s.upper().z();
+}
+
+static std::int64_t pack_buffer_method_c(Data& data)
+{
+  auto const t0 = steady_clock::now();
   Grid3 const cgrid = cell_grid;
   Subgrid3 const offgrid = offset_grid;
   int const num_offsets = offgrid.size();
+  View<int**> buffer_offsets = data.buffer_offsets;
+  View<Subgrid3*> owned_cells = data.owned_cells;
+  View<real*> buffer = data.buffer;
   auto f = [=] DGT_DEVICE (int const block, Vec3<int> const& cell_ijk) {
     int const cell = cgrid.index(cell_ijk);
-    for (int offset_idx = 0; offset_idx < offgrid.size(); ++offset_idx){
+    for (int offset_idx = 0; offset_idx < num_offsets; ++offset_idx){
+      int const buffer_offset = buffer_offsets(block, offset_idx);
+      if (buffer_offset == -1) continue;
+      Subgrid3 const cells = owned_cells[offset_idx];
+      if (!contains(cells, cell_ijk)) continue;
+      int const local_idx = cells.index(cell_ijk);
+      int const buffer_idx = buffer_offset + local_idx;
+      buffer(buffer_idx) = data.cell_values(block, cell);
     }
   };
-  for_each("method c", num_blocks, cell_grid, functor);
-#endif
+  for_each("method c", num_blocks, cell_grid, f);
+  Kokkos::fence();
+  auto const t1 = steady_clock::now();
+  auto const t = duration_cast<microseconds>(t1-t0).count();
+  printf(" > method c | %lld us\n", t);
+  return t;
 }
 
 static void do_packing_test()
@@ -201,9 +227,12 @@ static void do_packing_test()
   std::int64_t a(0), b(0), c(0);
   for (int iter = 1; iter <= 20; ++iter) {
     printf("iteration %d\n", iter);
+    Kokkos::deep_copy(data.buffer, 0.);
     a += pack_buffer_method_a(data);
+    Kokkos::deep_copy(data.buffer, 0.);
     b += pack_buffer_method_b(data);
-    c += pack_buffer_method_c();
+    Kokkos::deep_copy(data.buffer, 0.);
+    c += pack_buffer_method_c(data);
   }
   printf(" > total method a | %lld us\n", a);
   printf(" > total method b | %lld us\n", b);
