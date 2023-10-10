@@ -17,8 +17,8 @@ struct Data
 {
   int num_buffer_cells;
   View<real**> cell_values;
-  View<real**> buffer_offsets;
-  HostView<real**> buffer_offsets_h;
+  View<int**> buffer_offsets;
+  HostView<int**> buffer_offsets_h;
   View<Subgrid3*> owned_cells;
   HostView<Subgrid3*> owned_cells_h;
   View<real*> buffer;
@@ -40,6 +40,7 @@ static void setup_buffer_offsets(Data& data)
   data.num_buffer_cells = 0;
   Kokkos::resize(data.buffer_offsets, num_blocks, offset_grid.size());
   Kokkos::resize(data.buffer_offsets_h, num_blocks, offset_grid.size());
+  Kokkos::deep_copy(data.buffer_offsets_h, -1);
   for (int b = 0; b < num_blocks; ++b) {
     auto f = [&] (Vec3<int> const& ijk) {
       if (ijk == Vec3<int>::zero()) return;
@@ -174,6 +175,17 @@ static std::int64_t pack_buffer_method_b(Data& data)
 static std::int64_t pack_buffer_method_c()
 {
   return 1;
+#if 0
+  Grid3 const cgrid = cell_grid;
+  Subgrid3 const offgrid = offset_grid;
+  int const num_offsets = offgrid.size();
+  auto f = [=] DGT_DEVICE (int const block, Vec3<int> const& cell_ijk) {
+    int const cell = cgrid.index(cell_ijk);
+    for (int offset_idx = 0; offset_idx < offgrid.size(); ++offset_idx){
+    }
+  };
+  for_each("method c", num_blocks, cell_grid, functor);
+#endif
 }
 
 static void do_packing_test()
