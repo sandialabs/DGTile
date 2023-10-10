@@ -22,7 +22,7 @@ class Vec3
     using reference = T&;
     using const_reference = T const&;
 
-    DGT_METHOD Vec3() = default;
+    DGT_METHOD Vec3() {}
 
     DGT_VOID_METHOD constexpr Vec3(T const& a, T const& b, T const& c)
       :m_x(a)

@@ -147,9 +147,12 @@ static void pack_buffer_method_b(
 
 static std::int64_t pack_buffer_method_b(Data& data)
 {
-  std::vector<int> weights(offset_grid.size(), 0);
-  for (int i = 0; i < offset_grid.size(); ++i) {
-    weights[i] = data.owned_cells_h[i].size();
+  std::vector<int> weights(offset_grid.size() * num_blocks, 0);
+  for (int b = 0; b < num_blocks; ++b) {
+    for (int i = 0; i < offset_grid.size(); ++i) {
+      int const idx = b*offset_grid.size() + i;
+      weights[idx] = data.owned_cells_h[i].size();
+    }
   }
   auto instances = Kokkos::Experimental::partition_space(
       Kokkos::DefaultExecutionSpace(),
@@ -158,13 +161,14 @@ static std::int64_t pack_buffer_method_b(Data& data)
   for (int b = 0; b < num_blocks; ++b) {
     auto f = [&] (Vec3<int> const& offset_ijk) {
       if (offset_ijk == Vec3<int>::zero()) return;
-      int const idx = offset_grid.index(offset_ijk);
+      int const i = offset_grid.index(offset_ijk);
+      int const idx = b*offset_grid.size() + i;
       pack_buffer_method_b(data, b, offset_ijk, instances[idx]);
     };
     seq_for_each(offset_grid, f);
-    for (int i = 0; i < offset_grid.size(); ++i) {
-      instances[i].fence();
-    }
+  }
+  for (size_t i = 0; i < instances.size(); ++i) {
+    instances[i].fence();
   }
   auto const t1 = steady_clock::now();
   auto const t = duration_cast<microseconds>(t1-t0).count();
@@ -172,7 +176,7 @@ static std::int64_t pack_buffer_method_b(Data& data)
   return t;
 }
 
-DGT_METHOD bool contains(
+DGT_METHOD inline bool contains(
     Subgrid3 const& s,
     Vec3<int> const& ijk)
 {
