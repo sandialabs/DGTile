@@ -27,8 +27,9 @@ struct Data
 static void setup_cell_values(Data& data)
 {
   Kokkos::resize(data.cell_values, num_blocks, cell_grid.size());
+  Grid3 const cgrid = cell_grid;
   auto f = [=] DGT_DEVICE (int const b, Vec3<int> const& ijk) {
-    int const cell = cell_grid.index(ijk);
+    int const cell = cgrid.index(ijk);
     data.cell_values(b, cell) = cell;
   };
   for_each("setup_cell_values", num_blocks, cell_grid, f);
@@ -85,11 +86,12 @@ static void pack_buffer_method_a(
     Data& data,
     int const block,
     Vec3<int> const& offset_ijk) {
+  Grid3 const cgrid = cell_grid;
   int const offset_idx = offset_grid.index(offset_ijk);
   Subgrid3 const owned_cells = data.owned_cells_h(offset_idx);
   int const buffer_offset = data.buffer_offsets_h(block, offset_idx);
   auto f = [=] DGT_DEVICE (Vec3<int> const& cell_ijk) {
-    int const cell = cell_grid.index(cell_ijk);
+    int const cell = cgrid.index(cell_ijk);
     int const local_idx = owned_cells.index(cell_ijk);
     int const buffer_idx = buffer_offset + local_idx;
     data.buffer(buffer_idx) = data.cell_values(block, cell);
@@ -121,12 +123,13 @@ static void pack_buffer_method_b(
     Vec3<int> const& offset_ijk,
     ExecSpace const& exec_space)
 {
+  Grid3 const cgrid = cell_grid;
   int const offset_idx = offset_grid.index(offset_ijk);
   Subgrid3 const owned_cells = data.owned_cells_h(offset_idx);
   int const buffer_offset = data.buffer_offsets_h(block, offset_idx);
   auto f = [=] DGT_DEVICE (int i, int j, int k) {
     Vec3<int> cell_ijk(i,j,k);
-    int const cell = cell_grid.index(cell_ijk);
+    int const cell = cgrid.index(cell_ijk);
     int const local_idx = owned_cells.index(cell_ijk);
     int const buffer_idx = buffer_offset + local_idx;
     data.buffer(buffer_idx) = data.cell_values(block, cell);
@@ -184,9 +187,12 @@ static void do_packing_test()
       cell_grid.extents().y(),
       cell_grid.extents().z());
   std::int64_t a(0), b(0), c(0);
-  a += pack_buffer_method_a(data);
-  b += pack_buffer_method_b(data);
-  c += pack_buffer_method_c();
+  for (int iter = 1; iter <= 20; ++iter) {
+    printf("iteration %d\n", iter);
+    a += pack_buffer_method_a(data);
+    b += pack_buffer_method_b(data);
+    c += pack_buffer_method_c();
+  }
   printf(" > total method a | %lld us\n", a);
   printf(" > total method b | %lld us\n", b);
   printf(" > total method c | %lld us\n", c);
