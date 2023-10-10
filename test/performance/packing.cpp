@@ -8,9 +8,10 @@
 #include <dgt_print.hpp> // debug
 
 using namespace dgt;
+using namespace std::chrono;
 
-static constexpr int num_blocks = 2;
-static constexpr Grid3 cell_grid = {22, 22, 22};
+static int num_blocks;
+static Grid3 cell_grid;
 
 struct Data
 {
@@ -98,7 +99,7 @@ static void pack_buffer_method_a(
 
 static std::int64_t pack_buffer_method_a(Data& data)
 {
-  auto const t0 = std::chrono::steady_clock::now();
+  auto const t0 = steady_clock::now();
   for (int b = 0; b < num_blocks; ++b) {
     auto f = [&] (Vec3<int> const& offset_ijk) {
       if (offset_ijk == Vec3<int>::zero()) return;
@@ -106,11 +107,38 @@ static std::int64_t pack_buffer_method_a(Data& data)
     };
     seq_for_each(offset_grid, f);
   }
-  auto const t1 = std::chrono::steady_clock::now();
-  auto const t = std::chrono::duration_cast<std::chrono::microseconds>(t1-t0).count();
   Kokkos::fence();
+  auto const t1 = steady_clock::now();
+  auto const t = duration_cast<microseconds>(t1-t0).count();
   printf(" > method a | %lld us\n", t);
   return t;
+}
+
+template <class ExecSpace>
+static void pack_buffer_method_b(
+    Data& data,
+    int const block,
+    Vec3<int> const& offset_ijk,
+    ExecSpace const& exec_space)
+{
+  int const offset_idx = offset_grid.index(offset_ijk);
+  Subgrid3 const owned_cells = data.owned_cells_h(offset_idx);
+  int const buffer_offset = data.buffer_offsets_h(block, offset_idx);
+  auto f = [=] DGT_DEVICE (int i, int j, int k) {
+    Vec3<int> cell_ijk(i,j,k);
+    int const cell = cell_grid.index(cell_ijk);
+    int const local_idx = owned_cells.index(cell_ijk);
+    int const buffer_idx = buffer_offset + local_idx;
+    data.buffer(buffer_idx) = data.cell_values(block, cell);
+  };
+  auto policy = Kokkos::MDRangePolicy<
+    Kokkos::IndexType<int>,
+    Kokkos::Rank<3, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>(
+        exec_space,
+        {owned_cells.lower().x(), owned_cells.lower().y(), owned_cells.lower().z()},
+        {owned_cells.upper().x(), owned_cells.upper().y(), owned_cells.upper().z()},
+        {64,1,1});
+  Kokkos::parallel_for("method b", policy, f);
 }
 
 static std::int64_t pack_buffer_method_b(Data& data)
@@ -122,7 +150,22 @@ static std::int64_t pack_buffer_method_b(Data& data)
   auto instances = Kokkos::Experimental::partition_space(
       Kokkos::DefaultExecutionSpace(),
       weights);
-  return 1;
+  auto const t0 = steady_clock::now();
+  for (int b = 0; b < num_blocks; ++b) {
+    auto f = [&] (Vec3<int> const& offset_ijk) {
+      if (offset_ijk == Vec3<int>::zero()) return;
+      int const idx = offset_grid.index(offset_ijk);
+      pack_buffer_method_b(data, b, offset_ijk, instances[idx]);
+    };
+    seq_for_each(offset_grid, f);
+    for (int i = 0; i < offset_grid.size(); ++i) {
+      instances[i].fence();
+    }
+  }
+  auto const t1 = steady_clock::now();
+  auto const t = duration_cast<microseconds>(t1-t0).count();
+  printf(" > method b | %lld us\n", t);
+  return t;
 }
 
 static std::int64_t pack_buffer_method_c()
@@ -151,6 +194,10 @@ static void do_packing_test()
 
 int main(int argc, char** argv) {
   dgt::initialize(argc, argv);
+  int const nblocks = std::stoi(argv[1]);
+  int const ncells = std::stoi(argv[2]);
+  num_blocks = nblocks;
+  cell_grid = Grid3(ncells, ncells, ncells);
   do_packing_test();
   dgt::finalize();
 }
