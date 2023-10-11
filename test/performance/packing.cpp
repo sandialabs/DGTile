@@ -16,11 +16,16 @@ static Grid3 cell_grid;
 struct Data
 {
   int num_buffer_cells;
+  int num_messages;
   View<real**> cell_values;
   View<int**> buffer_offsets;
   HostView<int**> buffer_offsets_h;
+  View<int*> buffer_offsets2;
+  HostView<int*> buffer_offsets2_h;
   View<Subgrid3*> owned_cells;
   HostView<Subgrid3*> owned_cells_h;
+  View<Subgrid3*> owned_cells2;
+  HostView<Subgrid3*> owned_cells2_h;
   View<real*> buffer;
 };
 
@@ -70,6 +75,53 @@ static void setup_owned_cells(Data& data)
   Kokkos::deep_copy(data.owned_cells, data.owned_cells_h);
 }
 
+static void setup_buffer_offsets2(Data& data)
+{
+  // I think we would first count # buffer cells based adjacency logic
+  // w/ considerations for AMR to get the actual # messaes
+  data.num_messages = num_blocks * (offset_grid.size()-1);
+  Kokkos::resize(data.buffer_offsets2, data.num_messages + 1);
+  Kokkos::resize(data.buffer_offsets2_h, data.num_messages + 1);
+  int msg_idx = 0;
+  int num_buffer_cells = 0;
+  for (int b = 0; b < num_blocks; ++b) {
+    auto f = [&] (Vec3<int> const& ijk) {
+      if (ijk == Vec3<int>::zero()) return;
+      Vec3<std::int8_t> ijk_i8(ijk.x(), ijk.y(), ijk.z());
+      Subgrid3 const owned_cells = get_cells(OWNED, cell_grid, ijk_i8);
+      data.buffer_offsets2_h[msg_idx] = num_buffer_cells;
+      data.buffer_offsets2_h[msg_idx+1] = num_buffer_cells + owned_cells.size();
+      num_buffer_cells += owned_cells.size();
+      msg_idx++;
+    };
+    seq_for_each(offset_grid, f);
+  }
+  if (msg_idx != data.num_messages) {
+    std::cout << "msg idx: " << msg_idx << "\n";
+    std::cout << "num_messages: " << data.num_messages << "\n";
+    throw std::runtime_error("setup_buffer_offsets2: whoops\n");
+  }
+  Kokkos::deep_copy(data.buffer_offsets2, data.buffer_offsets2_h);
+}
+
+static void setup_owned_cells2(Data& data)
+{
+  Kokkos::resize(data.owned_cells2, data.num_messages);
+  Kokkos::resize(data.owned_cells2_h, data.num_messages);
+  int msg_idx = 0;
+  for (int b = 0; b < num_blocks; ++b) {
+    auto f = [&] (Vec3<int> const& ijk) {
+      if (ijk == Vec3<int>::zero()) return;
+      Vec3<std::int8_t> ijk_i8(ijk.x(), ijk.y(), ijk.z());
+      Subgrid3 const owned_cells = get_cells(OWNED, cell_grid, ijk_i8);
+      data.owned_cells2_h[msg_idx] = owned_cells;
+      msg_idx++;
+    };
+    seq_for_each(offset_grid, f);
+  }
+  Kokkos::deep_copy(data.owned_cells2, data.owned_cells2_h);
+}
+
 static void setup_buffer(Data& data)
 {
   Kokkos::resize(data.buffer, data.num_buffer_cells);
@@ -79,7 +131,9 @@ static void setup_data(Data& data)
 {
   setup_cell_values(data);
   setup_buffer_offsets(data);
+  setup_buffer_offsets2(data);
   setup_owned_cells(data);
+  setup_owned_cells2(data);
   setup_buffer(data);
 }
 
@@ -91,7 +145,7 @@ static void pack_buffer_method_a(
   int const offset_idx = offset_grid.index(offset_ijk);
   Subgrid3 const owned_cells = data.owned_cells_h(offset_idx);
   int const buffer_offset = data.buffer_offsets_h(block, offset_idx);
-  auto f = [=] DGT_DEVICE (Vec3<int> const& cell_ijk) {
+  auto f = [=] DGT_DEVICE (Vec3<int> const& cell_ijk) DGT_ALWAYS_INLINE {
     int const cell = cgrid.index(cell_ijk);
     int const local_idx = owned_cells.index(cell_ijk);
     int const buffer_idx = buffer_offset + local_idx;
@@ -128,7 +182,7 @@ static void pack_buffer_method_b(
   int const offset_idx = offset_grid.index(offset_ijk);
   Subgrid3 const owned_cells = data.owned_cells_h(offset_idx);
   int const buffer_offset = data.buffer_offsets_h(block, offset_idx);
-  auto f = [=] DGT_DEVICE (int i, int j, int k) {
+  auto f = [=] DGT_DEVICE (int i, int j, int k) DGT_ALWAYS_INLINE {
     Vec3<int> cell_ijk(i,j,k);
     int const cell = cgrid.index(cell_ijk);
     int const local_idx = owned_cells.index(cell_ijk);
@@ -198,7 +252,9 @@ static std::int64_t pack_buffer_method_c(Data& data)
   View<int**> buffer_offsets = data.buffer_offsets;
   View<Subgrid3*> owned_cells = data.owned_cells;
   View<real*> buffer = data.buffer;
-  auto f = [=] DGT_DEVICE (int const block, Vec3<int> const& cell_ijk) {
+  auto f = [=] DGT_DEVICE (
+      int const block,
+      Vec3<int> const& cell_ijk) DGT_ALWAYS_INLINE {
     int const cell = cgrid.index(cell_ijk);
     for (int offset_idx = 0; offset_idx < num_offsets; ++offset_idx){
       int const buffer_offset = buffer_offsets(block, offset_idx);
@@ -218,6 +274,41 @@ static std::int64_t pack_buffer_method_c(Data& data)
   return t;
 }
 
+// we know offsets are monotonically increasing
+DGT_METHOD inline int binary_search(View<int*> offsets, int const x)
+{
+  int min = 0;
+  int max = offsets.size()-1;
+  while (std::abs(max - min) > 1) {
+    int mid = (max + min) / 2;
+    if (x < offsets[mid]) max = mid;
+    else min = mid;
+  }
+  return min;
+}
+
+static std::int64_t pack_buffer_method_d(Data& data)
+{
+  auto const t0 = steady_clock::now();
+  auto offsets = data.buffer_offsets2;
+  auto owned_cells = data.owned_cells2;
+  auto f = [=] (int const buffer_cell) {
+    int const msg_idx = binary_search(offsets, buffer_cell);
+    Subgrid3 const cells = owned_cells[msg_idx];
+
+
+    std::cout << "buffer_cell: " <<  buffer_cell << " msg_idx: " << msg_idx << "\n";
+
+
+
+  };
+  Kokkos::parallel_for("method d", data.num_buffer_cells, f);
+  auto const t1 = steady_clock::now();
+  auto const t = duration_cast<microseconds>(t1-t0).count();
+  printf(" > method d | %lld us\n", t);
+  return t;
+}
+
 static void do_packing_test()
 {
   Data data;
@@ -228,8 +319,9 @@ static void do_packing_test()
       cell_grid.extents().x(),
       cell_grid.extents().y(),
       cell_grid.extents().z());
-  std::int64_t a(0), b(0), c(0);
-  for (int iter = 1; iter <= 20; ++iter) {
+  printf(" > num buffer cells: %d\n", data.num_buffer_cells);
+  std::int64_t a(0), b(0), c(0), d(0);
+  for (int iter = 1; iter <= 1; ++iter) {
     printf("iteration %d\n", iter);
     Kokkos::deep_copy(data.buffer, 0.);
     a += pack_buffer_method_a(data);
@@ -237,10 +329,13 @@ static void do_packing_test()
     b += pack_buffer_method_b(data);
     Kokkos::deep_copy(data.buffer, 0.);
     c += pack_buffer_method_c(data);
+    Kokkos::deep_copy(data.buffer, 0.);
+    d += pack_buffer_method_d(data);
   }
   printf(" > total method a | %lld us\n", a);
   printf(" > total method b | %lld us\n", b);
   printf(" > total method c | %lld us\n", c);
+  printf(" > total method d | %lld us\n", d);
 }
 
 int main(int argc, char** argv) {
