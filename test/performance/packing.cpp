@@ -152,7 +152,6 @@ static std::int64_t pack_values_method_b(Data& data)
   Kokkos::fence();
   auto const t1 = steady_clock::now();
   auto const t = duration_cast<microseconds>(t1-t0).count();
-  printf(" > method c | %lld us\n", t);
   return t;
 }
 
