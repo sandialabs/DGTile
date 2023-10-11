@@ -135,7 +135,7 @@ DGT_METHOD inline Vec<real, NEQ> get_hllc_flux(
   else if ((s[LEFT] <= 0) && (0. < s_star)) return F_star[LEFT];
   else if ((s_star <= 0.) && (0. <= s[RIGHT])) return F_star[RIGHT];
   else if (s[RIGHT] < 0.) return F[RIGHT];
-  else abort();
+  else return Vec<real, NEQ>::zero();
 }
 
 static void compute_fluxes(State& state, int const soln_idx, int const axis)
