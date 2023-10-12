@@ -101,7 +101,7 @@ class Field {
 
 };
 
-struct SolutionField
+struct ModalField
 {
   std::string name = "";
   std::vector<Field<real***>> solution;
