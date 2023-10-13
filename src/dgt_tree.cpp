@@ -361,6 +361,7 @@ static AdjImpl get_adj(
       }
       if (is_coarse_to_fine) {
         for (ID const fine_adj_id : fine_adj_ids) {
+          //TODO: maybe here I need to transfer the offset to the 4x4x4 grid?
           result.adjacent.push_back({fine_adj_id, 1, toi8(offset)});
         }
       }

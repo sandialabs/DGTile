@@ -44,8 +44,6 @@ class Mesh
     void set_periodic(Vec3<bool> const& periodic);
     void set_basis(int const p, int const q, bool const tensor);
 
-    void verify();
-
     void init(Grid3 const& block_grid);
 
     void add_modal(
@@ -85,6 +83,10 @@ class Mesh
     Field<real***> const& get_residual(std::string const& name) const;
 
     void print_stats() const;
+
+  private:
+
+    void ensure_set();
 
 };
 

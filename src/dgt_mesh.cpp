@@ -39,6 +39,14 @@ static void verify_dimensions(Grid3 const& cell_grid, Basis<View> const& basis)
   }
 }
 
+void Mesh::ensure_set()
+{
+  verify_comm(m_comm);
+  verify_cell_grid(m_cell_grid);
+  verify_basis(m_basis);
+  verify_dimensions(m_cell_grid, m_basis);
+}
+
 void Mesh::set_comm(mpicpp::comm* comm)
 {
   m_comm = comm;
@@ -84,17 +92,9 @@ static tree::OwnedLeaves get_owned_leaves(
   return std::vector<tree::ID>(begin, end);
 }
 
-void Mesh::verify()
-{
-  verify_comm(m_comm);
-  verify_cell_grid(m_cell_grid);
-  verify_basis(m_basis);
-  verify_dimensions(m_cell_grid, m_basis);
-}
-
 void Mesh::init(Grid3 const& block_grid)
 {
-  verify();
+  ensure_set();
   int const dim = infer_dimension(m_cell_grid);
   m_leaves = tree::create(dim, block_grid);
   m_zleaves = tree::order(dim, m_leaves);
@@ -123,7 +123,7 @@ void Mesh::add_modal(
     int const ncomps,
     bool const with_flux)
 {
-  verify();
+  ensure_set();
   if (modal_index(m_modal, name) >= 0) {
     std::string const msg = fmt::format(
         "dgt::Mesh::add_modal -> field {} already exists", name);

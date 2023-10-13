@@ -101,6 +101,7 @@ Subgrid3 get_coarse_to_fine_cells(
     Vec3<int> const& child_ijk,
     Vec3<std::int8_t> const& ijk_offset)
 {
+  //TODO: modify to infer child from 4x4x4 grid
   int const dim = infer_dim(cell_grid);
   Vec3<int> const ncells = cell_grid.extents();
   Subgrid3 s = get_cells(ownership, cell_grid, ijk_offset);
