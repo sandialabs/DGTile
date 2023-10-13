@@ -361,8 +361,10 @@ static AdjImpl get_adj(
       }
       if (is_coarse_to_fine) {
         for (ID const fine_adj_id : fine_adj_ids) {
-          //TODO: maybe here I need to transfer the offset to the 4x4x4 grid?
-          result.adjacent.push_back({fine_adj_id, 1, toi8(offset)});
+          Point const fine_pt = get_fine_point(dim, pt, Vec3<int>::zero());
+          Point const fine_adj_pt = get_point(dim, fine_adj_id);
+          Vec3<int> const fine_offset = fine_adj_pt.ijk - fine_pt.ijk;
+          result.adjacent.push_back({fine_adj_id, 1, toi8(fine_offset)});
         }
       }
       if (needs_refinement) {

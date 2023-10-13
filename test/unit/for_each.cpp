@@ -3,8 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include <dgt_print.hpp> // debug
-
 using namespace dgt;
 
 TEST(for_each, sequenced_invalid_grid)

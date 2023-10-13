@@ -1,8 +1,6 @@
 #include <dgt_cartesian.hpp>
 #include <dgt_ghosting.hpp>
 
-#include <dgt_print.hpp> // debug
-
 namespace dgt {
 namespace ghosting {
 
@@ -40,10 +38,7 @@ void PackData::build(
       } else if (adj.level_offset == -1) {
         subgrid = get_fine_to_coarse_cells(OWNED, cell_grid, adj.ijk_offset);
       } else if (adj.level_offset == 1) {
-        //TODO: modify to 4x4x4 grid
-        Vec3<int> const child_ijk = Vec3<int>::zero();
-        subgrid = get_coarse_to_fine_cells(
-            OWNED, cell_grid, child_ijk, adj.ijk_offset);
+        subgrid = get_coarse_to_fine_cells(OWNED, cell_grid, adj.ijk_offset);
       } else {
         throw std::runtime_error("PackData::build - invalid adjacencies");
       }

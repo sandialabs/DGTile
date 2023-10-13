@@ -254,33 +254,38 @@ TEST(cartesian, get_fine_to_coarse_cells_owned_2D)
 
 //TODO: get_fine_to_coarse_cells_owned_3D
 
-TEST(cartesian, get_coarse_to_fine_cells_ghost_1D)
-{
-  Grid3 const g(8,0,0);
-  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,0,0}, {-1,0,0}), Subgrid3({0,0,0}, {1,0,0}));
-  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {0,0,0}, { 1,0,0}), Subgrid3({7,0,0}, {8,0,0}));
-}
-
 TEST(cartesian, get_coarse_to_fine_cells_ghost_2D)
 {
   Grid3 const g(8,8,0);
-  // XMIN face for the two children near it
-  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,0,0}, {-1,0,0}), Subgrid3({0,1,0}, {1,4,0}));
-  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,1,0}, {-1,0,0}), Subgrid3({0,4,0}, {1,7,0}));
-  //TODO: fill this in
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {-1,-1,0}), Subgrid3({0,0,0}, {1,1,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, { 0,-1,0}), Subgrid3({1,0,0}, {4,1,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, { 1,-1,0}), Subgrid3({4,0,0}, {7,1,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, { 2,-1,0}), Subgrid3({7,0,0}, {8,1,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {-1, 0,0}), Subgrid3({0,1,0}, {1,4,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, { 2, 0,0}), Subgrid3({7,1,0}, {8,4,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {-1, 1,0}), Subgrid3({0,4,0}, {1,7,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, { 2, 1,0}), Subgrid3({7,4,0}, {8,7,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {-1, 2,0}), Subgrid3({0,7,0}, {1,8,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, { 0, 2,0}), Subgrid3({1,7,0}, {4,8,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, { 1, 2,0}), Subgrid3({4,7,0}, {7,8,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, { 2, 2,0}), Subgrid3({7,7,0}, {8,8,0}));
 }
 
-TEST(cartesian, get_coarse_to_fine_cells_ghost_3D)
+TEST(cartesian, get_coarse_to_fine_cells_owned_2D)
 {
-  Grid3 const g(8,8,8);
-  // XMIN face for the four children near it
-  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,0,0}, {-1,0,0}), Subgrid3({0,1,1}, {1,4,4}));
-  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,1,0}, {-1,0,0}), Subgrid3({0,4,1}, {1,7,4}));
-  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,0,1}, {-1,0,0}), Subgrid3({0,1,4}, {1,4,7}));
-  EXPECT_EQ(get_coarse_to_fine_cells(GHOST, g, {1,1,1}, {-1,0,0}), Subgrid3({0,4,4}, {1,7,7}));
-  //TODO: fill this in
+  Grid3 const g(8,8,0);
+  EXPECT_EQ(get_coarse_to_fine_cells(OWNED, g, {-1,-1,0}), Subgrid3({1,1,0}, {2,2,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(OWNED, g, { 0,-1,0}), Subgrid3({1,1,0}, {4,2,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(OWNED, g, { 1,-1,0}), Subgrid3({4,1,0}, {7,2,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(OWNED, g, { 2,-1,0}), Subgrid3({6,1,0}, {7,2,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(OWNED, g, {-1, 0,0}), Subgrid3({1,1,0}, {2,4,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(OWNED, g, { 2, 0,0}), Subgrid3({6,1,0}, {7,4,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(OWNED, g, {-1, 1,0}), Subgrid3({1,4,0}, {2,7,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(OWNED, g, { 2, 1,0}), Subgrid3({6,4,0}, {7,7,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(OWNED, g, {-1, 2,0}), Subgrid3({1,6,0}, {2,7,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(OWNED, g, { 0, 2,0}), Subgrid3({1,6,0}, {4,7,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(OWNED, g, { 1, 2,0}), Subgrid3({4,6,0}, {7,7,0}));
+  EXPECT_EQ(get_coarse_to_fine_cells(OWNED, g, { 2, 2,0}), Subgrid3({6,6,0}, {7,7,0}));
 }
 
-//TODO: get_coarse_to_fine_cells_owned_1D
-//TODO: get_coarse_to_fine_cells_owned_2D
-//TODO: get_coarse_to_fine_cells_owned_3D
+//TODO: get_coarse_to_fine_cells_[owned/ghost]_[1/3]D

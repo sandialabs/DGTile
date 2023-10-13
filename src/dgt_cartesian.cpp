@@ -95,22 +95,31 @@ Subgrid3 get_fine_to_coarse_cells(
   return s;
 }
 
+static Vec3<std::int8_t> get_standard_offset(
+    int const dim,
+    Vec3<std::int8_t> const& fine_offset)
+{
+  Vec3<std::int8_t> result = fine_offset;
+  for (int axis = 0; axis < dim; ++axis) {
+    if (result[axis] == 1) result[axis] = 0;
+    if (result[axis] == 2) result[axis] = 1;
+  }
+  return result;
+}
+
 Subgrid3 get_coarse_to_fine_cells(
     int const ownership,
     Grid3 const& cell_grid,
-    Vec3<int> const& child_ijk,
     Vec3<std::int8_t> const& ijk_offset)
 {
-  //TODO: modify to infer child from 4x4x4 grid
   int const dim = infer_dim(cell_grid);
   Vec3<int> const ncells = cell_grid.extents();
-  Subgrid3 s = get_cells(ownership, cell_grid, ijk_offset);
+  Vec3<std::int8_t> const ijk = get_standard_offset(dim, ijk_offset);
+  Subgrid3 s = get_cells(ownership, cell_grid, ijk);
   for (int axis = 0; axis < dim; ++axis) {
-    if (ijk_offset[axis] == 0) {
-      int const axis_half_cells = ncells[axis] / 2;
-      if (child_ijk[axis] == 0) s.upper()[axis] = axis_half_cells;
-      if (child_ijk[axis] == 1) s.lower()[axis] = axis_half_cells;
-    }
+    int const axis_half_cells = ncells[axis] / 2;
+    if (ijk_offset[axis] == 0) s.upper()[axis] = axis_half_cells;
+    if (ijk_offset[axis] == 1) s.lower()[axis] = axis_half_cells;
   }
   return s;
 }

@@ -5,8 +5,6 @@
 #include <dgt_initialize.hpp>
 #include <dgt_view.hpp>
 
-#include <dgt_print.hpp> // debug
-
 using namespace dgt;
 using namespace std::chrono;
 
