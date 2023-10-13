@@ -4,6 +4,7 @@
 
 #include <mpicpp.hpp>
 
+#include "dgt_field.hpp"
 #include "dgt_subgrid3.hpp"
 #include "dgt_tree.hpp"
 #include "dgt_view.hpp"
@@ -11,7 +12,7 @@
 namespace dgt {
 namespace ghosting {
 
-class PackData
+class Packing
 {
 
   private:
@@ -24,11 +25,11 @@ class PackData
     DualView<int*> m_blocks;
     DualView<int*> m_offsets;
     DualView<Subgrid3*> m_subgrids;
-    HostPinnedView<real*> m_values;
+    HostPinnedRightView<real***> m_values;
 
   public:
 
-    PackData() = default;
+    Packing() = default;
 
     void build(
         Grid3 const& cell_grid,

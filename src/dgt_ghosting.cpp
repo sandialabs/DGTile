@@ -15,7 +15,7 @@ static int count_messages(
   return num_messages;
 }
 
-void PackData::build(
+void Packing::build(
     Grid3 const& cell_grid,
     tree::Adjacencies const& adjs,
     tree::OwnedLeaves const& leaves,
@@ -23,9 +23,9 @@ void PackData::build(
     int const num_modes)
 {
   m_num_messages = count_messages(adjs, leaves);
-  m_blocks = DualView<int*>("Pack::blocks", m_num_messages);
-  m_offsets = DualView<int*>("Pack::offsets", m_num_messages);
-  m_subgrids = DualView<Subgrid3*>("Pack::subgrids", m_num_messages);
+  m_blocks = DualView<int*>("Packing::blocks", m_num_messages);
+  m_offsets = DualView<int*>("Packing::offsets", m_num_messages);
+  m_subgrids = DualView<Subgrid3*>("Packing::subgrids", m_num_messages);
   m_num_cells = 0;
   int msg_idx = 0;
   int local_block_idx = 0;
@@ -40,7 +40,7 @@ void PackData::build(
       } else if (adj.level_offset == 1) {
         subgrid = get_coarse_to_fine_cells(OWNED, cell_grid, adj.ijk_offset);
       } else {
-        throw std::runtime_error("PackData::build - invalid adjacencies");
+        throw std::runtime_error("Packing::build - invalid adjacencies");
       }
       m_blocks.h_view[msg_idx] = local_block_idx;
       m_subgrids.h_view[msg_idx] = subgrid;
@@ -50,6 +50,12 @@ void PackData::build(
     }
     local_block_idx++;
   }
+  m_values = HostPinnedRightView<real***>(
+      "Packing::values", m_num_cells, num_max_eqs, num_modes);
+  Kokkos::deep_copy(m_blocks.d_view, m_blocks.h_view);
+  Kokkos::deep_copy(m_offsets.d_view, m_offsets.h_view);
+  Kokkos::deep_copy(m_subgrids.d_view, m_subgrids.d_view);
+  Kokkos::fence();
 }
 
 }

@@ -38,7 +38,7 @@ static OwnedLeaves get_owned_leaves(
   return std::vector<ID>(begin, end);
 }
 
-TEST(ghosting, DEBUG)
+TEST(ghosting, packing)
 {
   mpicpp::comm comm = mpicpp::comm::world();
   int const dim = 2;
@@ -49,6 +49,6 @@ TEST(ghosting, DEBUG)
   Point const base_pt = get_base_point(dim, z_leaves);
   Adjacencies const adjs = get_adjacencies(dim, leaves, base_pt, periodic);
   Grid3 const cell_grid(6,6,0);
-  ghosting::PackData data;
-  data.build(cell_grid, adjs, owned_leaves, 5, 4);
+  ghosting::Packing packing;
+  packing.build(cell_grid, adjs, owned_leaves, 5, 4);
 }
