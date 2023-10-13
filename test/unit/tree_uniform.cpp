@@ -335,7 +335,7 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_XYZ_3D)
   Periodic const periodic(true, true, true);
   Point const base_pt = get_base_point(dim, leaves);
   Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
-  EXPECT_EQ(adjacencies.size(), 26);
+  EXPECT_EQ(adjacencies.at(0).size(), 26);
 }
 
 TEST(tree_uniform, write_vtu_failure)
