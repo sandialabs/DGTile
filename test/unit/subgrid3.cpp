@@ -59,6 +59,19 @@ TEST(subgrid3, size)
   EXPECT_EQ(generalize(1, Subgrid3({0,0,0}, {5,0,0})).size(), 5);
 }
 
+TEST(subgrid3, index)
+{
+  EXPECT_EQ(Subgrid3({1,1,1}, {3,3,3}).index({1,1,1}), 0);
+  EXPECT_EQ(Subgrid3({1,1,1}, {3,3,3}).index({2,1,1}), 1);
+  EXPECT_EQ(Subgrid3({1,1,1}, {3,3,3}).index({1,2,1}), 2);
+}
+
+TEST(subgrid3, contains)
+{
+  EXPECT_EQ(Subgrid3({1,1,1}, {3,3,3}).contains({2,1,1}), true);
+  EXPECT_EQ(Subgrid3({1,1,1}, {3,3,3}).contains({3,1,1}), false);
+}
+
 TEST(subgrid3, dimensionalize)
 {
   EXPECT_EQ(dimensionalize(3, Subgrid3({1,1,1}, {8,8,8})), Subgrid3({1,1,1}, {8,8,8}));

@@ -61,6 +61,17 @@ class Subgrid3
       return Grid3(extents()).index(ijk - lower());
     }
 
+    DGT_METHOD constexpr bool contains(Vec3<int> const& ijk) const
+    {
+      return
+        ijk.x() >= lower().x() &&
+        ijk.y() >= lower().y() &&
+        ijk.z() >= lower().z() &&
+        ijk.x() < upper().x() &&
+        ijk.y() < upper().y() &&
+        ijk.z() < upper().z();
+    }
+
     DGT_METHOD constexpr bool operator==(Subgrid3 const& other) const
     {
       return m_box == other.m_box;
