@@ -7,21 +7,24 @@
 namespace dgt {
 
 template <class T>
-using View = typename Kokkos::View<T, Kokkos::LayoutLeft>;
+using View = typename Kokkos::View<T>;
 
 template <class T>
-using HostView = typename Kokkos::View<T, Kokkos::LayoutLeft>::HostMirror;
+using HostView = typename Kokkos::View<T>::HostMirror;
 
 #if defined(KOKKOS_ENABLE_CUDA)
 
 template <class T>
 using HostPinnedView = typename Kokkos::View<T,
-      Kokkos::LayoutLeft,
+      Kokkos::CudaHostPinnedSpace>;
+
+template <class T>
+using HostPinnedRightView = typename Kokkos::View<T,
+      Kokkos::LayoutRight,
       Kokkos::CudaHostPinnedSpace>;
 
 template <class T>
 using UnmanagedView = typename Kokkos::View<T,
-      Kokkos::LayoutLeft,
       Kokkos::CudaHostPinnedSpace,
       Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
@@ -29,24 +32,29 @@ using UnmanagedView = typename Kokkos::View<T,
 
 template <class T>
 using HostPinnedView = typename Kokkos::View<T,
-      Kokkos::LayoutLeft,
+      Kokkos::HipHostPinnedSpace>;
+
+template <class T>
+using HostPinnedRightView = typename Kokkos::View<T,
+      Kokkos::LayoutRight,
       Kokkos::HipHostPinnedSpace>;
 
 template <class T>
 using UnmanagedView = typename Kokkos::View<T,
-      Kokkos::LayoutLeft,
       Kokkos::HipHostPinnedSpace,
       Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
 #else
 
 template <class T>
-using HostPinnedView = typename Kokkos::View<T,
-      Kokkos::LayoutLeft>;
+using HostPinnedView = typename Kokkos::View<T>;
+
+template <class T>
+using HostPinnedRightView = typename Kokkos::View<T,
+      Kokkos::LayoutRight>;
 
 template <class T>
 using UnmanagedView = typename Kokkos::View<T,
-      Kokkos::LayoutLeft,
       Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
 #endif
