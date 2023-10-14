@@ -42,6 +42,8 @@ TEST(ghosting, packing)
 {
   mpicpp::comm comm = mpicpp::comm::world();
   int const dim = 2;
+  int const neqs = 5;
+  int const nmodes = 4;
   Vec3<bool> const periodic(false, false, false);
   Leaves const leaves = get_example_refined(dim);
   ZLeaves const z_leaves = order(dim, leaves);
@@ -49,6 +51,9 @@ TEST(ghosting, packing)
   Point const base_pt = get_base_point(dim, z_leaves);
   Adjacencies const adjs = get_adjacencies(dim, leaves, base_pt, periodic);
   Grid3 const cell_grid(6,6,0);
+  Field<real***> U;
   ghosting::Packing packing;
-  packing.build(cell_grid, adjs, owned_leaves, 5, 4);
+  packing.build(cell_grid, adjs, owned_leaves, neqs, nmodes);
+  U.create("U", leaves.size(), cell_grid.size(), neqs, nmodes);
+  packing.pack(U);
 }

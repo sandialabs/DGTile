@@ -22,9 +22,10 @@ class Packing
 
     int m_num_messages = 0;
     int m_num_cells = 0;
-    DualView<int*> m_blocks;
-    DualView<int*> m_offsets;
+    Grid3 m_cell_grid = {0,0,0};
     DualView<Subgrid3*> m_subgrids;
+    DualView<int*> m_cell_offsets;
+    DualView<int*> m_block_offsets;
     HostPinnedRightView<real***> m_values;
 
   public:
@@ -37,6 +38,8 @@ class Packing
         tree::OwnedLeaves const& leaves,
         int const num_max_eqs,
         int const num_modes);
+
+    void pack(Field<real***> const& field);
 
 };
 
