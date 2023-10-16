@@ -30,8 +30,8 @@ struct Point
 struct Adjacency
 {
   ID neighbor = 0;
-  std::int8_t level_offset = -1;
-  Vec3<std::int8_t> ijk_offset = Vec3<std::int8_t>::zero();
+  std::int8_t level_diff = -1;
+  Vec3<std::int8_t> meta_ijk = Vec3<std::int8_t>::zero();
 };
 
 using Adjacent = std::vector<Adjacency>;

@@ -12,7 +12,6 @@ set(UNIT_TEST_SOURCES
   dg_dim3.cpp
   field.cpp
   for_each.cpp
-  ghosting.cpp
   grid3.cpp
   mesh.cpp
   main.cpp

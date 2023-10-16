@@ -251,14 +251,14 @@ static Point make_periodic(
     Point& pt,
     int const dim,
     Periodic const& periodic,
-    Vec3<int> const& offset,
+    Vec3<int> const& meta_ijk,
     Box3<int> const& bounds)
 {
   Point result = pt;
   for (int axis = 0; axis < dim; ++axis) {
     if (!periodic[axis]) continue;
-    if (offset[axis] == -1) result.ijk[axis] = bounds.upper()[axis];
-    if (offset[axis] ==  1) result.ijk[axis] = bounds.lower()[axis];
+    if (meta_ijk[axis] == -1) result.ijk[axis] = bounds.upper()[axis];
+    if (meta_ijk[axis] ==  1) result.ijk[axis] = bounds.lower()[axis];
   }
   return result;
 }
@@ -273,10 +273,10 @@ static Vec3<std::int8_t> toi8(Vec3<int> const& ijk)
 
 static std::vector<Vec3<int>> get_adj_children(
     int const dim,
-    Vec3<int> const& offset)
+    Vec3<int> const& meta_ijk)
 {
   std::vector<Vec3<int>> children;
-  children.push_back(offset);
+  children.push_back(meta_ijk);
   for (int axis = 0; axis < dim; ++axis) {
     std::size_t num_children = children.size();
     for (std::size_t i = 0; i < num_children; ++i) {
@@ -292,9 +292,9 @@ static std::vector<Vec3<int>> get_adj_children(
 static std::vector<ID> get_fine_ids(
     int const dim,
     Point const& adj_pt,
-    Vec3<int> const& offset)
+    Vec3<int> const& meta_ijk)
 {
-  std::vector<Vec3<int>> children = get_adj_children(dim, offset);
+  std::vector<Vec3<int>> children = get_adj_children(dim, meta_ijk);
   std::vector<ID> ids(children.size());
   for (std::size_t i = 0; i < children.size(); ++i) {
     Vec3<int> const child_ijk = children[i];
@@ -307,12 +307,12 @@ static std::vector<ID> get_fine_ids(
 static std::vector<ID> get_finer_ids(
     int const dim,
     std::vector<ID> const& adj_ids,
-    Vec3<int> const& offset)
+    Vec3<int> const& meta_ijk)
 {
   std::vector<ID> finer_ids;
   for (ID const global_id : adj_ids) {
     Point const pt = get_point(dim, global_id);
-    std::vector<ID> const ids = get_fine_ids(dim, pt, offset);
+    std::vector<ID> const ids = get_fine_ids(dim, pt, meta_ijk);
     finer_ids.insert(finer_ids.end(), ids.begin(), ids.end());
   }
   return finer_ids;
@@ -334,37 +334,37 @@ static AdjImpl get_adj(
   AdjImpl result;
   Point const pt = get_point(dim, global_id);
   Box3<int> const bounds = get_grid_bounds(pt.level, base_pt);
-  Subgrid3 const grid = dimensionalize(dim, offset_grid);
+  Subgrid3 const grid = dimensionalize(dim, meta_grid);
   bool const skip_periodic = (periodic == Vec3<bool>::zero());
-  auto functor = [&] (Vec3<int> const& offset) {
-    if (offset == Vec3<int>::zero()) return;
-    Point adj_pt(pt.level, pt.ijk + offset);
+  auto functor = [&] (Vec3<int> const& meta_ijk) {
+    if (meta_ijk == Vec3<int>::zero()) return;
+    Point adj_pt(pt.level, pt.ijk + meta_ijk);
     if (!is_in(dim, adj_pt, bounds)) {
       if (skip_periodic) return;
-      Point const ppt = make_periodic(adj_pt, dim, periodic, offset, bounds);
+      Point const ppt = make_periodic(adj_pt, dim, periodic, meta_ijk, bounds);
       if (!is_in(dim, ppt, bounds)) return;
       else adj_pt = ppt;
     }
     ID const adj_id = get_global_id(dim, adj_pt);
     if (is_leaf(adj_id, leaves)) {
-      result.adjacent.push_back({adj_id, 0, toi8(offset)});
+      result.adjacent.push_back({adj_id, 0, toi8(meta_ijk)});
     } else {
       Point const coarse_adj_pt = get_coarse_point(dim, adj_pt);
       ID const coarse_adj_id = get_global_id(dim, coarse_adj_pt);
-      std::vector<ID> const fine_adj_ids = get_fine_ids(dim, adj_pt, offset);
-      std::vector<ID> const finer_adj_ids = get_finer_ids(dim, fine_adj_ids, offset);
+      std::vector<ID> const fine_adj_ids = get_fine_ids(dim, adj_pt, meta_ijk);
+      std::vector<ID> const finer_adj_ids = get_finer_ids(dim, fine_adj_ids, meta_ijk);
       bool const is_fine_to_coarse = is_leaf(coarse_adj_id, leaves);
       bool const is_coarse_to_fine = are_leaves(fine_adj_ids, leaves);
       bool const needs_refinement = is_leaf_in(finer_adj_ids, leaves);
       if (is_fine_to_coarse) {
-        result.adjacent.push_back({coarse_adj_id, -1, toi8(offset)});
+        result.adjacent.push_back({coarse_adj_id, -1, toi8(meta_ijk)});
       }
       if (is_coarse_to_fine) {
         for (ID const fine_adj_id : fine_adj_ids) {
           Point const fine_pt = get_fine_point(dim, pt, Vec3<int>::zero());
           Point const fine_adj_pt = get_point(dim, fine_adj_id);
-          Vec3<int> const fine_offset = fine_adj_pt.ijk - fine_pt.ijk;
-          result.adjacent.push_back({fine_adj_id, 1, toi8(fine_offset)});
+          Vec3<int> const fine_meta_ijk = fine_adj_pt.ijk - fine_pt.ijk;
+          result.adjacent.push_back({fine_adj_id, 1, toi8(fine_meta_ijk)});
         }
       }
       if (needs_refinement) {

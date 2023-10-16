@@ -40,7 +40,7 @@ static void setup_input_values(Data& data)
 static void setup_messages(Data& data)
 {
   // this would be some separate counting function with AMR
-  data.num_messages = data.num_blocks * (offset_grid.size()-1);
+  data.num_messages = data.num_blocks * (meta_grid.size()-1);
   data.num_message_cells = 0;
   Kokkos::resize(data.message_blocks, data.num_messages);
   Kokkos::resize(data.message_blocks_h, data.num_messages);
@@ -60,7 +60,7 @@ static void setup_messages(Data& data)
       data.num_message_cells += owned_cells.size();
       msg_idx++;
     };
-    seq_for_each(offset_grid, f);
+    seq_for_each(meta_grid, f);
   }
   Kokkos::deep_copy(data.message_blocks, data.message_blocks_h);
   Kokkos::deep_copy(data.message_offsets, data.message_offsets_h);
@@ -102,7 +102,7 @@ static std::int64_t pack_values_method_a(Data& data)
       for_each("", owned_cells, f2);
       msg_idx++;
     };
-    seq_for_each(offset_grid, f1);
+    seq_for_each(meta_grid, f1);
   }
   Kokkos::fence();
   auto const t1 = steady_clock::now();
@@ -127,7 +127,7 @@ DGT_METHOD inline bool contains(
 static std::int64_t pack_values_method_b(Data& data)
 {
   auto const t0 = steady_clock::now();
-  int const nmsg_per_block = offset_grid.size()-1;
+  int const nmsg_per_block = meta_grid.size()-1;
   Grid3 const cell_grid = data.cell_grid;
   auto message_offsets = data.message_offsets;
   auto message_subgrids = data.message_subgrids;

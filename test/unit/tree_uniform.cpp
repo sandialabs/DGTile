@@ -245,8 +245,8 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_X_2D)
   EXPECT_EQ(adjacencies[ID(0)].size(), 2);
   EXPECT_EQ(adjacencies[ID(0)][0].neighbor, ID(0));
   EXPECT_EQ(adjacencies[ID(0)][1].neighbor, ID(0));
-  EXPECT_EQ(adjacencies[ID(0)][0].ijk_offset, Vec3<std::int8_t>(-1,0,0));
-  EXPECT_EQ(adjacencies[ID(0)][1].ijk_offset, Vec3<std::int8_t>( 1,0,0));
+  EXPECT_EQ(adjacencies[ID(0)][0].meta_ijk, Vec3<std::int8_t>(-1,0,0));
+  EXPECT_EQ(adjacencies[ID(0)][1].meta_ijk, Vec3<std::int8_t>( 1,0,0));
 }
 
 TEST(tree_uniform, get_adjacencies_single_block_periodic_Y_2D)
@@ -260,8 +260,8 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_Y_2D)
   EXPECT_EQ(adjacencies[ID(0)].size(), 2);
   EXPECT_EQ(adjacencies[ID(0)][0].neighbor, ID(0));
   EXPECT_EQ(adjacencies[ID(0)][1].neighbor, ID(0));
-  EXPECT_EQ(adjacencies[ID(0)][0].ijk_offset, Vec3<std::int8_t>(0,-1,0));
-  EXPECT_EQ(adjacencies[ID(0)][1].ijk_offset, Vec3<std::int8_t>(0, 1,0));
+  EXPECT_EQ(adjacencies[ID(0)][0].meta_ijk, Vec3<std::int8_t>(0,-1,0));
+  EXPECT_EQ(adjacencies[ID(0)][1].meta_ijk, Vec3<std::int8_t>(0, 1,0));
 }
 
 TEST(tree_uniform, get_adjacencies_single_block_periodic_XY_2D)
@@ -298,8 +298,8 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_X_3D)
   Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 2);
-  EXPECT_EQ(adjacencies[ID(0)][0].ijk_offset, Vec3<std::int8_t>(-1, 0,0));
-  EXPECT_EQ(adjacencies[ID(0)][1].ijk_offset, Vec3<std::int8_t>( 1, 0,0));
+  EXPECT_EQ(adjacencies[ID(0)][0].meta_ijk, Vec3<std::int8_t>(-1, 0,0));
+  EXPECT_EQ(adjacencies[ID(0)][1].meta_ijk, Vec3<std::int8_t>( 1, 0,0));
 }
 
 TEST(tree_uniform, get_adjacencies_single_block_periodic_Y_3D)
@@ -311,8 +311,8 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_Y_3D)
   Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 2);
-  EXPECT_EQ(adjacencies[ID(0)][0].ijk_offset, Vec3<std::int8_t>(0,-1,0));
-  EXPECT_EQ(adjacencies[ID(0)][1].ijk_offset, Vec3<std::int8_t>(0, 1,0));
+  EXPECT_EQ(adjacencies[ID(0)][0].meta_ijk, Vec3<std::int8_t>(0,-1,0));
+  EXPECT_EQ(adjacencies[ID(0)][1].meta_ijk, Vec3<std::int8_t>(0, 1,0));
 }
 
 TEST(tree_uniform, get_adjacencies_single_block_periodic_Z_3D)
@@ -324,8 +324,8 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_Z_3D)
   Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 2);
-  EXPECT_EQ(adjacencies[ID(0)][0].ijk_offset, Vec3<std::int8_t>(0,0,-1));
-  EXPECT_EQ(adjacencies[ID(0)][1].ijk_offset, Vec3<std::int8_t>(0,0, 1));
+  EXPECT_EQ(adjacencies[ID(0)][0].meta_ijk, Vec3<std::int8_t>(0,0,-1));
+  EXPECT_EQ(adjacencies[ID(0)][1].meta_ijk, Vec3<std::int8_t>(0,0, 1));
 }
 
 TEST(tree_uniform, get_adjacencies_single_block_periodic_XYZ_3D)
