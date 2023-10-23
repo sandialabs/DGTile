@@ -1,3 +1,13 @@
+\documentclass[border={20pt 20pt 20pt 20pt},preview]{standalone}
+\usepackage{pgfplots}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\pgfplotsset{compat=1.16}
+\usepackage{tikz}
+
+\begin{document}
+
 \begin{figure}[ht!]
 \begin{subfigure}{0.33\textwidth}
 \begin{tikzpicture}[scale=0.5]
@@ -75,6 +85,8 @@
 \end{tikzpicture}
 \caption{Level 2}
 \end{subfigure}
-\caption{Global unique identifiers: $\ID(l,i,j,k)$ for an octree.}
+\caption*{Global unique identifiers: $\text{ID}(l,i,j,k)$ for an octree.}
 \label{fig:tree_global_IDs}
 \end{figure}
+
+\end{document}
