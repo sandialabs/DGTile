@@ -76,7 +76,7 @@ template <class LeavesT>
     Point const& base_pt, Box3<real> const& d);
 
 [[nodiscard]] Adjacencies get_adjacencies(
-    int const dim, Leaves const& leaves,
+    int const dim, ZLeaves const& z_leaves, Leaves const& leaves,
     Point const& base_pt, Periodic const& periodic);
 
 [[nodiscard]] Leaves balance(

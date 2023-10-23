@@ -205,9 +205,10 @@ TEST(tree_uniform, get_adjacencies_single_block_1D)
 {
   int const dim = 1;
   Leaves const leaves = create(dim, {1,0,0});
+  ZLeaves const z_leaves = order(dim, leaves);
   Periodic const periodic(false, false, false);
   Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
+  Adjacencies adjacencies = get_adjacencies(dim, z_leaves, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 0);
 }
@@ -216,9 +217,10 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_X_1D)
 {
   int const dim = 1;
   Leaves const leaves = create(dim, {1,0,0});
+  ZLeaves const z_leaves = order(dim, leaves);
   Periodic const periodic(true, false, false);
   Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
+  Adjacencies adjacencies = get_adjacencies(dim, z_leaves, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 2);
 }
@@ -227,9 +229,10 @@ TEST(tree_uniform, get_adjacencies_single_block_2D)
 {
   int const dim = 2;
   Leaves const leaves = create(dim, {1,1,0});
+  ZLeaves const z_leaves = order(dim, leaves);
   Periodic const periodic(false, false, false);
   Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
+  Adjacencies adjacencies = get_adjacencies(dim, z_leaves, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 0);
 }
@@ -238,9 +241,10 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_X_2D)
 {
   int const dim = 2;
   Leaves const leaves = create(dim, {1,1,0});
+  ZLeaves const z_leaves = order(dim, leaves);
   Periodic const periodic(true, false, false);
   Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
+  Adjacencies adjacencies = get_adjacencies(dim, z_leaves, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 2);
   EXPECT_EQ(adjacencies[ID(0)][0].neighbor, ID(0));
@@ -253,9 +257,10 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_Y_2D)
 {
   int const dim = 2;
   Leaves const leaves = create(dim, {1,1,0});
+  ZLeaves const z_leaves = order(dim, leaves);
   Periodic const periodic(false, true, false);
   Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
+  Adjacencies adjacencies = get_adjacencies(dim, z_leaves, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 2);
   EXPECT_EQ(adjacencies[ID(0)][0].neighbor, ID(0));
@@ -268,9 +273,10 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_XY_2D)
 {
   int const dim = 2;
   Leaves const leaves = create(dim, {1,1,0});
+  ZLeaves const z_leaves = order(dim, leaves);
   Periodic const periodic(true, true, false);
   Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
+  Adjacencies adjacencies = get_adjacencies(dim, z_leaves, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 8);
   for (std::size_t i = 0; i < 8; ++i) {
@@ -282,9 +288,10 @@ TEST(tree_uniform, get_adjacencies_single_block_3D)
 {
   int const dim = 3;
   Leaves const leaves = create(dim, {1,1,1});
+  ZLeaves const z_leaves = order(dim, leaves);
   Periodic const periodic(false, false, false);
   Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
+  Adjacencies adjacencies = get_adjacencies(dim, z_leaves, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 0);
 }
@@ -293,9 +300,10 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_X_3D)
 {
   int const dim = 3;
   Leaves const leaves = create(dim, {1,1,1});
+  ZLeaves const z_leaves = order(dim, leaves);
   Periodic const periodic(true, false, false);
   Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
+  Adjacencies adjacencies = get_adjacencies(dim, z_leaves, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 2);
   EXPECT_EQ(adjacencies[ID(0)][0].meta_ijk, Vec3<std::int8_t>(-1, 0,0));
@@ -306,9 +314,10 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_Y_3D)
 {
   int const dim = 3;
   Leaves const leaves = create(dim, {1,1,1});
+  ZLeaves const z_leaves = order(dim, leaves);
   Periodic const periodic(false, true, false);
   Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
+  Adjacencies adjacencies = get_adjacencies(dim, z_leaves, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 2);
   EXPECT_EQ(adjacencies[ID(0)][0].meta_ijk, Vec3<std::int8_t>(0,-1,0));
@@ -319,9 +328,10 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_Z_3D)
 {
   int const dim = 3;
   Leaves const leaves = create(dim, {1,1,1});
+  ZLeaves const z_leaves = order(dim, leaves);
   Periodic const periodic(false, false, true);
   Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
+  Adjacencies adjacencies = get_adjacencies(dim, z_leaves, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.size(), 1);
   EXPECT_EQ(adjacencies[ID(0)].size(), 2);
   EXPECT_EQ(adjacencies[ID(0)][0].meta_ijk, Vec3<std::int8_t>(0,0,-1));
@@ -332,9 +342,10 @@ TEST(tree_uniform, get_adjacencies_single_block_periodic_XYZ_3D)
 {
   int const dim = 3;
   Leaves const leaves = create(dim, {1,1,1});
+  ZLeaves const z_leaves = order(dim, leaves);
   Periodic const periodic(true, true, true);
   Point const base_pt = get_base_point(dim, leaves);
-  Adjacencies adjacencies = get_adjacencies(dim, leaves, base_pt, periodic);
+  Adjacencies adjacencies = get_adjacencies(dim, z_leaves, leaves, base_pt, periodic);
   EXPECT_EQ(adjacencies.at(0).size(), 26);
 }
 

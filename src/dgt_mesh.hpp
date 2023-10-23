@@ -27,7 +27,6 @@ class Mesh
     tree::Leaves m_leaves;
     tree::ZLeaves m_zleaves;
     tree::OwnedLeaves m_owned_leaves;
-    tree::Adjacencies m_leaf_adjs;
 
     BlockInfo<View> m_block_info;
     BlockInfo<HostView> m_block_info_h;
@@ -60,7 +59,6 @@ class Mesh
     tree::Leaves const& leaves() const { return m_leaves; }
     tree::ZLeaves const& z_leaves() const { return m_zleaves; }
     tree::OwnedLeaves const& owned_leaves() const { return m_owned_leaves; }
-    tree::Adjacencies const& leaf_adjs() const { return m_leaf_adjs; }
 
     Basis<View> const& basis() const { return m_basis; }
     Basis<HostView> const& basis_h() const { return m_basis_h; }

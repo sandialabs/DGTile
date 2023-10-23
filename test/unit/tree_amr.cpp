@@ -212,7 +212,7 @@ TEST(tree_amr, get_adjacencies_failure)
   ZLeaves const z_leaves = order(dim, leaves);
   Point const base_pt = get_base_point(dim, z_leaves);
   Periodic const periodic(true, false, false);
-  EXPECT_THROW((void)get_adjacencies(dim, leaves, base_pt, periodic), std::runtime_error);
+  EXPECT_THROW((void)get_adjacencies(dim, z_leaves, leaves, base_pt, periodic), std::runtime_error);
 }
 
 TEST(tree_amr, balance_1D)

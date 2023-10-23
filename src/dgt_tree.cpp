@@ -385,12 +385,13 @@ static AdjImpl get_adj(
 
 Adjacencies get_adjacencies(
     int const dim,
+    ZLeaves const& z_leaves,
     Leaves const& leaves,
     Point const& base_pt,
     Periodic const& periodic)
 {
   Adjacencies result;
-  for (ID const global_id : leaves) {
+  for (ID const global_id : z_leaves) {
     AdjImpl const impl = get_adj(dim, global_id, leaves, base_pt, periodic);
     result[global_id] = impl.adjacent;
     if (impl.should_refine) {
