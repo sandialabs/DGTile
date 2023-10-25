@@ -101,9 +101,24 @@ class Field {
 
 };
 
+struct FieldDescriptor
+{
+  std::string const name = "";
+  int entity_dim = -1;
+  int entity_axis = -1;
+  int num_comps = -1;
+};
+
+struct ModalDescriptor
+{
+  std::string const name = "";
+  int num_stored = -1;
+  int num_comps = -1;
+  bool with_flux = true;
+};
+
 struct ModalField
 {
-  std::string name = "";
   std::vector<Field<real***>> solution;
   Field<real***> residual;
   Field<real***> fluxes[DIMENSIONS];

@@ -68,11 +68,11 @@ void setup(State& state, mpicpp::comm* comm, Input const& in)
   state.mesh.set_cell_grid(in.mesh.cell_grid);
   state.mesh.set_periodic(in.mesh.periodic);
   state.mesh.set_basis(p, q, tensor);
-  state.mesh.init(in.mesh.block_grid);
+  int const nstored = get_num_stored_solutions(p);
+  state.mesh.add_modal({"hydro", nstored, NEQ, true});
+  state.mesh.initialize(in.mesh.block_grid);
   state.mesh.print_stats();
   state.eos = EoS(in.gamma);
-  int const nstored = get_num_stored_solutions(p);
-  state.mesh.add_modal("hydro", nstored, NEQ);
   apply_initial_conditions(state, in);
 
   // debug

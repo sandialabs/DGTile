@@ -39,12 +39,53 @@ static void verify_dimensions(Grid3 const& cell_grid, Basis<View> const& basis)
   }
 }
 
+static void verify_modal(std::vector<ModalDescriptor> const& modal)
+{
+  if (modal.size() == 0) {
+    throw std::runtime_error("dgt::Mesh - no modal fields added");
+  }
+  for (ModalDescriptor const& m : modal) {
+    if (m.name == "") {
+      throw std::runtime_error("dgt::Mesh - modal field unnamed");
+    }
+    std::string const base = fmt::format("dgt::Mesh - modal_field[{}]", m.name);
+    if (m.num_stored < 0) {
+      throw std::runtime_error(base + ".num_stored < 0");
+    }
+    if (m.num_comps < 0) {
+      throw std::runtime_error(base + ".num_comps < 0");
+    }
+  }
+}
+
+static void verify_fields(std::vector<FieldDescriptor> const& fields)
+{
+  for (FieldDescriptor const& f : fields) {
+    if (f.name == "") {
+      throw std::runtime_error("dgt::Mesh - field unnamed");
+    }
+    std::string const base = fmt::format("dgt::Mesh - field[{}]", f.name);
+    if (f.entity_dim < 0) {
+      throw std::runtime_error(base + ".num_stored < 0");
+    }
+    if (f.num_comps < 0) {
+      throw std::runtime_error(base + ".num_comps < 0");
+    }
+  }
+}
+
 void Mesh::ensure_set()
 {
   verify_comm(m_comm);
   verify_cell_grid(m_cell_grid);
   verify_basis(m_basis);
   verify_dimensions(m_cell_grid, m_basis);
+}
+
+void Mesh::ensure_added()
+{
+  verify_modal(m_modal_meta);
+  verify_fields(m_field_meta);
 }
 
 void Mesh::set_comm(mpicpp::comm* comm)
@@ -77,7 +118,56 @@ void Mesh::set_basis(int const p, int const q, bool const tensor)
   m_basis_h = build_basis<HostView>(dim(), p, q, tensor);
 }
 
-static tree::OwnedLeaves get_owned_leaves(
+template <class VecT>
+static int index(VecT const& vector, std::string const& name)
+{
+  for (std::size_t i = 0; i < vector.size(); ++i) {
+    if (vector[i].name == name) return int(i);
+  }
+  return -1;
+}
+
+void Mesh::add_modal(ModalDescriptor const modal)
+{
+  if (index(m_modal_meta, modal.name) >= 0) {
+    std::string const msg = fmt::format(
+        "dgt::Mesh::add_modal -> field {} already exists", modal.name);
+    throw std::runtime_error(msg);
+  }
+  m_modal_meta.push_back(modal);
+}
+
+void Mesh::add_field(FieldDescriptor const field)
+{
+  if (index(m_field_meta, field.name) >= 0) {
+    std::string const msg = fmt::format(
+        "dgt::Mesh::add_field -> field {} already exists", field.name);
+    throw std::runtime_error(msg);
+  }
+  m_field_meta.push_back(field);
+}
+
+static tree::Partitioning get_partitioning(
+    mpicpp::comm* comm,
+    tree::ZLeaves const& z_leaves)
+{
+  using namespace linear_partitioning;
+  int const nranks = comm->size();
+  int const nleaves = z_leaves.size();
+  tree::Partitioning partitioning;
+  for (int rank = 0; rank < nranks; ++rank) {
+    int const nlocal = get_num_local(nleaves, nranks, rank);
+    int const offset = get_local_offset(nleaves, nranks, rank);
+    for (int block = 0; block < nlocal; ++block) {
+      tree::ID const leaf_id = z_leaves[offset + block];
+      partitioning[leaf_id].rank = rank;
+      partitioning[leaf_id].block = block;
+    }
+  }
+  return partitioning;
+}
+
+static tree::ZLeaves get_owned_leaves(
     mpicpp::comm* comm,
     tree::ZLeaves const& z_leaves)
 {
@@ -92,66 +182,74 @@ static tree::OwnedLeaves get_owned_leaves(
   return std::vector<tree::ID>(begin, end);
 }
 
-void Mesh::init(Grid3 const& block_grid)
+void Mesh::initialize(Grid3 const& block_grid)
 {
   ensure_set();
+  ensure_added();
+  m_leaves = tree::create(infer_dimension(m_cell_grid), block_grid);
+  initialize();
+}
+
+void Mesh::initialize(tree::Leaves const& leaves)
+{
+  ensure_set();
+  ensure_added();
+  m_leaves = leaves;
+  initialize();
+}
+
+static ModalField make_modal_field(
+    ModalDescriptor const& m,
+    Grid3 const& cell_grid,
+    Basis<View> const& B,
+    int const nblocks)
+{
+  int const dim = B.dim;
+  int const nmodes = B.num_modes;
+  int const nface_pts = B.num_face_pts;
+  int const ncells = get_num_cells(cell_grid);
+  ModalField f;
+  f.solution.resize(m.num_stored);
+  std::string const rname = fmt::format("{}_residual", m.name);
+  f.residual.create(rname, nblocks, ncells, m.num_comps, nmodes);
+  for (int soln_idx = 0; soln_idx < m.num_stored; ++soln_idx) {
+    std::string const sname = fmt::format("{}_{}", m.name, soln_idx);
+    f.solution[soln_idx].create(sname, nblocks, ncells, m.num_comps, nmodes);
+  }
+  if (m.with_flux) {
+    for (int axis = 0; axis < dim; ++axis) {
+      int const nfaces = get_num_faces(cell_grid, axis);
+      std::string const axis_name = get_axis_name(axis);
+      std::string const fname = fmt::format("{}_fluxes_{}", m.name, axis_name);
+      f.fluxes[axis].create(fname, nblocks, nfaces, nface_pts, m.num_comps);
+    }
+  }
+  return f;
+}
+
+void Mesh::initialize()
+{
   int const dim = infer_dimension(m_cell_grid);
-  m_leaves = tree::create(dim, block_grid);
   m_zleaves = tree::order(dim, m_leaves);
+  m_partitioning = get_partitioning(m_comm, m_zleaves);
   m_owned_leaves = get_owned_leaves(m_comm, m_zleaves);
   tree::Point const base_pt = tree::get_base_point(dim, m_zleaves);
+  m_owned_adjacencies = tree::get_adjacencies(
+      dim, m_owned_leaves, m_leaves, base_pt, m_periodic);
   m_block_info = build_block_info<View>(
       dim, m_cell_grid, m_domain, m_owned_leaves, base_pt);
   m_block_info_h = build_block_info<HostView>(
       dim, m_cell_grid, m_domain, m_owned_leaves, base_pt);
-}
-
-static int modal_index(
-    std::vector<ModalField> const& modal,
-    std::string const& name)
-{
-  for (std::size_t i = 0; i < modal.size(); ++i) {
-    if (modal[i].name == name) return int(i);
-  }
-  return -1;
-}
-
-void Mesh::add_modal(
-    std::string const& name,
-    int const nstored,
-    int const ncomps,
-    bool const with_flux)
-{
-  ensure_set();
-  if (modal_index(m_modal, name) >= 0) {
-    std::string const msg = fmt::format(
-        "dgt::Mesh::add_modal -> field {} already exists", name);
-    throw std::runtime_error(msg);
-  }
-  int const dim = m_basis.dim;
-  int const nmodes = m_basis.num_modes;
-  int const nface_pts = m_basis.num_face_pts;
-  int const ncells = get_num_cells(m_cell_grid);
   int const nblocks = int(m_owned_leaves.size());
-  ModalField f;
-  f.name = name;
-  f.solution.resize(nstored);
-  std::string const rname = fmt::format("{}_residual", name);
-  f.residual.create(rname, nblocks, ncells, ncomps, nmodes);
-  for (int soln_idx = 0; soln_idx < nstored; ++soln_idx) {
-    std::string const sname = fmt::format("{}_{}", name, soln_idx);
-    f.solution[soln_idx].create(sname, nblocks, ncells, ncomps, nmodes);
+  for (ModalDescriptor const& meta : m_modal_meta) {
+    ModalField f = make_modal_field(meta, m_cell_grid, m_basis, nblocks);
+    m_modal.push_back(f);
   }
-  if (with_flux) {
-    for (int axis = 0; axis < dim; ++axis) {
-      int const nfaces = get_num_faces(m_cell_grid, axis);
-      std::string const axis_name = get_axis_name(axis);
-      std::string const fname = fmt::format("{}_fluxes_{}", name, axis_name);
-      f.fluxes[axis].create(fname, nblocks, nfaces, nface_pts, ncomps);
-    }
+  for (FieldDescriptor const& f : m_field_meta) {
+    (void)f;
+    //TODO: Field f = build_field(f, m_cell_grid, nblocks);
+    //TODO: m_field.push_back(f);
   }
-  m_modal.push_back(f);
-  //TODO also initialize the communication pattern here
 }
 
 int Mesh::dim() const
@@ -187,7 +285,7 @@ int Mesh::num_owned_cells() const
 
 Field<real***>& Mesh::get_solution(std::string const& name, int const soln_idx)
 {
-  int const modal_idx = modal_index(m_modal, name);
+  int const modal_idx = index(m_modal_meta, name);
   if (modal_idx < 0) {
     std::string const msg = fmt::format(
         "dgt::Mesh::get_solution -> field {} doesn't exist", name);
@@ -198,7 +296,7 @@ Field<real***>& Mesh::get_solution(std::string const& name, int const soln_idx)
 
 Field<real***>& Mesh::get_fluxes(std::string const& name, int const axis)
 {
-  int const modal_idx = modal_index(m_modal, name);
+  int const modal_idx = index(m_modal_meta, name);
   if (modal_idx < 0) {
     std::string const msg = fmt::format(
         "dgt::Mesh::get_fluxes -> field {} doesn't exist", name);
@@ -208,7 +306,7 @@ Field<real***>& Mesh::get_fluxes(std::string const& name, int const axis)
 
 Field<real***>& Mesh::get_residual(std::string const& name)
 {
-  int const modal_idx = modal_index(m_modal, name);
+  int const modal_idx = index(m_modal_meta, name);
   if (modal_idx < 0) {
     std::string const msg = fmt::format(
         "dgt::Mesh::get_residual -> field {} doesn't exist", name);
@@ -220,7 +318,7 @@ Field<real***> const& Mesh::get_solution(
     std::string const& name,
     int const soln_idx) const
 {
-  int const modal_idx = modal_index(m_modal, name);
+  int const modal_idx = index(m_modal_meta, name);
   if (modal_idx < 0) {
     std::string const msg = fmt::format(
         "dgt::Mesh::get_solution -> field {} doesn't exist", name);
@@ -233,7 +331,7 @@ Field<real***> const& Mesh::get_fluxes(
     std::string const& name,
     int const axis) const
 {
-  int const modal_idx = modal_index(m_modal, name);
+  int const modal_idx = index(m_modal_meta, name);
   if (modal_idx < 0) {
     std::string const msg = fmt::format(
         "dgt::Mesh::get_fluxes -> field {} doesn't exist", name);
@@ -243,7 +341,7 @@ Field<real***> const& Mesh::get_fluxes(
 
 Field<real***> const& Mesh::get_residual(std::string const& name) const
 {
-  int const modal_idx = modal_index(m_modal, name);
+  int const modal_idx = index(m_modal_meta, name);
   if (modal_idx < 0) {
     std::string const msg = fmt::format(
         "dgt::Mesh::get_residual -> field {} doesn't exist", name);

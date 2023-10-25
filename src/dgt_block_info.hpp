@@ -21,7 +21,7 @@ BlockInfo<ViewT> build_block_info(
     int const dim,
     Grid3 const& cell_grid,
     Box3<real> const& domain,
-    tree::OwnedLeaves const& ids,
+    tree::ZLeaves const& ids,
     tree::Point const& base_pt);
 
 }

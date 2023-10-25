@@ -19,7 +19,7 @@ TEST(block_info, build_1D_host)
 {
   int const dim = 1;
   Box3<real> const domain({0.,0.,0.}, {1.,0.,0.});
-  tree::OwnedLeaves const leaves{3,4,2};
+  tree::ZLeaves const leaves{3,4,2};
   tree::Point const base_pt(1, {2,0,0});
   Grid3 const ghost_cell_grid(3,0,0);
   BlockInfo<HostView> B = build_block_info<HostView>(
@@ -42,7 +42,7 @@ TEST(block_info, build_1D_device)
 {
   int const dim = 1;
   Box3<real> const domain({0.,0.,0.}, {1.,0.,0.});
-  tree::OwnedLeaves const leaves{3,4,2};
+  tree::ZLeaves const leaves{3,4,2};
   tree::Point const base_pt(1, {2,0,0});
   Grid3 const ghost_cell_grid(3,0,0);
   BlockInfo<View> B = build_block_info<View>(
@@ -65,7 +65,7 @@ TEST(block_info, build_2D_host)
 {
   int const dim = 2;
   Box3<real> const domain({0.,0.,0.}, {1.,1.,0.});
-  tree::OwnedLeaves const leaves{4,3,2,9,6,10,5};
+  tree::ZLeaves const leaves{4,3,2,9,6,10,5};
   tree::Point const base_pt(1, {2,2,0});
   Grid3 const ghost_cell_grid(3,3,0);
   BlockInfo<HostView> B = build_block_info<HostView>(
@@ -118,7 +118,7 @@ TEST(block_info, build_2D_device)
 {
   int const dim = 2;
   Box3<real> const domain({0.,0.,0.}, {1.,1.,0.});
-  tree::OwnedLeaves const leaves{4,3,2,9,6,10,5};
+  tree::ZLeaves const leaves{4,3,2,9,6,10,5};
   tree::Point const base_pt(1, {2,2,0});
   Grid3 const ghost_cell_grid(3,3,0);
   BlockInfo<View> B = build_block_info<View>(
@@ -173,7 +173,7 @@ TEST(block_info, build_3D_host)
   Box3<real> const domain({0.,0.,0.}, {1.,1.,1.});
   tree::Point const base_pt(1, {2,2,2});
   Grid3 const ghost_cell_grid(3,3,3);
-  tree::OwnedLeaves const leaves{9,10,13,14,25,26,29,30,2,3,4,5,6,7,8};
+  tree::ZLeaves const leaves{9,10,13,14,25,26,29,30,2,3,4,5,6,7,8};
   BlockInfo<HostView> B = build_block_info<HostView>(
       dim, ghost_cell_grid, domain, leaves, base_pt);
   compare(B.tree_ids, {9,10,13,14,25,26,29,30,2,3,4,5,6,7,8});
@@ -253,7 +253,7 @@ TEST(block_info, build_3D_device)
   Box3<real> const domain({0.,0.,0.}, {1.,1.,1.});
   tree::Point const base_pt(1, {2,2,2});
   Grid3 const ghost_cell_grid(3,3,3);
-  tree::OwnedLeaves const leaves{9,10,13,14,25,26,29,30,2,3,4,5,6,7,8};
+  tree::ZLeaves const leaves{9,10,13,14,25,26,29,30,2,3,4,5,6,7,8};
   BlockInfo<View> B = build_block_info<View>(
       dim, ghost_cell_grid, domain, leaves, base_pt);
   compare(B.tree_ids, {9,10,13,14,25,26,29,30,2,3,4,5,6,7,8});

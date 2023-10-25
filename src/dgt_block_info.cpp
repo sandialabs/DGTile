@@ -149,7 +149,7 @@ BlockInfo<ViewT> build_block_info(
   int const dim,
   Grid3 const& cell_grid,
   Box3<real> const& domain,
-  tree::OwnedLeaves const& ids,
+  tree::ZLeaves const& ids,
   tree::Point const& base_pt)
 {
   BlockInfo<ViewT> B;
@@ -171,9 +171,9 @@ BlockInfo<ViewT> build_block_info(
 }
 
 template BlockInfo<View>
-build_block_info(int const, Grid3 const&, Box3<real> const&, tree::OwnedLeaves const&, tree::Point const&);
+build_block_info(int const, Grid3 const&, Box3<real> const&, tree::ZLeaves const&, tree::Point const&);
 
 template BlockInfo<HostView>
-build_block_info(int const, Grid3 const&, Box3<real> const&, tree::OwnedLeaves const&, tree::Point const&);
+build_block_info(int const, Grid3 const&, Box3<real> const&, tree::ZLeaves const&, tree::Point const&);
 
 }

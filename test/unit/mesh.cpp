@@ -19,7 +19,8 @@ static Mesh get_example_mesh(int const dim, mpicpp::comm* comm)
   mesh.set_domain(domain);
   mesh.set_cell_grid(cell_grid);
   mesh.set_basis(1, 2, true);
-  mesh.init(block_grid);
+  mesh.add_modal({"hydro", 2, 5, true});
+  mesh.initialize(block_grid);
   return mesh;
 }
 
@@ -65,9 +66,7 @@ TEST(mesh, add_modal_field)
   int const num_ghost_faces_per_block = 20;
   int const num_modes = 4;
   int const num_face_pts = 2;
-  int const num_stored = 2;
   int const num_eqs = 5;
-  mesh.add_modal("hydro", num_stored, num_eqs);
   Field<real***> U0 = mesh.get_solution("hydro", 0);
   Field<real***> U1 = mesh.get_solution("hydro", 1);
   Field<real***> R = mesh.get_residual("hydro");

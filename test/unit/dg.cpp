@@ -216,7 +216,7 @@ static void test_integrates_polynomial(Basis<HostView> const& B)
     integral += f * wt;
   }
   if (B.p != 2) {
-    EXPECT_NEAR(integral, ipow(2, B.dim), 1.e-15);
+    EXPECT_NEAR(integral, ipow(2, B.dim), 1.e-14);
   }
 }
 

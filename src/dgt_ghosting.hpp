@@ -10,9 +10,22 @@
 #include "dgt_view.hpp"
 
 namespace dgt {
-namespace ghosting {
 
-class Packing
+class Mesh;
+
+struct Message
+{
+  int tag = -1;
+  int rank = -1;
+  int size = -1;
+  real* data = nullptr;
+  mpicpp::request req;
+  void send(mpicpp::comm* c) { req = c->isend(data, size, rank, tag); }
+  void recv(mpicpp::comm* c) { req = c->irecv(data, size, rank, tag); }
+  void wait() { req.wait(); }
+};
+
+class Ghosting
 {
 
   private:
@@ -20,28 +33,12 @@ class Packing
     template <class T>
     using DualView = typename Kokkos::DualView<T>;
 
-    int m_num_messages = 0;
-    int m_num_cells = 0;
-    Grid3 m_cell_grid = {0,0,0};
-    DualView<Subgrid3*> m_subgrids;
-    DualView<int*> m_cell_offsets;
-    DualView<int*> m_block_offsets;
-    HostPinnedRightView<real***> m_values;
+    std::vector<Message> m_messages[DIRECTIONS];
 
   public:
 
-    Packing() = default;
-
-    void build(
-        Grid3 const& cell_grid,
-        tree::Adjacencies const& adjs,
-        tree::OwnedLeaves const& leaves,
-        int const num_max_eqs,
-        int const num_modes);
-
-    void pack(Field<real***> const& field);
+    void build(dgt::Mesh const& mesh);
 
 };
 
-}
 }

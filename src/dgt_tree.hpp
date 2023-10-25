@@ -34,12 +34,18 @@ struct Adjacency
   Vec3<std::int8_t> meta_ijk = Vec3<std::int8_t>::zero();
 };
 
+struct Local
+{
+  int rank = -1;
+  int block = -1;
+};
+
 using Adjacent = std::vector<Adjacency>;
 using Adjacencies = std::unordered_map<ID, Adjacent>;
 using Leaves = std::unordered_set<ID>;
 using Levels = std::vector<std::int8_t>;
 using Marks = std::vector<std::int8_t>;
-using OwnedLeaves = std::vector<ID>;
+using Partitioning = std::unordered_map<ID, Local>;
 using Periodic = Vec3<bool>;
 using ZLeaves = std::vector<ID>;
 

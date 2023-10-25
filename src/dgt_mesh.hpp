@@ -26,12 +26,18 @@ class Mesh
 
     tree::Leaves m_leaves;
     tree::ZLeaves m_zleaves;
-    tree::OwnedLeaves m_owned_leaves;
+    tree::Partitioning m_partitioning;
+    tree::ZLeaves m_owned_leaves;
+    tree::Adjacencies m_owned_adjacencies;
 
     BlockInfo<View> m_block_info;
     BlockInfo<HostView> m_block_info_h;
 
+    std::vector<ModalDescriptor> m_modal_meta;
+    std::vector<FieldDescriptor> m_field_meta;
+
     std::vector<ModalField> m_modal;
+    std::vector<Field<real**>> m_fields;
 
   public:
 
@@ -43,22 +49,23 @@ class Mesh
     void set_periodic(Vec3<bool> const& periodic);
     void set_basis(int const p, int const q, bool const tensor);
 
-    void init(Grid3 const& block_grid);
+    void add_modal(ModalDescriptor const modal);
+    void add_field(FieldDescriptor const field);
 
-    void add_modal(
-        std::string const& name,
-        int const num_stored,
-        int const num_comps,
-        bool const with_flux = true);
+    void initialize(Grid3 const& block_grid);
+    void initialize(tree::Leaves const& leaves);
 
     mpicpp::comm* comm() { return m_comm; }
     mpicpp::comm const* comm() const { return m_comm; }
     Box3<real> domain() const { return m_domain; }
     Grid3 cell_grid() const { return m_cell_grid; }
     Vec3<bool> periodic() const { return m_periodic; }
+
     tree::Leaves const& leaves() const { return m_leaves; }
     tree::ZLeaves const& z_leaves() const { return m_zleaves; }
-    tree::OwnedLeaves const& owned_leaves() const { return m_owned_leaves; }
+    tree::ZLeaves const& owned_leaves() const { return m_owned_leaves; }
+    tree::Adjacencies const& owned_adjacencies() const { return m_owned_adjacencies; }
+    tree::Partitioning const& partitioning() const { return m_partitioning; }
 
     Basis<View> const& basis() const { return m_basis; }
     Basis<HostView> const& basis_h() const { return m_basis_h; }
@@ -85,6 +92,8 @@ class Mesh
   private:
 
     void ensure_set();
+    void ensure_added();
+    void initialize();
 
 };
 

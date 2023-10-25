@@ -1,10 +1,10 @@
-#include <dgt_cartesian.hpp>
 #include <dgt_for_each.hpp>
 #include <dgt_ghosting.hpp>
+#include <dgt_mesh.hpp>
 
 namespace dgt {
-namespace ghosting {
 
+#if 0
 static int count_messages(
     tree::Adjacencies const& adjs,
     tree::OwnedLeaves const& leaves)
@@ -17,6 +17,9 @@ static int count_messages(
 }
 
 void Packing::build(
+void Ghosting::build(
+    tree::Leaves const& leaves,
+    tree::OwnedLeaves const& owned_leaves,
     Grid3 const& cell_grid,
     tree::Adjacencies const& adjs,
     tree::OwnedLeaves const& leaves,
@@ -93,6 +96,44 @@ void Packing::pack(Field<real***> const& field)
   };
   for_each("pack", num_blocks, m_cell_grid, functor);
 }
+#endif
 
+static int count_messages(
+    tree::ZLeaves const& owned_leaves,
+    tree::Adjacencies const& owned_adjs)
+{
+  int num_messages = 0;
+  for (auto const leaf_id : owned_leaves) {
+    num_messages += owned_adjs.at(leaf_id).size();
+  }
+  return num_messages;
 }
+
+void Ghosting::build(Mesh const& mesh)
+{
+  auto const& leaves = mesh.owned_leaves();
+  auto const& adjs = mesh.owned_adjacencies();
+  auto const& partitioning = mesh.partitioning();
+  int const num_messages = count_messages(leaves, adjs);
+  m_messages[SEND].resize(num_messages);
+  m_messages[RECV].resize(num_messages);
+  int msg_idx = 0;
+  int local_block_idx = 0;
+  for (auto const leaf_id : leaves) {
+    for (auto const& adj : adjs.at(leaf_id)) {
+      tree::ID const adj_leaf_id = adj.neighbor;
+      int const adj_rank = partitioning.at(adj_leaf_id).rank;
+      int const adj_block = partitioning.at(adj_leaf_id).block;
+
+      m_messages[SEND][msg_idx].rank = adj_rank;
+      m_messages[RECV][msg_idx].rank = adj_rank;
+
+      m_messages[SEND][msg_idx].tag = adj_block; // TODO fix this
+      m_messages[RECV][msg_idx].tag = adj_block; // TODO fix this
+      msg_idx++;
+    }
+    local_block_idx++;
+  }
+}
+
 }

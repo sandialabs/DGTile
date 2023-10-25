@@ -1,59 +1,46 @@
 #include <dgt_ghosting.hpp>
-#include <dgt_partitioning.hpp>
+#include <dgt_mesh.hpp>
 
 #include <gtest/gtest.h>
 
 using namespace dgt;
 using namespace dgt::tree;
 
-static Leaves refine_zleaf(
-    int const dim,
-    Leaves const& leaves,
-    int const index)
-{
-  ZLeaves const z_leaves = order(dim, leaves);
-  Marks marks(z_leaves.size(), REMAIN);
-  marks[index] = REFINE;
-  return modify(dim, z_leaves, marks);
-}
-
-static Leaves get_example_refined(int const dim)
-{
-  Leaves const leaves = create(dim, {3,3,0});
-  return refine_zleaf(dim, leaves, 3);
-}
-
-static OwnedLeaves get_owned_leaves(
+static Mesh get_single_block_mesh(
     mpicpp::comm* comm,
-    ZLeaves const& z_leaves)
+    int const dim,
+    int const p,
+    int const q,
+    bool const tensor)
 {
-  using namespace linear_partitioning;
-  int const rank = comm->rank();
-  int const nranks = comm->size();
-  int const nleaves = z_leaves.size();
-  int const nlocal = get_num_local(nleaves, nranks, rank);
-  int const offset = get_local_offset(nleaves, nranks, rank);
-  auto begin = z_leaves.begin() + offset;
-  auto end = z_leaves.begin() + offset + nlocal;
-  return std::vector<ID>(begin, end);
+  Grid3 cell_grid(0,0,0);
+  Grid3 block_grid(0,0,0);
+  Vec3<bool> periodic(false,false,false);
+  Box3<real> domain({0.,0.,0.}, {0.,0.,0.});
+  for (int axis = 0; axis < dim; ++axis) {
+    block_grid.extents()[axis] = 1;
+    cell_grid.extents()[axis] = 6;
+    periodic[axis] = true;
+    domain.upper()[axis] = 1.;
+  }
+  Mesh mesh;
+  mesh.set_comm(comm);
+  mesh.set_domain(domain);
+  mesh.set_cell_grid(cell_grid);
+  mesh.set_periodic(periodic);
+  mesh.set_basis(p, q, tensor);
+  mesh.add_modal({"hydro", 2, 5, true});
+  mesh.initialize(block_grid);
+  return mesh;
 }
 
-TEST(ghosting, packing)
+TEST(ghosting, single_block_periodic_2D)
 {
   mpicpp::comm comm = mpicpp::comm::world();
-  int const dim = 2;
-  int const neqs = 5;
-  int const nmodes = 4;
-  Vec3<bool> const periodic(false, false, false);
-  Leaves const leaves = get_example_refined(dim);
-  ZLeaves const z_leaves = order(dim, leaves);
-  OwnedLeaves const owned_leaves = get_owned_leaves(&comm, z_leaves);
-  Point const base_pt = get_base_point(dim, z_leaves);
-  Adjacencies const adjs = get_adjacencies(dim, leaves, base_pt, periodic);
-  Grid3 const cell_grid(6,6,0);
-  Field<real***> U;
-  ghosting::Packing packing;
-  packing.build(cell_grid, adjs, owned_leaves, neqs, nmodes);
-  U.create("U", leaves.size(), cell_grid.size(), neqs, nmodes);
-  packing.pack(U);
+  Mesh mesh = get_single_block_mesh(&comm, 2, 1, 2, true);
+
+  Ghosting ghosting;
+  ghosting.build(mesh);
+
+
 }
