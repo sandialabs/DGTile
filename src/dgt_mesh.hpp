@@ -34,10 +34,7 @@ class Mesh
     BlockInfo<HostView> m_block_info_h;
 
     std::vector<ModalDescriptor> m_modal_meta;
-    std::vector<FieldDescriptor> m_field_meta;
-
     std::vector<ModalField> m_modal;
-    std::vector<Field<real**>> m_fields;
 
   public:
 
@@ -50,7 +47,6 @@ class Mesh
     void set_basis(int const p, int const q, bool const tensor);
 
     void add_modal(ModalDescriptor const modal);
-    void add_field(FieldDescriptor const field);
 
     void initialize(Grid3 const& block_grid);
     void initialize(tree::Leaves const& leaves);
@@ -79,10 +75,10 @@ class Mesh
     int num_total_cells() const;
     int num_owned_cells() const;
 
+    std::vector<ModalDescriptor> const& get_modal_descriptors() const;
     Field<real***>& get_solution(std::string const& name, int const soln_idx);
     Field<real***>& get_fluxes(std::string const& name, int const axis);
     Field<real***>& get_residual(std::string const& name);
-
     Field<real***> const& get_solution(std::string const& name, int const soln_idx) const;
     Field<real***> const& get_fluxes(std::string const& name, int const axis) const;
     Field<real***> const& get_residual(std::string const& name) const;

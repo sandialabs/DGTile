@@ -58,22 +58,6 @@ static void verify_modal(std::vector<ModalDescriptor> const& modal)
   }
 }
 
-static void verify_fields(std::vector<FieldDescriptor> const& fields)
-{
-  for (FieldDescriptor const& f : fields) {
-    if (f.name == "") {
-      throw std::runtime_error("dgt::Mesh - field unnamed");
-    }
-    std::string const base = fmt::format("dgt::Mesh - field[{}]", f.name);
-    if (f.entity_dim < 0) {
-      throw std::runtime_error(base + ".num_stored < 0");
-    }
-    if (f.num_comps < 0) {
-      throw std::runtime_error(base + ".num_comps < 0");
-    }
-  }
-}
-
 void Mesh::ensure_set()
 {
   verify_comm(m_comm);
@@ -85,7 +69,6 @@ void Mesh::ensure_set()
 void Mesh::ensure_added()
 {
   verify_modal(m_modal_meta);
-  verify_fields(m_field_meta);
 }
 
 void Mesh::set_comm(mpicpp::comm* comm)
@@ -137,23 +120,13 @@ void Mesh::add_modal(ModalDescriptor const modal)
   m_modal_meta.push_back(modal);
 }
 
-void Mesh::add_field(FieldDescriptor const field)
-{
-  if (index(m_field_meta, field.name) >= 0) {
-    std::string const msg = fmt::format(
-        "dgt::Mesh::add_field -> field {} already exists", field.name);
-    throw std::runtime_error(msg);
-  }
-  m_field_meta.push_back(field);
-}
-
 static tree::Partitioning get_partitioning(
     mpicpp::comm* comm,
     tree::ZLeaves const& z_leaves)
 {
   using namespace linear_partitioning;
   int const nranks = comm->size();
-  int const nleaves = z_leaves.size();
+  int const nleaves = int(z_leaves.size());
   tree::Partitioning partitioning;
   for (int rank = 0; rank < nranks; ++rank) {
     int const nlocal = get_num_local(nleaves, nranks, rank);
@@ -174,7 +147,7 @@ static tree::ZLeaves get_owned_leaves(
   using namespace linear_partitioning;
   int const rank = comm->rank();
   int const nranks = comm->size();
-  int const nleaves = z_leaves.size();
+  int const nleaves = int(z_leaves.size());
   int const nlocal = get_num_local(nleaves, nranks, rank);
   int const offset = get_local_offset(nleaves, nranks, rank);
   auto begin = z_leaves.begin() + offset;
@@ -245,11 +218,7 @@ void Mesh::initialize()
     ModalField f = make_modal_field(meta, m_cell_grid, m_basis, nblocks);
     m_modal.push_back(f);
   }
-  for (FieldDescriptor const& f : m_field_meta) {
-    (void)f;
-    //TODO: Field f = build_field(f, m_cell_grid, nblocks);
-    //TODO: m_field.push_back(f);
-  }
+  //TODO: add `tagged` fields here (that we can't prolong/restrict w/ basis)
 }
 
 int Mesh::dim() const
@@ -281,6 +250,11 @@ int Mesh::num_owned_cells() const
   Grid3 const owned_cell_grid(owned_cells.extents());
   int const num_cells_per_block = get_num_cells(owned_cell_grid);
   return num_owned_blocks() * num_cells_per_block;
+}
+
+std::vector<ModalDescriptor> const& Mesh::get_modal_descriptors() const
+{
+  return m_modal_meta;
 }
 
 Field<real***>& Mesh::get_solution(std::string const& name, int const soln_idx)

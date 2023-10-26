@@ -48,3 +48,11 @@ TEST(field, create_real3)
     EXPECT_EQ(f.get()[i].extent(2), 8);
   }
 }
+
+TEST(field, create_no_blocks)
+{
+  Field<real***> f;
+  f.create("f", 0, 10, 5, 8);
+  EXPECT_EQ(f.name(), "f");
+  EXPECT_EQ(f.get().size(), 0);
+}
