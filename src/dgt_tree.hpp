@@ -27,6 +27,17 @@ struct Point
   }
 };
 
+struct Adjacent
+{
+  ID neighbor = 0;
+  std::int8_t axis = -1;
+  std::int8_t dir = -1;
+  std::int8_t kind = EQUAL;
+  Vec3<int> my_child_ijk = {0,0,0};
+};
+
+using AdjacentToLeaf = std::vector<Adjacent>;
+using Adjacencies = std::vector<AdjacentToLeaf>;
 using Leaves = std::unordered_set<ID>;
 using Levels = std::vector<std::int8_t>;
 using Marks = std::vector<std::int8_t>;
@@ -60,6 +71,13 @@ template <class LeavesT>
 
 template <class LeavesT>
 [[nodiscard]] Point get_base_point(int const dim, LeavesT const& leaves);
+
+Adjacencies get_adjacencies(
+    int const dim,
+    ZLeaves const& z_leaves,
+    Leaves const& leaves,
+    Point const& base_pt,
+    Periodic const& periodic);
 
 [[nodiscard]] Box3<real> get_domain(
     int const dim, ID const global_id,

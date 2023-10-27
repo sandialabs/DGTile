@@ -171,6 +171,64 @@ TEST(tree_uniform, get_base_point_3D)
   EXPECT_EQ(get_base_point(dim, z_leaves3), Point(5, {22,2,1}));
 }
 
+static Adjacencies get_adj_single_block(int const dim, bool const p)
+{
+  Grid3 block_grid(0,0,0);
+  Vec3<bool> periodic(false, false, false);
+  for (int axis = 0; axis < DIMENSIONS; ++axis) {
+    block_grid.extents()[axis] = 1;
+    if (p) periodic[axis] = true;
+  }
+  Leaves const leaves = create(dim, block_grid);
+  ZLeaves const z_leaves = order(dim, leaves);
+  Point const base_pt = get_base_point(dim, z_leaves);
+  Adjacencies const adjs = get_adjacencies(
+      dim, z_leaves, leaves, base_pt, periodic);
+  return adjs;
+}
+
+TEST(tree_uniform, get_adjacencies_single_block_1D)
+{
+  Adjacencies const adjs = get_adj_single_block(1, false);
+  EXPECT_EQ(adjs.size(), 1);
+  EXPECT_EQ(adjs[0].size(), 0);
+}
+
+TEST(tree_uniform, get_adjacencies_single_block_2D)
+{
+  Adjacencies const adjs = get_adj_single_block(2, false);
+  EXPECT_EQ(adjs.size(), 1);
+  EXPECT_EQ(adjs[0].size(), 0);
+}
+
+TEST(tree_uniform, get_adjacencies_single_block_3D)
+{
+  Adjacencies const adjs = get_adj_single_block(3, false);
+  EXPECT_EQ(adjs.size(), 1);
+  EXPECT_EQ(adjs[0].size(), 0);
+}
+
+TEST(tree_uniform, get_adjacencies_single_block_periodic_1D)
+{
+  Adjacencies const adjs = get_adj_single_block(1, true);
+  EXPECT_EQ(adjs.size(), 1);
+  EXPECT_EQ(adjs[0].size(), 2);
+}
+
+TEST(tree_uniform, get_adjacencies_single_block_periodic_2D)
+{
+  Adjacencies const adjs = get_adj_single_block(2, true);
+  EXPECT_EQ(adjs.size(), 1);
+  EXPECT_EQ(adjs[0].size(), 4);
+}
+
+TEST(tree_uniform, get_adjacencies_single_block_periodic_3D)
+{
+  Adjacencies const adjs = get_adj_single_block(3, true);
+  EXPECT_EQ(adjs.size(), 1);
+  EXPECT_EQ(adjs[0].size(), 6);
+}
+
 TEST(tree_uniform, get_domain_1D)
 {
   int const dim = 1;

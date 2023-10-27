@@ -184,6 +184,203 @@ Point get_base_point(int const dim, LeavesT const& leaves)
 template Point get_base_point(int const, Leaves const&);
 template Point get_base_point(int const, ZLeaves const&);
 
+struct AdjImpl
+{
+  AdjacentToLeaf adj;
+  bool should_refine = false;
+};
+
+static Box3<int> get_grid_bounds(
+    int const level,
+    Point const& base_pt)
+{
+  int const dim = infer_dimension(base_pt.ijk);
+  int const diff = level - base_pt.level;
+  Vec3<int> min = Vec3<int>::zero();
+  Vec3<int> max = Vec3<int>::zero();
+  for (int axis = 0; axis < dim; ++axis) {
+    int const naxis = base_pt.ijk[axis];
+    max[axis] = (1 << diff) * naxis - 1;
+  }
+  return Box3<int>(min, max);
+}
+
+static bool is_in(
+    int const dim,
+    Point const& pt,
+    Box3<int> const& bounds)
+{
+  for (int axis = 0; axis < dim; ++axis) {
+    if (pt.ijk[axis] < bounds.lower()[axis]) return false;
+    if (pt.ijk[axis] > bounds.upper()[axis]) return false;
+  }
+  return true;
+}
+
+static Point make_periodic(
+    Point const& pt,
+    Box3<int> const& bounds,
+    int const axis,
+    int const dir)
+{
+  Point periodic = pt;
+  Vec3<int> const min_ijk = bounds.lower();
+  Vec3<int> const max_ijk = bounds.upper();
+  if (dir == LEFT) periodic.ijk[axis] = max_ijk[axis];
+  if (dir == RIGHT) periodic.ijk[axis] = min_ijk[axis];
+  return periodic;
+}
+
+static std::vector<Vec3<int>> get_adj_children(
+    int const dim,
+    int const axis,
+    int const dir)
+{
+  std::vector<Vec3<int>> children;
+  auto functor = [&] (Vec3<int> const& child_ijk) {
+    if (child_ijk[axis] == dir) return;
+    children.push_back(child_ijk);
+  };
+  seq_for_each(generalize(dim, child_grid), functor);
+  return children;
+}
+
+static std::vector<ID> get_fine_ids(
+    int const dim,
+    int const axis,
+    int const dir,
+    Point const& pt)
+{
+  std::vector<Vec3<int>> children = get_adj_children(dim, axis, dir);
+  std::vector<ID> ids(children.size());
+  for (std::size_t i = 0; i < children.size(); ++i) {
+    Vec3<int> const child_ijk = children[i];
+    Point const fine_pt = get_fine_point(dim, pt, child_ijk);
+    ids[i] = get_global_id(dim, fine_pt);
+  }
+  return ids;
+}
+
+static std::vector<ID> get_finer_ids(
+    int const dim,
+    int const axis,
+    int const dir,
+    std::vector<ID> const adj_ids)
+{
+  std::vector<ID> finer_ids;
+  for (ID const global_id : adj_ids) {
+    Point const pt = get_point(dim, global_id);
+    std::vector<ID> const ids = get_fine_ids(dim, axis, dir, pt);
+    finer_ids.insert(finer_ids.end(), ids.begin(), ids.end());
+  }
+  return finer_ids;
+}
+
+static bool are_leaves(std::vector<ID> const& ids, Leaves const& leaves)
+{
+  bool are = true;
+  for (ID const id : ids) {
+    if (!is_leaf(id, leaves)) are = false;
+  }
+  return are;
+}
+
+static bool is_leaf_in(std::vector<ID> const& ids, Leaves const& leaves)
+{
+  bool is_in = false;
+  for (ID const id : ids) {
+    if (is_leaf(id, leaves)) is_in = true;
+  }
+  return is_in;
+}
+
+static AdjImpl get_adj(
+    int const dim,
+    ID const global_id,
+    Leaves const& leaves,
+    Point const& base_pt,
+    Periodic const& periodic)
+{
+  AdjImpl result;
+  Point const pt = get_point(dim, global_id);
+  Box3<int> const bounds = get_grid_bounds(pt.level, base_pt);
+  for (int axis = 0; axis < dim; ++axis) {
+    for (int dir = 0; dir < DIRECTIONS; ++dir) {
+      Vec3<int> const offset = get_dir_sign(dir) * Vec3<int>::axis(axis);
+      Point adj_pt(pt.level, pt.ijk + offset);
+      if (!is_in(dim, adj_pt, bounds)) {
+        if (periodic[axis]) {
+          adj_pt = make_periodic(adj_pt, bounds, axis, dir);
+        } else {
+          continue;
+        }
+      }
+      Adjacent adj;
+      adj.axis = static_cast<std::int8_t>(axis);
+      adj.dir = static_cast<std::int8_t>(dir);
+      ID const adj_id = get_global_id(dim, adj_pt);
+      if (is_leaf(adj_id, leaves)) {
+        adj.neighbor = adj_id;
+        result.adj.push_back(adj);
+      } else {
+        Point const coarse_adj_pt = get_coarse_point(dim, adj_pt);
+        ID const coarse_adj_id = get_global_id(dim, coarse_adj_pt);
+        std::vector<ID> const fine_adj_ids = get_fine_ids(dim, axis, dir, adj_pt);
+        std::vector<ID> const finer_adj_ids = get_finer_ids(dim, axis, dir, fine_adj_ids);
+        bool const is_fine_to_coarse = is_leaf(coarse_adj_id, leaves);
+        bool const is_coarse_to_fine = are_leaves(fine_adj_ids, leaves);
+        bool const needs_refinement = is_leaf_in(finer_adj_ids, leaves);
+        if (is_fine_to_coarse) {
+          adj.kind = FINE_TO_COARSE;
+          adj.neighbor = coarse_adj_id;
+          result.adj.push_back(adj);
+        }
+        if (is_coarse_to_fine) {
+          int const idir = invert_dir(dir);
+          auto const my_child_ijks = get_adj_children(dim, axis, idir);
+          for (std::size_t i = 0; i < fine_adj_ids.size(); ++i) {
+            adj.kind = COARSE_TO_FINE;
+            adj.neighbor = fine_adj_ids[i];
+            adj.my_child_ijk = my_child_ijks[i];
+            result.adj.push_back(adj);
+          }
+        }
+        if (needs_refinement) {
+          result.should_refine = true;
+        }
+        int const invalid_flag =
+          int(is_fine_to_coarse) +
+          int(is_coarse_to_fine) +
+          int(needs_refinement);
+        if (invalid_flag > 1) {
+          throw std::runtime_error("dgt::tree.get_adj - invalid tree");
+        }
+      }
+    }
+  }
+  return result;
+}
+
+Adjacencies get_adjacencies(
+    int const dim,
+    ZLeaves const& z_leaves,
+    Leaves const& leaves,
+    Point const& base_pt,
+    Periodic const& periodic)
+{
+  Adjacencies result;
+  result.resize(z_leaves.size());
+  for (std::size_t i = 0; i < z_leaves.size(); ++i) {
+    ID const global_id = z_leaves[i];
+    AdjImpl const impl = get_adj(dim, global_id, leaves, base_pt, periodic);
+    result[i] = impl.adj;
+    if (impl.should_refine) {
+      throw std::runtime_error("dgt::tree::get_adjacencies - invalid tree");
+    }
+  }
+  return result;
+}
+
 Box3<real> get_domain(
     int const dim,
     ID const global_id,
