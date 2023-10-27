@@ -120,26 +120,6 @@ void Mesh::add_modal(ModalDescriptor const modal)
   m_modal_meta.push_back(modal);
 }
 
-static tree::Partitioning get_partitioning(
-    mpicpp::comm* comm,
-    tree::ZLeaves const& z_leaves)
-{
-  using namespace linear_partitioning;
-  int const nranks = comm->size();
-  int const nleaves = int(z_leaves.size());
-  tree::Partitioning partitioning;
-  for (int rank = 0; rank < nranks; ++rank) {
-    int const nlocal = get_num_local(nleaves, nranks, rank);
-    int const offset = get_local_offset(nleaves, nranks, rank);
-    for (int block = 0; block < nlocal; ++block) {
-      tree::ID const leaf_id = z_leaves[offset + block];
-      partitioning[leaf_id].rank = rank;
-      partitioning[leaf_id].block = block;
-    }
-  }
-  return partitioning;
-}
-
 static tree::ZLeaves get_owned_leaves(
     mpicpp::comm* comm,
     tree::ZLeaves const& z_leaves)
@@ -204,11 +184,8 @@ void Mesh::initialize()
 {
   int const dim = infer_dimension(m_cell_grid);
   m_zleaves = tree::order(dim, m_leaves);
-  m_partitioning = get_partitioning(m_comm, m_zleaves);
   m_owned_leaves = get_owned_leaves(m_comm, m_zleaves);
   tree::Point const base_pt = tree::get_base_point(dim, m_zleaves);
-  m_owned_adjacencies = tree::get_adjacencies(
-      dim, m_owned_leaves, m_leaves, base_pt, m_periodic);
   m_block_info = build_block_info<View>(
       dim, m_cell_grid, m_domain, m_owned_leaves, base_pt);
   m_block_info_h = build_block_info<HostView>(

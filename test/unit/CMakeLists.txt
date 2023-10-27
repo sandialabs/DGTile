@@ -12,7 +12,6 @@ set(UNIT_TEST_SOURCES
   dg_dim3.cpp
   field.cpp
   for_each.cpp
-  ghosting.cpp
   grid3.cpp
   mesh.cpp
   main.cpp
@@ -22,7 +21,6 @@ set(UNIT_TEST_SOURCES
   stl.cpp
   subgrid3.cpp
   tree.cpp
-  tree_amr.cpp
   tree_uniform.cpp
   vec.cpp
   vec3.cpp

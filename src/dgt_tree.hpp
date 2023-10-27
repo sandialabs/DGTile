@@ -27,25 +27,9 @@ struct Point
   }
 };
 
-struct Adjacency
-{
-  ID neighbor = 0;
-  std::int8_t level_diff = -1;
-  Vec3<std::int8_t> meta_ijk = Vec3<std::int8_t>::zero();
-};
-
-struct Local
-{
-  int rank = -1;
-  int block = -1;
-};
-
-using Adjacent = std::vector<Adjacency>;
-using Adjacencies = std::unordered_map<ID, Adjacent>;
 using Leaves = std::unordered_set<ID>;
 using Levels = std::vector<std::int8_t>;
 using Marks = std::vector<std::int8_t>;
-using Partitioning = std::unordered_map<ID, Local>;
 using Periodic = Vec3<bool>;
 using ZLeaves = std::vector<ID>;
 
@@ -80,22 +64,6 @@ template <class LeavesT>
 [[nodiscard]] Box3<real> get_domain(
     int const dim, ID const global_id,
     Point const& base_pt, Box3<real> const& d);
-
-[[nodiscard]] Adjacencies get_adjacencies(
-    int const dim, ZLeaves const& z_leaves, Leaves const& leaves,
-    Point const& base_pt, Periodic const& periodic);
-
-[[nodiscard]] Leaves balance(
-    int const dim, Leaves const& leaves,
-    Point const& base_pt, Periodic const& periodic);
-
-[[nodiscard]] Leaves modify(
-    int const dim, ZLeaves const& z_leaves, Marks const& marks);
-
-[[nodiscard]] Leaves modify(
-    int const dim, ZLeaves const& z_leaves, Levels const& levels,
-    Point const& base_pt, Periodic const& periodic,
-    int const min_level = 0, int const max_level = 16);
 
 void write_vtu(
     int const dim, std::string const& prefix,

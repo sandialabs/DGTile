@@ -8,8 +8,6 @@
 namespace dgt {
 
 static constexpr Grid3 child_grid = {2,2,2};
-static constexpr Subgrid3 meta_grid = {{-1,-1,-1}, {2,2,2}};
-static constexpr Subgrid3 fine_meta_grid = {{-1,-1,-1,}, {3,3,3}};
 
 DGT_METHOD inline int get_dir_sign(int const dir)
 {
@@ -104,20 +102,5 @@ std::string inline get_axis_name(int const axis)
 
 [[nodiscard]] Subgrid3 get_owned_cells(Grid3 const& cell_grid);
 [[nodiscard]] Subgrid3 get_owned_faces(Grid3 const& cell_grid, int const axis);
-
-[[nodiscard]] Subgrid3 get_cells(
-    int const ownership,
-    Grid3 const& cell_grid,
-    Vec3<std::int8_t> const& meta_ijk);
-
-[[nodiscard]] Subgrid3 get_fine_to_coarse_cells(
-    int const ownership,
-    Grid3 const& cell_grid,
-    Vec3<std::int8_t> const& meta_ijk);
-
-[[nodiscard]] Subgrid3 get_coarse_to_fine_cells(
-    int const ownership,
-    Grid3 const& cell_grid,
-    Vec3<std::int8_t> const& fine_meta_ijk);
 
 }

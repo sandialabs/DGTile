@@ -7,24 +7,6 @@
 using namespace dgt;
 using namespace dgt::tree;
 
-static std::vector<Vec3<int>> get_adj_children(
-    int const dim,
-    Vec3<int> const& offset)
-{
-  std::vector<Vec3<int>> children;
-  children.push_back(offset);
-  for (int axis = 0; axis < dim; ++axis) {
-    std::size_t num_children = children.size();
-    for (std::size_t i = 0; i < num_children; ++i) {
-      Vec3<int>& child = children[i];
-      if      (child[axis] == -1) child[axis] = 1;
-      else if (child[axis] ==  1) child[axis] = 0;
-      else children.push_back(child + Vec3<int>::axis(axis));
-    }
-  }
-  return children;
-}
-
 TEST(tree, mark_definitions)
 {
   EXPECT_EQ(DEREFINE, -1);
@@ -189,71 +171,4 @@ TEST(tree, create_3D)
   EXPECT_EQ(leaves.count(ID(13)), 1);
   EXPECT_EQ(leaves.count(ID(14)), 1);
   EXPECT_EQ(leaves.count(ID(15)), 1);
-}
-
-TEST(tree, get_adj_children_1D)
-{
-  int const dim = 1;
-  std::vector<Vec3<int>> children;
-  children = get_adj_children(dim, {-1,0,0});
-  EXPECT_EQ(children.size(), 1);
-  EXPECT_EQ(children[0], Vec3<int>(1,0,0));
-  children = get_adj_children(dim, { 1,0,0});
-  EXPECT_EQ(children.size(), 1);
-  EXPECT_EQ(children[0], Vec3<int>(0,0,0));
-}
-
-TEST(tree, get_adj_children_2D)
-{
-  int const dim = 2;
-  std::vector<Vec3<int>> children;
-  children = get_adj_children(dim, {-1,-1,0});
-  EXPECT_EQ(children.size(), 1);
-  EXPECT_EQ(children[0], Vec3<int>(1,1,0));
-  children = get_adj_children(dim, {0,-1,0});
-  EXPECT_EQ(children.size(), 2);
-  EXPECT_EQ(children[0], Vec3<int>(0,1,0));
-  EXPECT_EQ(children[1], Vec3<int>(1,1,0));
-  children = get_adj_children(dim, {1,-1,0});
-  EXPECT_EQ(children.size(), 1);
-  EXPECT_EQ(children[0], Vec3<int>(0,1,0));
-  children = get_adj_children(dim, {-1,0,0});
-  EXPECT_EQ(children.size(), 2);
-  EXPECT_EQ(children[0], Vec3<int>(1,0,0));
-  EXPECT_EQ(children[1], Vec3<int>(1,1,0));
-  children = get_adj_children(dim, {1,0,0});
-  EXPECT_EQ(children.size(), 2);
-  EXPECT_EQ(children[0], Vec3<int>(0,0,0));
-  EXPECT_EQ(children[1], Vec3<int>(0,1,0));
-  children = get_adj_children(dim, {-1,1,0});
-  EXPECT_EQ(children.size(), 1);
-  EXPECT_EQ(children[0], Vec3<int>(1,0,0));
-  children = get_adj_children(dim, {0,1,0});
-  EXPECT_EQ(children.size(), 2);
-  EXPECT_EQ(children[0], Vec3<int>(0,0,0));
-  EXPECT_EQ(children[1], Vec3<int>(1,0,0));
-  children = get_adj_children(dim, {1,1,0});
-  EXPECT_EQ(children.size(), 1);
-  EXPECT_EQ(children[0], Vec3<int>(0,0,0));
-}
-
-TEST(tree, get_adj_children_3D)
-{
-  int const dim = 3;
-  std::vector<Vec3<int>> children;
-  children = get_adj_children(dim, {-1,-1,-1});
-  EXPECT_EQ(children.size(), 1);
-  EXPECT_EQ(children[0], Vec3<int>(1,1,1));
-  children = get_adj_children(dim, {-1,0,0});
-  EXPECT_EQ(children.size(), 4);
-  EXPECT_EQ(children[0], Vec3<int>(1,0,0));
-  EXPECT_EQ(children[1], Vec3<int>(1,1,0));
-  EXPECT_EQ(children[2], Vec3<int>(1,0,1));
-  EXPECT_EQ(children[3], Vec3<int>(1,1,1));
-  children = get_adj_children(dim, {1,0,0});
-  EXPECT_EQ(children.size(), 4);
-  EXPECT_EQ(children[0], Vec3<int>(0,0,0));
-  EXPECT_EQ(children[1], Vec3<int>(0,1,0));
-  EXPECT_EQ(children[2], Vec3<int>(0,0,1));
-  EXPECT_EQ(children[3], Vec3<int>(0,1,1));
 }
