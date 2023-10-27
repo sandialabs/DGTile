@@ -72,7 +72,7 @@ template <class LeavesT>
 template <class LeavesT>
 [[nodiscard]] Point get_base_point(int const dim, LeavesT const& leaves);
 
-Adjacencies get_adjacencies(
+[[nodiscard]] Adjacencies get_adjacencies(
     int const dim,
     ZLeaves const& z_leaves,
     Leaves const& leaves,

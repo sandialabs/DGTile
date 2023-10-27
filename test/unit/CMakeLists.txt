@@ -21,6 +21,7 @@ set(UNIT_TEST_SOURCES
   stl.cpp
   subgrid3.cpp
   tree.cpp
+  tree_amr.cpp
   tree_uniform.cpp
   vec.cpp
   vec3.cpp
