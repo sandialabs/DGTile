@@ -73,11 +73,20 @@ template <class LeavesT>
 [[nodiscard]] Point get_base_point(int const dim, LeavesT const& leaves);
 
 [[nodiscard]] Adjacencies get_adjacencies(
-    int const dim,
-    ZLeaves const& z_leaves,
-    Leaves const& leaves,
-    Point const& base_pt,
-    Periodic const& periodic);
+    int const dim, ZLeaves const& z_leaves, Leaves const& leaves,
+    Point const& base_pt, Periodic const& periodic);
+
+[[nodiscard]] Leaves balance(
+    int const dim, Leaves const& leaves,
+    Point const& base_pt, Periodic const& periodic);
+
+[[nodiscard]] Leaves modify(
+    int const dim, ZLeaves const& z_leaves, Marks const& marks);
+
+[[nodiscard]] Leaves modify(
+    int const dim, ZLeaves const& z_leaves, Levels const& levels,
+    Point const& base_pt, Periodic const& periodic,
+    int const min_level = 0, int const max_level = 16);
 
 [[nodiscard]] Box3<real> get_domain(
     int const dim, ID const global_id,

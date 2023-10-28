@@ -381,6 +381,161 @@ Adjacencies get_adjacencies(
   return result;
 }
 
+static void insert_children(
+    Leaves& leaves,
+    int const dim,
+    ID const global_id)
+{
+  Point const pt = get_point(dim, global_id);
+  auto functor = [&] (Vec3<int> const& child_ijk) {
+    Point const fine_pt = get_fine_point(dim, pt, child_ijk);
+    ID const fine_global_id = get_global_id(dim, fine_pt);
+    leaves.insert(fine_global_id);
+  };
+  seq_for_each(dimensionalize(dim, child_grid), functor);
+}
+
+static void insert_parent(
+    Leaves& leaves,
+    int const dim,
+    ID const global_id)
+{
+  Point const pt = get_point(dim, global_id);
+  Point const coarse_pt = get_coarse_point(dim, pt);
+  ID const coarse_global_id = get_global_id(dim, coarse_pt);
+  leaves.insert(coarse_global_id);
+}
+
+static std::vector<ID> get_refines(
+    int const dim,
+    Leaves const& leaves,
+    Point const& base_pt,
+    Periodic const& periodic)
+{
+  std::vector<ID> result;
+  for (ID const global_id : leaves) {
+    AdjImpl const impl = get_adj(dim, global_id, leaves, base_pt, periodic);
+    if (impl.should_refine) {
+      result.push_back(global_id);
+    }
+  }
+  return result;
+}
+
+Leaves balance(
+    int const dim,
+    Leaves const& leaves,
+    Point const& base_pt,
+    Periodic const& periodic)
+{
+  Leaves result = leaves;
+  bool needs_modification = true;
+  while (needs_modification) {
+    ZLeaves const z_leaves = order(dim, result);
+    std::vector<ID> const ids = get_refines(dim, result, base_pt, periodic);
+    std::size_t const num_refines = ids.size();
+    if (num_refines > 0) {
+      for (std::size_t i = 0; i < num_refines; ++i) {
+        ID const leaf = ids[i];
+        insert_children(result, dim, leaf);
+        result.erase(leaf);
+      }
+    } else {
+      needs_modification = false;
+    }
+  }
+  return result;
+}
+
+static std::unordered_set<ID> get_valid_parents(
+    int const dim,
+    ZLeaves const& z_leaves,
+    Marks const& marks)
+{
+  std::list<ID> sorted_parents;
+  std::list<ID> unique_parents;
+  std::unordered_set<ID> result;
+  for (std::size_t i = 0; i < z_leaves.size(); ++i) {
+    if (marks[i] == DEREFINE) {
+      ID const leaf = z_leaves[i];
+      Point const pt = get_point(dim, leaf);
+      Point const coarse_pt = get_coarse_point(dim, pt);
+      ID const parent = get_global_id(dim, coarse_pt);
+      unique_parents.push_back(parent);
+    }
+  }
+  unique_parents.sort();
+  sorted_parents = unique_parents;
+  unique_parents.unique();
+  int const num_child = dimensionalize(dim, child_grid).size();
+  for (ID const parent : unique_parents) {
+    int const count = std::count(
+        sorted_parents.begin(), sorted_parents.end(), parent);
+    if (count == num_child) result.insert(parent);
+  }
+  return result;
+}
+
+static bool can_derefine(
+    int const dim,
+    ID const leaf,
+    std::unordered_set<ID> const& parents)
+{
+  Point const pt = get_point(dim, leaf);
+  Point const coarse_pt = get_coarse_point(dim, pt);
+  ID const parent = get_global_id(dim, coarse_pt);
+  if (parents.count(parent)) return true;
+  else return false;
+}
+
+Leaves modify(
+    int const dim,
+    ZLeaves const& z_leaves,
+    Marks const& marks)
+{
+  Leaves leaves;
+  auto const parents = get_valid_parents(dim, z_leaves, marks);
+  for (std::size_t i = 0; i < z_leaves.size(); ++i) {
+    ID const leaf = z_leaves[i];
+    if (marks[i] == REMAIN) leaves.insert(leaf);
+    if (marks[i] == REFINE) insert_children(leaves, dim, leaf);
+    if (marks[i] == DEREFINE) {
+      if (can_derefine(dim, leaf, parents)) {
+        insert_parent(leaves, dim, leaf);
+      } else {
+        leaves.insert(leaf);
+      }
+    }
+  }
+  return leaves;
+}
+
+Leaves modify(
+    int const dim,
+    ZLeaves const& z_leaves,
+    Levels const& levels,
+    Point const& base_pt,
+    Periodic const& periodic,
+    int const min_level,
+    int const max_level)
+{
+  Marks marks(z_leaves.size(), REMAIN);
+  for (std::size_t i = 0; i < z_leaves.size(); ++i) {
+    ID const leaf = z_leaves[i];
+    int const current_level = get_level(dim, leaf);
+    int const desired_level = int(levels[i]);
+    bool const can_refine = (current_level < max_level);
+    bool const can_derefine = (current_level > min_level);
+    bool const should_refine = (desired_level > current_level);
+    bool const should_derefine = (desired_level < current_level);
+    if (should_refine && can_refine) marks[i] = REFINE;
+    if (should_derefine && can_derefine) marks[i] = DEREFINE;
+  }
+  Leaves leaves = modify(dim, z_leaves, marks);
+  leaves = balance(dim, leaves, base_pt, periodic);
+  return leaves;
+}
+
 Box3<real> get_domain(
     int const dim,
     ID const global_id,
