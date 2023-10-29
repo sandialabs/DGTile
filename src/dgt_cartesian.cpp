@@ -119,4 +119,35 @@ Subgrid3 get_coarse_to_fine_cells(
   return s;
 }
 
+static Subgrid3 const get_equal_cells(
+    Grid3 const& cell_grid,
+    int const ownership,
+    int const axis,
+    int const dir)
+{
+  int offset = (ownership == OWNED) ? 1 : 0;
+  int const dim = infer_dim(cell_grid);
+  Vec3<int> const ncells = cell_grid.extents();
+  Vec3<int> lower = Vec3<int>::zero();
+  Vec3<int> upper = Vec3<int>::zero();
+  for (int d = 0; d < dim; ++d) {
+    lower[d] = 1;
+    upper[d] = ncells[d] - 1;
+  }
+  lower[axis] = (dir == LEFT) ? offset : ncells[axis]-offset-1;
+  upper[axis] = (dir == LEFT) ? offset+1 : ncells[axis]-offset;
+  return Subgrid3(lower, upper);
+}
+
+Subgrid3 get_cells(
+    Grid3 const& cell_grid,
+    int const ownership,
+    int const adjacency_kind,
+    int const axis,
+    int const dir)
+{
+  (void)adjacency_kind;
+  return get_equal_cells(cell_grid, ownership, axis, dir);
+}
+
 }

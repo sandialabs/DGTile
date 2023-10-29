@@ -1,6 +1,9 @@
 #include <dgt_cartesian.hpp>
+#include <dgt_tree.hpp>
 
 #include <gtest/gtest.h>
+
+#include <dgt_print.hpp> // debug
 
 using namespace dgt;
 
@@ -153,4 +156,58 @@ TEST(cartesian, get_owned_faces)
   EXPECT_EQ(get_owned_faces({6,6,6}, X), Subgrid3({1,1,1}, {6,5,5}));
   EXPECT_EQ(get_owned_faces({6,6,6}, Y), Subgrid3({1,1,1}, {5,6,5}));
   EXPECT_EQ(get_owned_faces({6,6,6}, Z), Subgrid3({1,1,1}, {5,5,6}));
+}
+
+TEST(cartesian, get_cells_equal_ghost_1D)
+{
+  Grid3 const cell_grid(6,0,0);
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::EQUAL, X, LEFT), Subgrid3({0,0,0}, {1,0,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::EQUAL, X, RIGHT), Subgrid3({5,0,0}, {6,0,0}));
+}
+
+TEST(cartesian, get_cells_equal_ghost_2D)
+{
+  Grid3 const cell_grid(6,6,0);
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::EQUAL, X, LEFT), Subgrid3({0,1,0}, {1,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::EQUAL, X, RIGHT), Subgrid3({5,1,0}, {6,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::EQUAL, Y, LEFT), Subgrid3({1,0,0}, {5,1,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::EQUAL, Y, RIGHT), Subgrid3({1,5,0}, {5,6,0}));
+}
+
+TEST(cartesian, get_cells_equal_ghost_3D)
+{
+  Grid3 const cell_grid(6,6,6);
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::EQUAL, X, LEFT), Subgrid3({0,1,1}, {1,5,5}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::EQUAL, X, RIGHT), Subgrid3({5,1,1}, {6,5,5}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::EQUAL, Y, LEFT), Subgrid3({1,0,1}, {5,1,5}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::EQUAL, Y, RIGHT), Subgrid3({1,5,1}, {5,6,5}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::EQUAL, Z, LEFT), Subgrid3({1,1,0}, {5,5,1}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::EQUAL, Z, RIGHT), Subgrid3({1,1,5}, {5,5,6}));
+}
+
+TEST(cartesian, get_cells_equal_owned_1D)
+{
+  Grid3 const cell_grid(6,0,0);
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, X, LEFT), Subgrid3({1,0,0}, {2,0,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, X, RIGHT), Subgrid3({4,0,0}, {5,0,0}));
+}
+
+TEST(cartesian, get_cells_equal_owned_2D)
+{
+  Grid3 const cell_grid(6,6,0);
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, X, LEFT), Subgrid3({1,1,0}, {2,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, X, RIGHT), Subgrid3({4,1,0}, {5,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, Y, LEFT), Subgrid3({1,1,0}, {5,2,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, Y, RIGHT), Subgrid3({1,4,0}, {5,5,0}));
+}
+
+TEST(cartesian, get_cells_equal_owned_3D)
+{
+  Grid3 const cell_grid(6,6,6);
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, X, LEFT), Subgrid3({1,1,1}, {2,5,5}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, X, RIGHT), Subgrid3({4,1,1}, {5,5,5}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, Y, LEFT), Subgrid3({1,1,1}, {5,2,5}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, Y, RIGHT), Subgrid3({1,4,1}, {5,5,5}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, Z, LEFT), Subgrid3({1,1,1}, {5,5,2}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, Z, RIGHT), Subgrid3({1,1,4}, {5,5,5}));
 }

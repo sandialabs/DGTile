@@ -119,4 +119,11 @@ std::string inline get_axis_name(int const axis)
 [[nodiscard]] Subgrid3 get_owned_cells(Grid3 const& cell_grid);
 [[nodiscard]] Subgrid3 get_owned_faces(Grid3 const& cell_grid, int const axis);
 
+[[nodiscard]] Subgrid3 get_cells(
+    Grid3 const& cell_grid,
+    int const ownership,
+    int const adjacency_kind,
+    int const axis,
+    int const dir);
+
 }
