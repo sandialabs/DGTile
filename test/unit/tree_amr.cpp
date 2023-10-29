@@ -72,18 +72,6 @@ TEST(tree_amr, get_base_pt_3D)
   EXPECT_EQ(get_base_point(dim, z_leaves), Point(1, {2,1,1}));
 }
 
-TEST(tree_amr, get_adjacencies_2D)
-{
-  int const dim = 2;
-  ZLeaves const z_leaves = get_example_amr(dim);
-  Leaves leaves;
-  for (auto const leaf_id : z_leaves) { leaves.insert(leaf_id); }
-  Point const base_pt = get_base_point(dim, z_leaves);
-  Vec3<bool> const periodic(false, false, false);
-  Adjacencies const adjs = get_adjacencies(
-      dim, z_leaves, leaves, base_pt, periodic);
-}
-
 static Leaves refine_zleaf(
     int const dim,
     Leaves const& leaves,
@@ -106,6 +94,33 @@ static Leaves get_example_refined2(int const dim)
   Leaves const leaves = get_example_refined(dim);
   int const leaf = (dim == 1) ? 1 : 3;
   return refine_zleaf(dim, leaves, leaf);
+}
+
+TEST(tree_amr, get_adjacencies_failure)
+{
+  int const dim = 2;
+  Leaves const leaves = get_example_refined2(dim);
+  ZLeaves const z_leaves = order(dim, leaves);
+  Point const base_pt = get_base_point(dim, z_leaves);
+  Periodic const periodic(true, false, false);
+  EXPECT_THROW((void)get_adjacencies(dim, z_leaves, leaves, base_pt, periodic), std::runtime_error);
+}
+
+TEST(tree_amr, get_adjacencies_2D)
+{
+  int const dim = 2;
+  Leaves const leaves = get_example_refined(dim);
+  ZLeaves const z_leaves = order(dim, leaves);
+  Point const base_pt = get_base_point(dim, z_leaves);
+  Periodic const periodic(false, false, false);
+  Adjacencies const adjs = get_adjacencies(
+      dim, z_leaves, leaves, base_pt, periodic);
+  EXPECT_EQ(adjs[0].size(), 2);
+  EXPECT_EQ(adjs[1].size(), 3);
+  EXPECT_EQ(adjs[2].size(), 3);
+  EXPECT_EQ(adjs[3].size(), 4);
+  EXPECT_EQ(adjs[3][1].which_child, 3);
+  EXPECT_EQ(adjs[4][1].which_child, 2);
 }
 
 TEST(tree_amr, modify_1D)
@@ -161,16 +176,6 @@ TEST(tree_amr, modify_3D)
   EXPECT_EQ(leaves.count(ID(138)), 1);
   EXPECT_EQ(leaves.count(ID(145)), 1);
   EXPECT_EQ(leaves.count(ID(146)), 1);
-}
-
-TEST(tree_amr, get_adjacencies_failure)
-{
-  int const dim = 2;
-  Leaves const leaves = get_example_refined2(dim);
-  ZLeaves const z_leaves = order(dim, leaves);
-  Point const base_pt = get_base_point(dim, z_leaves);
-  Periodic const periodic(true, false, false);
-  EXPECT_THROW((void)get_adjacencies(dim, z_leaves, leaves, base_pt, periodic), std::runtime_error);
 }
 
 TEST(tree_amr, balance_1D)

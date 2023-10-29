@@ -77,6 +77,30 @@ TEST(cartesian, is_cell_ghost)
   EXPECT_EQ(is_cell_ghost(3, {10,10,10}, {3,4,5}), false);
 }
 
+TEST(cartesian, get_child_ijk)
+{
+  EXPECT_EQ(get_child_ijk(0), Vec3<int>(0,0,0));
+  EXPECT_EQ(get_child_ijk(1), Vec3<int>(1,0,0));
+  EXPECT_EQ(get_child_ijk(2), Vec3<int>(0,1,0));
+  EXPECT_EQ(get_child_ijk(3), Vec3<int>(1,1,0));
+  EXPECT_EQ(get_child_ijk(4), Vec3<int>(0,0,1));
+  EXPECT_EQ(get_child_ijk(5), Vec3<int>(1,0,1));
+  EXPECT_EQ(get_child_ijk(6), Vec3<int>(0,1,1));
+  EXPECT_EQ(get_child_ijk(7), Vec3<int>(1,1,1));
+}
+
+TEST(cartesian, get_which_child)
+{
+  EXPECT_EQ(get_which_child({0,0,0}), 0);
+  EXPECT_EQ(get_which_child({1,0,0}), 1);
+  EXPECT_EQ(get_which_child({0,1,0}), 2);
+  EXPECT_EQ(get_which_child({1,1,0}), 3);
+  EXPECT_EQ(get_which_child({0,0,1}), 4);
+  EXPECT_EQ(get_which_child({1,0,1}), 5);
+  EXPECT_EQ(get_which_child({0,1,1}), 6);
+  EXPECT_EQ(get_which_child({1,1,1}), 7);
+}
+
 TEST(cartesian, get_axis_name)
 {
   EXPECT_EQ(get_axis_name(X), "X");

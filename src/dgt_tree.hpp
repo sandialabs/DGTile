@@ -33,7 +33,7 @@ struct Adjacent
   std::int8_t axis = -1;
   std::int8_t dir = -1;
   std::int8_t kind = EQUAL;
-  Vec3<int> my_child_ijk = {0,0,0};
+  std::int8_t which_child = 0;
 };
 
 using AdjacentToLeaf = std::vector<Adjacent>;

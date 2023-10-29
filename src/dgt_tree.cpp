@@ -294,6 +294,15 @@ static bool is_leaf_in(std::vector<ID> const& ids, Leaves const& leaves)
   return is_in;
 }
 
+static int get_which_child(int const dim, Point const& pt)
+{
+  Point const coarse_pt = get_coarse_point(dim, pt);
+  Point const corner_pt = get_fine_point(dim, coarse_pt, {0,0,0});
+  Vec3<int> const child_ijk = pt.ijk - corner_pt.ijk;
+  int const which_child = get_which_child(child_ijk);
+  return which_child;
+}
+
 static AdjImpl get_adj(
     int const dim,
     ID const global_id,
@@ -333,15 +342,16 @@ static AdjImpl get_adj(
         if (is_fine_to_coarse) {
           adj.kind = FINE_TO_COARSE;
           adj.neighbor = coarse_adj_id;
+          adj.which_child = get_which_child(dim, pt);
           result.adj.push_back(adj);
         }
         if (is_coarse_to_fine) {
           int const idir = invert_dir(dir);
-          auto const my_child_ijks = get_adj_children(dim, axis, idir);
+          auto const child_ijks = get_adj_children(dim, axis, idir);
           for (std::size_t i = 0; i < fine_adj_ids.size(); ++i) {
             adj.kind = COARSE_TO_FINE;
             adj.neighbor = fine_adj_ids[i];
-            adj.my_child_ijk = my_child_ijks[i];
+            adj.which_child = get_which_child(child_ijks[i]);
             result.adj.push_back(adj);
           }
         }

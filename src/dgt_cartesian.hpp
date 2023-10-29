@@ -86,6 +86,22 @@ DGT_METHOD inline bool is_cell_ghost(
   return false;
 }
 
+DGT_METHOD inline Vec3<int> get_child_ijk(int const which_child)
+{
+  Vec3<int> child_ijk;
+  int const a = which_child % 2;
+  int const b = (which_child - a) / 2;
+  child_ijk.x() = a;
+  child_ijk.y() = b % 2;
+  child_ijk.z() = b / 2;
+  return child_ijk;
+}
+
+DGT_METHOD inline int get_which_child(Vec3<int> const& child_ijk)
+{
+  return child_ijk.x() + 2 * (child_ijk.y() + 2 * child_ijk.z());
+}
+
 std::string inline get_axis_name(int const axis)
 {
   return
