@@ -139,15 +139,53 @@ static Subgrid3 const get_equal_cells(
   return Subgrid3(lower, upper);
 }
 
+static Subgrid3 const get_ftc_cells(
+    Grid3 const& cell_grid,
+    int const ownership,
+    int const axis,
+    int const dir)
+{
+  if (ownership == GHOST) {
+    return get_equal_cells(cell_grid, GHOST, axis, dir);
+  }
+  Subgrid3 s = get_equal_cells(cell_grid, OWNED, axis, dir);
+  if (dir == LEFT) s.upper()[axis] += 1;
+  if (dir == RIGHT) s.lower()[axis] -= 1;
+  return s;
+}
+
+static Subgrid3 const get_ctf_cells(
+    Grid3 const& cell_grid,
+    int const ownership,
+    int const axis,
+    int const dir,
+    int const which_child)
+{
+  (void)cell_grid;
+  (void)ownership;
+  (void)axis;
+  (void)dir;
+  (void)which_child;
+  return Subgrid3(Vec3<int>::zero());
+}
+
 Subgrid3 get_cells(
     Grid3 const& cell_grid,
     int const ownership,
     int const adjacency_kind,
     int const axis,
-    int const dir)
+    int const dir,
+    int const which_child)
 {
-  (void)adjacency_kind;
-  return get_equal_cells(cell_grid, ownership, axis, dir);
+  if (adjacency_kind == tree::EQUAL) {
+    return get_equal_cells(cell_grid, ownership, axis, dir);
+  } else if (adjacency_kind == tree::FINE_TO_COARSE) {
+    return get_ftc_cells(cell_grid, ownership, axis, dir);
+  } else if (adjacency_kind == tree::COARSE_TO_FINE) {
+    return get_ctf_cells(cell_grid, ownership, axis, dir, which_child);
+  } else {
+    throw std::runtime_error("dgt:get_cells - invalid kind");
+  }
 }
 
 }

@@ -124,6 +124,7 @@ std::string inline get_axis_name(int const axis)
     int const ownership,
     int const adjacency_kind,
     int const axis,
-    int const dir);
+    int const dir,
+    int const which_child = 0);
 
 }

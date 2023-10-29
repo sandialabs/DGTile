@@ -211,3 +211,57 @@ TEST(cartesian, get_cells_equal_owned_3D)
   EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, Z, LEFT), Subgrid3({1,1,1}, {5,5,2}));
   EXPECT_EQ(get_cells(cell_grid, OWNED, tree::EQUAL, Z, RIGHT), Subgrid3({1,1,4}, {5,5,5}));
 }
+
+TEST(cartesian, get_cells_ftc_ghost_1D)
+{
+  Grid3 const cell_grid(6,0,0);
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::FINE_TO_COARSE, X, LEFT), Subgrid3({0,0,0}, {1,0,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::FINE_TO_COARSE, X, RIGHT), Subgrid3({5,0,0}, {6,0,0}));
+}
+
+TEST(cartesian, get_cells_ftc_ghost_2D)
+{
+  Grid3 const cell_grid(6,6,0);
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::FINE_TO_COARSE, X, LEFT), Subgrid3({0,1,0}, {1,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::FINE_TO_COARSE, X, RIGHT), Subgrid3({5,1,0}, {6,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::FINE_TO_COARSE, Y, LEFT), Subgrid3({1,0,0}, {5,1,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::FINE_TO_COARSE, Y, RIGHT), Subgrid3({1,5,0}, {5,6,0}));
+}
+
+TEST(cartesian, get_cells_ftc_ghost_3D)
+{
+  Grid3 const cell_grid(6,6,6);
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::FINE_TO_COARSE, X, LEFT), Subgrid3({0,1,1}, {1,5,5}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::FINE_TO_COARSE, X, RIGHT), Subgrid3({5,1,1}, {6,5,5}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::FINE_TO_COARSE, Y, LEFT), Subgrid3({1,0,1}, {5,1,5}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::FINE_TO_COARSE, Y, RIGHT), Subgrid3({1,5,1}, {5,6,5}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::FINE_TO_COARSE, Z, LEFT), Subgrid3({1,1,0}, {5,5,1}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::FINE_TO_COARSE, Z, RIGHT), Subgrid3({1,1,5}, {5,5,6}));
+}
+
+TEST(cartesian, get_cells_ftc_owned_1D)
+{
+  Grid3 const cell_grid(6,0,0);
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, X, LEFT), Subgrid3({1,0,0}, {3,0,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, X, RIGHT), Subgrid3({3,0,0}, {5,0,0}));
+}
+
+TEST(cartesian, get_cells_ftc_owned_2D)
+{
+  Grid3 const cell_grid(6,6,0);
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, X, LEFT), Subgrid3({1,1,0}, {3,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, X, RIGHT), Subgrid3({3,1,0}, {5,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, Y, LEFT), Subgrid3({1,1,0}, {5,3,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, Y, RIGHT), Subgrid3({1,3,0}, {5,5,0}));
+}
+
+TEST(cartesian, get_cells_ftc_owned_3D)
+{
+  Grid3 const cell_grid(6,6,6);
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, X, LEFT), Subgrid3({1,1,1}, {3,5,5}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, X, RIGHT), Subgrid3({3,1,1}, {5,5,5}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, Y, LEFT), Subgrid3({1,1,1}, {5,3,5}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, Y, RIGHT), Subgrid3({1,3,1}, {5,5,5}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, Z, LEFT), Subgrid3({1,1,1}, {5,5,3}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, Z, RIGHT), Subgrid3({1,1,3}, {5,5,5}));
+}
