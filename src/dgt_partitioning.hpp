@@ -30,7 +30,7 @@ namespace linear_partitioning {
 [[nodiscard]] PartInfo get_part_info(
     int const num_ranks,
     tree::ID const global_id,
-    tree::ZLeaves const& z_leaves);
+    tree::GlobalToZ const& inv_z_leaves);
 
 }
 }

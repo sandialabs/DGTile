@@ -38,5 +38,26 @@ tree::ZLeaves get_owned_leaves(
   return std::vector<tree::ID>(begin, end);
 }
 
+PartInfo get_part_info(
+    int const num_parts,
+    tree::ID const global_id,
+    tree::GlobalToZ const& inv_z_leaves)
+{
+  PartInfo result;
+  int const num_total = int(inv_z_leaves.size());
+  int const zid = inv_z_leaves.at(global_id);
+  int const quotient = num_total / num_parts;
+  int const remainder = num_total % num_parts;
+  int const transition_zid = get_local_offset(num_total, num_parts, remainder);
+  if (zid < transition_zid) {
+    result.rank = zid / (quotient + 1);
+    result.block = zid - result.rank * (quotient + 1);
+  } else {
+    result.rank = remainder + (zid - transition_zid) / quotient;
+    result.block = (zid - transition_zid) - (result.rank - remainder) * quotient;
+  }
+  return result;
+}
+
 }
 }
