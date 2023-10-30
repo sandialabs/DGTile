@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 using namespace dgt;
+using namespace dgt::tree;
 
 TEST(partitioning, linear_get_num_local)
 {
@@ -46,4 +47,14 @@ TEST(partitioning, check_empty_ranks_will_work)
   auto end = ids.begin() + offset + num_local;
   std::vector<int> owned_ids(begin, end);
   EXPECT_EQ(owned_ids.size(), 0);
+}
+
+TEST(partitioning, linear_get_owned_leaves)
+{
+  using namespace dgt::linear_partitioning;
+  ZLeaves ids = {1,2,9,28,3,5,17,12};
+  ZLeaves ids_part0 = {1,2,9,28};
+  ZLeaves ids_part1 = {3,5,17,12};
+  EXPECT_EQ(get_owned_leaves(0, 2, ids), ids_part0);
+  EXPECT_EQ(get_owned_leaves(1, 2, ids), ids_part1);
 }

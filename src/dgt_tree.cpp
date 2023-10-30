@@ -129,6 +129,17 @@ ZLeaves order(int const dim, Leaves const& leaves)
   return z_leaves;
 }
 
+GlobalToZ invert(int const dim, ZLeaves const& z_leaves)
+{
+  (void)dim;
+  GlobalToZ inverse_z_leaves;
+  for (std::size_t i = 0; i < z_leaves.size(); ++i) {
+    ID const global_id = z_leaves[i];
+    inverse_z_leaves[global_id] = int(i);
+  }
+  return inverse_z_leaves;
+}
+
 int min_op(int const a, int const b) { return (a < b) ? a : b; }
 int max_op(int const a, int const b) { return (a > b) ? a : b; }
 

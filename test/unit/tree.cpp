@@ -172,3 +172,13 @@ TEST(tree, create_3D)
   EXPECT_EQ(leaves.count(ID(14)), 1);
   EXPECT_EQ(leaves.count(ID(15)), 1);
 }
+
+TEST(tree, invert)
+{
+  ZLeaves const z_leaves = {10,100,27,101,1298};
+  GlobalToZ const inv_z_leaves = invert(2, z_leaves);
+  EXPECT_EQ(inv_z_leaves.at(10), 0);
+  EXPECT_EQ(inv_z_leaves.at(100), 1);
+  EXPECT_EQ(inv_z_leaves.at(101), 3);
+  EXPECT_EQ(inv_z_leaves.at(1298), 4);
+}

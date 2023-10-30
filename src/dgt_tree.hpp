@@ -38,6 +38,7 @@ struct Adjacent
 
 using AdjacentToLeaf = std::vector<Adjacent>;
 using Adjacencies = std::vector<AdjacentToLeaf>;
+using GlobalToZ = std::unordered_map<ID, int>;
 using Leaves = std::unordered_set<ID>;
 using Levels = std::vector<std::int8_t>;
 using Marks = std::vector<std::int8_t>;
@@ -62,6 +63,8 @@ using ZLeaves = std::vector<ID>;
 [[nodiscard]] Leaves create(int const dim, Grid3 const& grid);
 
 [[nodiscard]] ZLeaves order(int const dim, Leaves const& leaves);
+
+[[nodiscard]] GlobalToZ invert(int const dim, ZLeaves const& z_leaves);
 
 template <class LeavesT>
 [[nodiscard]] int get_max_level(int const dim, LeavesT const& leaves);

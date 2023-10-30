@@ -8,6 +8,7 @@ set(DGT_HEADERS
   dgt_dg.hpp
   dgt_field.hpp
   dgt_for_each.hpp
+  dgt_ghosting.hpp
   dgt_grid3.hpp
   dgt_initialize.hpp
   dgt_lua.hpp
@@ -31,6 +32,7 @@ set(DGT_SOURCES
   dgt_block_info.cpp
   dgt_cartesian.cpp
   dgt_dg.cpp
+  dgt_ghosting.cpp
   dgt_initialize.cpp
   dgt_lua.cpp
   dgt_mesh.cpp

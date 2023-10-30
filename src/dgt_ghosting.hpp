@@ -9,7 +9,9 @@ class Ghosting
 
   private:
 
-    int m_num_messages = -1;
+  public:
+
+    void build(Mesh const& mesh);
 
 };
 
