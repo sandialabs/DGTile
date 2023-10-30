@@ -53,7 +53,7 @@ Subgrid3 get_owned_faces(Grid3 const& cell_grid, int const axis)
   return faces;
 }
 
-static Subgrid3 const get_cells(
+static Subgrid3 const get_equal_cells(
     Grid3 const& cell_grid,
     int const ownership,
     int const axis,
@@ -79,7 +79,7 @@ static Subgrid3 const get_ftc_cells(
     int const axis,
     int const dir)
 {
-  Subgrid3 s = get_cells(cell_grid, ownership, axis, dir);
+  Subgrid3 s = get_equal_cells(cell_grid, ownership, axis, dir);
   if (ownership == GHOST) return s;
   if (dir == LEFT) s.upper()[axis] += 1;
   if (dir == RIGHT) s.lower()[axis] -= 1;
@@ -94,14 +94,14 @@ static Subgrid3 const get_ctf_cells(
     int const which_child)
 {
   int const dim = infer_dim(cell_grid);
-  Subgrid3 s = get_cells(cell_grid, ownership, axis, dir);
+  Subgrid3 s = get_equal_cells(cell_grid, ownership, axis, dir);
   Vec3<int> const child_ijk = get_child_ijk(which_child);
   Vec3<int> const ncells = cell_grid.extents();
   for (int d = 0; d < dim; ++d) {
     if (d == axis) continue;
     int const half_cells = ncells[d] / 2;
-    if (child_ijk[axis] == 0) s.upper()[axis] = half_cells;
-    if (child_ijk[axis] == 1) s.lower()[axis] = half_cells;
+    if (child_ijk[d] == 0) s.upper()[d] = half_cells;
+    if (child_ijk[d] == 1) s.lower()[d] = half_cells;
   }
   return s;
 }
@@ -115,7 +115,7 @@ Subgrid3 get_cells(
     int const which_child)
 {
   if (adjacency_kind == tree::EQUAL) {
-    return get_cells(cell_grid, ownership, axis, dir);
+    return get_equal_cells(cell_grid, ownership, axis, dir);
   } else if (adjacency_kind == tree::FINE_TO_COARSE) {
     return get_ftc_cells(cell_grid, ownership, axis, dir);
   } else if (adjacency_kind == tree::COARSE_TO_FINE) {

@@ -265,3 +265,43 @@ TEST(cartesian, get_cells_ftc_owned_3D)
   EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, Z, LEFT), Subgrid3({1,1,1}, {5,5,3}));
   EXPECT_EQ(get_cells(cell_grid, OWNED, tree::FINE_TO_COARSE, Z, RIGHT), Subgrid3({1,1,3}, {5,5,5}));
 }
+
+TEST(cartesian, get_cells_ctf_ghost_1D)
+{
+  Grid3 const cell_grid(6,0,0);
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::COARSE_TO_FINE, X, LEFT, 0), Subgrid3({0,0,0}, {1,0,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::COARSE_TO_FINE, X, RIGHT, 0), Subgrid3({5,0,0}, {6,0,0}));
+}
+
+TEST(cartesian, get_cells_ctf_ghost_2D)
+{
+  Grid3 const cell_grid(6,6,0);
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::COARSE_TO_FINE, X, LEFT, 0), Subgrid3({0,1,0}, {1,3,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::COARSE_TO_FINE, X, LEFT, 2), Subgrid3({0,3,0}, {1,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::COARSE_TO_FINE, X, RIGHT, 1), Subgrid3({5,1,0}, {6,3,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::COARSE_TO_FINE, X, RIGHT, 3), Subgrid3({5,3,0}, {6,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::COARSE_TO_FINE, Y, LEFT, 0), Subgrid3({1,0,0}, {3,1,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::COARSE_TO_FINE, Y, LEFT, 1), Subgrid3({3,0,0}, {5,1,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::COARSE_TO_FINE, Y, RIGHT, 2), Subgrid3({1,5,0}, {3,6,0}));
+  EXPECT_EQ(get_cells(cell_grid, GHOST, tree::COARSE_TO_FINE, Y, RIGHT, 3), Subgrid3({3,5,0}, {5,6,0}));
+}
+
+TEST(cartesian, get_cells_ctf_owned_1D)
+{
+  Grid3 const cell_grid(6,0,0);
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::COARSE_TO_FINE, X, LEFT, 0), Subgrid3({1,0,0}, {2,0,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::COARSE_TO_FINE, X, RIGHT, 0), Subgrid3({4,0,0}, {5,0,0}));
+}
+
+TEST(cartesian, get_cells_ctf_owned_2D)
+{
+  Grid3 const cell_grid(6,6,0);
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::COARSE_TO_FINE, X, LEFT, 0), Subgrid3({1,1,0}, {2,3,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::COARSE_TO_FINE, X, LEFT, 2), Subgrid3({1,3,0}, {2,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::COARSE_TO_FINE, X, RIGHT, 1), Subgrid3({4,1,0}, {5,3,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::COARSE_TO_FINE, X, RIGHT, 3), Subgrid3({4,3,0}, {5,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::COARSE_TO_FINE, Y, LEFT, 0), Subgrid3({1,1,0}, {3,2,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::COARSE_TO_FINE, Y, LEFT, 1), Subgrid3({3,1,0}, {5,2,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::COARSE_TO_FINE, Y, RIGHT, 2), Subgrid3({1,4,0}, {3,5,0}));
+  EXPECT_EQ(get_cells(cell_grid, OWNED, tree::COARSE_TO_FINE, Y, RIGHT, 3), Subgrid3({3,4,0}, {5,5,0}));
+}
