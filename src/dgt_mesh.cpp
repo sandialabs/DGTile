@@ -223,6 +223,16 @@ std::vector<ModalDescriptor> const& Mesh::get_modal_descriptors() const
   return m_modal_meta;
 }
 
+ModalDescriptor const& Mesh::get_modal_descriptor(std::string const& name) const
+{
+  int const modal_idx = index(m_modal_meta, name);
+  if (modal_idx < 0) {
+    std::string const msg = fmt::format(
+        "dgt::Mesh::get_modal_descriptor -> field {} doesn't exist", name);
+  }
+  return m_modal_meta[modal_idx];
+}
+
 Field<real***>& Mesh::get_solution(std::string const& name, int const soln_idx)
 {
   int const modal_idx = index(m_modal_meta, name);

@@ -76,9 +76,12 @@ class Mesh
     int num_owned_cells() const;
 
     std::vector<ModalDescriptor> const& get_modal_descriptors() const;
+    ModalDescriptor const& get_modal_descriptor(std::string const& name) const;
+
     Field<real***>& get_solution(std::string const& name, int const soln_idx);
     Field<real***>& get_fluxes(std::string const& name, int const axis);
     Field<real***>& get_residual(std::string const& name);
+
     Field<real***> const& get_solution(std::string const& name, int const soln_idx) const;
     Field<real***> const& get_fluxes(std::string const& name, int const axis) const;
     Field<real***> const& get_residual(std::string const& name) const;

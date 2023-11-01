@@ -3,9 +3,9 @@
 #include <Kokkos_DualView.hpp>
 
 #include "dgt_defines.hpp"
+#include "dgt_mesh.hpp"
 #include "dgt_message.hpp"
 #include "dgt_subgrid3.hpp"
-#include "dgt_tree.hpp"
 #include "dgt_view.hpp"
 
 namespace dgt {
@@ -20,12 +20,16 @@ class Ghosting
     template <class T>
     using DualView = typename Kokkos::DualView<T>;
 
-    using buffer_t = HostPinnedView<real***>;
+    using buffer_t = HostPinnedRightView<real***>;
+
+    Grid3 m_cell_grid = {0,0,0};
 
     int m_max_eqs = -1;
+    int m_num_blocks = -1;
     int m_num_modes = -1;
+    int m_num_msgs = -1;
 
-    DualView<int*> m_msgs_per_block;
+    DualView<int*> m_block_offsets;
     DualView<int*> m_buffer_offsets;
     DualView<tree::Adjacent*> m_adjacencies;
     DualView<Subgrid3*> m_subgrids[DIRECTIONS];
@@ -37,10 +41,24 @@ class Ghosting
 
     void build(Mesh const& mesh);
 
+    void begin_transfer(
+        Field<real***> const& U,
+        Basis<View> const& B,
+        int const start_eq,
+        int const end_eq);
+
+    void end_transfer();
+
   private:
 
     void build_views(Mesh const& mesh);
     void build_messages(Mesh const& mesh);
+
+    void pack(
+        Field<real***> const& U,
+        Basis<View> const& B,
+        int const start_eq,
+        int const end_eq);
 
 };
 
