@@ -107,7 +107,7 @@ an example Z-curve ordering of the leaves for a two-dimensional mesh.
   :width: 500
   :alt: Z-curve ordering of a 2D mesh
 
-The psuedo-code below illustrates how a z-curve ordering of an arbitrary
+The pseudo-code below illustrates how a z-curve ordering of an arbitrary
 tree is obtained recursively, starting from the root global id :math:`0`.
 
 .. code-block:: lua
