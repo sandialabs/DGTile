@@ -33,7 +33,7 @@ static Mesh get_single_block_mesh(
   return mesh;
 }
 
-TEST(ghosting, single_block)
+TEST(ghosting, build_single_block_2D)
 {
   mpicpp::comm comm = mpicpp::comm::world();
   Mesh mesh = get_single_block_mesh(&comm, 2, 1, 2, true);

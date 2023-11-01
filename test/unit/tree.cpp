@@ -173,6 +173,19 @@ TEST(tree, create_3D)
   EXPECT_EQ(leaves.count(ID(15)), 1);
 }
 
+TEST(tree, order_3D)
+{
+  Leaves const leaves = create(3, {3,2,1});
+  ZLeaves const zleaves = order(3, leaves);
+  EXPECT_EQ(leaves.size(), 6);
+  EXPECT_EQ(zleaves[0], ID(9));
+  EXPECT_EQ(zleaves[1], ID(10));
+  EXPECT_EQ(zleaves[2], ID(13));
+  EXPECT_EQ(zleaves[3], ID(14));
+  EXPECT_EQ(zleaves[4], ID(11));
+  EXPECT_EQ(zleaves[5], ID(15));
+}
+
 TEST(tree, invert)
 {
   ZLeaves const z_leaves = {10,100,27,101,1298};

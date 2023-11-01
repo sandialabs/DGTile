@@ -13,3 +13,4 @@ in DGTile.
     :caption: Table of Contents:
 
     trees
+    dg
