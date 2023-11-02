@@ -173,7 +173,7 @@ static void write_mesh(
   }
 }
 
-void write_out(Input const& in, State const& state, int soln_idx)
+void write_out(Input const& in, State& state, int soln_idx)
 {
   static int ctr = 0;
   std::filesystem::path const out_dir = in.name;
@@ -182,6 +182,7 @@ void write_out(Input const& in, State const& state, int soln_idx)
   std::filesystem::create_directory(vtk_dir);
   std::filesystem::create_directory(path);
   write_mesh(path, state, soln_idx);
+  state.vtk_times.push_back(state.time);
   ctr++;
 }
 

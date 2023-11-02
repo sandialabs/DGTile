@@ -175,6 +175,14 @@ static inputs::Mesh parse_mesh(lua::table const& in)
   return result;
 }
 
+static inputs::Vtk parse_vtk(lua::table const& in)
+{
+  check_valid_keys(in, {"when"});
+  inputs::Vtk result;
+  result.when = make_when(in.get_or_table("when"));
+  return result;
+}
+
 struct lua_scalar : inputs::function<real>
 {
   lua::function f;
@@ -297,6 +305,7 @@ Input make_input(
       "time",
       "basis",
       "mesh",
+      "vtk",
       "initial_conditions"});
   Input result;
   result.input_file_name = file_name;
@@ -304,6 +313,7 @@ Input make_input(
   result.time = parse_time(in.get_table("time"));
   result.basis = parse_basis(in.get_table("basis"));
   result.mesh = parse_mesh(in.get_table("mesh"));
+  result.vtk = parse_vtk(in.get_table("vtk"));
   result.ics = parse_ics(in.get_table("initial_conditions"));
   if (parsing_errors > 0) {
     throw std::runtime_error("example-> encountered errors when parsing");

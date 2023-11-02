@@ -36,6 +36,10 @@ input = {
     end
   },
 
+  vtk = {
+    when = {{kind='at_time_periodically', frequency='0.1'}}
+  }
+
 }
 
 dgtile.run(input)

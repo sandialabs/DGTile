@@ -90,7 +90,9 @@ real compute_dt(Input const& in, State const& state)
   reduce_for_each<real>("dt",
       nblocks, owned_cells, functor, Kokkos::Min<real>(dt));
   real const cfl = in.time.cfl;
-  return cfl * dt;
+  real sim_dt = cfl * dt;
+  sim_dt = std::min(sim_dt, in.time.end_time - state.time);
+  return sim_dt;
 }
 
 DGT_METHOD inline Vec<real, NEQ> get_hllc_flux(
@@ -311,7 +313,7 @@ void advance_explicitly(
   auto to = mesh.get_solution("hydro", to_idx).get();
   auto functor = [=] DGT_DEVICE(
       int const block,
-      Vec3<int> const& cell_ijk)
+      Vec3<int> const& cell_ijk) DGT_ALWAYS_INLINE
   {
     int const cell = cell_grid.index(cell_ijk);
     real const detJ = block_info.cell_detJs[block];
@@ -326,6 +328,38 @@ void advance_explicitly(
     }
   };
   for_each("explicit_advance", num_blocks, owned_cells, functor);
+}
+
+void axpby(
+    State& state,
+    Field<real***>& r,
+    real const a,
+    Field<real***>& x,
+    real const b,
+    Field<real***>& y)
+{
+  auto R = r.get();
+  auto X = x.get();
+  auto Y = y.get();
+  Mesh const& mesh = state.mesh;
+  Grid3 const cell_grid = mesh.cell_grid();
+  Subgrid3 const owned_cells = get_owned_cells(cell_grid);
+  int const num_blocks = mesh.num_owned_blocks();
+  int const num_modes = mesh.basis().num_modes;
+  auto functor = [=] DGT_DEVICE(
+      int const block,
+      Vec3<int> const& cell_ijk) DGT_ALWAYS_INLINE
+  {
+    int const cell = cell_grid.index(cell_ijk);
+    for (int eq = 0; eq < NEQ; ++eq) {
+      for (int mode = 0; mode < num_modes; ++mode) {
+        R[block](cell, eq, mode) =
+          a * X[block](cell, eq, mode) +
+          b * Y[block](cell, eq, mode);
+      }
+    }
+  };
+  for_each("axpby", num_blocks, owned_cells, functor);
 }
 
 }

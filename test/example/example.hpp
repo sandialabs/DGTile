@@ -51,6 +51,11 @@ struct InitialConditions
   function_ptr<Vec3<real>> velocity;
 };
 
+struct Vtk
+{
+  WhenPtr when;
+};
+
 }
 
 enum {DENS=0, MMTM=1, ENER=4, NEQ=5};
@@ -63,6 +68,7 @@ struct Input
   inputs::Basis basis;
   inputs::Time time;
   inputs::Mesh mesh;
+  inputs::Vtk vtk;
   inputs::InitialConditions ics;
 };
 
@@ -94,12 +100,13 @@ struct State
   real time = 0.;
   real dt = 0.;
   int step = 0;
+  std::vector<real> vtk_times;
 };
 
 void run_lua_file(std::string const& path);
 void run(mpicpp::comm* comm, Input const& in);
 void setup(State& state, mpicpp::comm* comm, Input const& in);
-void write_out(Input const& in, State const& state, int soln_idx);
+void write_out(Input const& in, State& state, int soln_idx);
 real compute_dt(Input const& in, State const& state);
 void zero_residual(State& state);
 void compute_fluxes(State& state, int const soln_idx);
