@@ -5,6 +5,7 @@
 #include "dgt_block_info.hpp"
 #include "dgt_dg.hpp"
 #include "dgt_field.hpp"
+#include "dgt_ghosting.hpp"
 #include "dgt_tree.hpp"
 #include "dgt_view.hpp"
 
@@ -35,6 +36,8 @@ class Mesh
 
     std::vector<ModalDescriptor> m_modal_meta;
     std::vector<ModalField> m_modal;
+
+    Ghosting m_ghosting;
 
   public:
 
@@ -85,6 +88,12 @@ class Mesh
     Field<real***> const& get_solution(std::string const& name, int const soln_idx) const;
     Field<real***> const& get_fluxes(std::string const& name, int const axis) const;
     Field<real***> const& get_residual(std::string const& name) const;
+
+    void ghost(
+        std::string const& name,
+        int const soln_idx,
+        int const eq_start,
+        int const eq_end);
 
     void print_stats() const;
 

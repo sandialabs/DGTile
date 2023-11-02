@@ -185,6 +185,7 @@ void Mesh::initialize()
     m_modal.push_back(f);
   }
   //TODO: add `tagged` fields here (that we can't prolong/restrict w/ basis)
+  m_ghosting.build(*this);
 }
 
 int Mesh::dim() const
@@ -297,6 +298,17 @@ Field<real***> const& Mesh::get_residual(std::string const& name) const
         "dgt::Mesh::get_residual -> field {} doesn't exist", name);
   }
   return m_modal[modal_idx].residual;
+}
+
+void Mesh::ghost(
+    std::string const& name,
+    int const soln_idx,
+    int const eq_start,
+    int const eq_end)
+{
+  auto const& U = get_solution(name, soln_idx);
+  m_ghosting.begin_transfer(U, m_basis, eq_start, eq_end);
+  m_ghosting.end_transfer(U, m_basis, eq_start, eq_end);
 }
 
 static Vec3<real> vec_min(Vec3<real> const& a, Vec3<real> const b)

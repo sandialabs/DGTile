@@ -3,10 +3,11 @@
 #include <Kokkos_DualView.hpp>
 
 #include "dgt_defines.hpp"
-#include "dgt_mesh.hpp"
+#include "dgt_dg.hpp"
+#include "dgt_field.hpp"
 #include "dgt_message.hpp"
+#include "dgt_tree.hpp"
 #include "dgt_subgrid3.hpp"
-#include "dgt_view.hpp"
 
 namespace dgt {
 
@@ -45,14 +46,14 @@ class Ghosting
     void begin_transfer(
         Field<real***> const& U,
         Basis<View> const& B,
-        int const start_eq,
-        int const end_eq);
+        int const eq_start,
+        int const eq_end);
 
     void end_transfer(
         Field<real***> const& U,
         Basis<View> const& B,
-        int const start_eq,
-        int const end_eq);
+        int const eq_start,
+        int const eq_end);
 
   private:
 

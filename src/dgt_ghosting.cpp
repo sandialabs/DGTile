@@ -1,18 +1,17 @@
 #include "dgt_cartesian.hpp"
 #include "dgt_for_each.hpp"
 #include "dgt_ghosting.hpp"
+#include "dgt_mesh.hpp"
 #include "dgt_partitioning.hpp"
-#include "dgt_tree.hpp"
 
 namespace dgt {
 
 static int count_messages(Mesh const& mesh)
 {
   int num_msg = 0;
-  auto const& leaves = mesh.owned_leaves();
   auto const& adjs = mesh.owned_adjacencies();
-  for (tree::ID const global_id : leaves) {
-    num_msg += adjs.at(global_id).size();
+  for (auto const& adj : adjs) {
+    num_msg += adj.size();
   }
   return num_msg;
 }
@@ -35,7 +34,6 @@ void copy_to_device(T const& v)
 void Ghosting::build_views(Mesh const& mesh)
 {
   int const dim = mesh.dim();
-  auto const& leaves = mesh.owned_leaves();
   auto const& adjs = mesh.owned_adjacencies();
   m_block_offsets = DualView<int*>("Ghosting::block_offsets", m_num_blocks+1);
   m_buffer_offsets = DualView<int*>("Ghosting::buffer_offsets", m_num_msgs+1);
@@ -47,8 +45,7 @@ void Ghosting::build_views(Mesh const& mesh)
   m_block_offsets.h_view[0] = 0;
   m_buffer_offsets.h_view[0] = 0;
   for (int block = 0; block < m_num_blocks; ++block) {
-    tree::ID const global_id = leaves[block];
-    for (auto const& adj : adjs.at(global_id)) {
+    for (auto const& adj : adjs[block]) {
       int const axis = adj.axis;
       int const dir = adj.dir;
       int const kind = adj.kind;
@@ -89,8 +86,9 @@ static int get_tag(
   return (block * num_border + border) * num_child + which_child;
 }
 
-static int invert_child(int const axis, int const child)
+static int invert_child(int const axis, int const child, int const adj_kind)
 {
+  if (adj_kind == tree::EQUAL) return 0;
   Vec3<int> const child_ijk = get_child_ijk(child);
   Vec3<int> ichild_ijk = child_ijk;
   ichild_ijk[axis] = (child_ijk[axis] == 0) ? 1 : 0;
@@ -102,22 +100,20 @@ void Ghosting::build_messages(Mesh const& mesh)
 {
   using namespace linear_partitioning;
   int const num_ranks = m_comm->size();
-  auto const& leaves = mesh.owned_leaves();
   auto const& adjs = mesh.owned_adjacencies();
   auto const inv_z_leaves = mesh.inv_z_leaves();
   m_messages[SEND].resize(m_num_msgs);
   m_messages[RECV].resize(m_num_msgs);
   int msg = 0;
   for (int block = 0; block < m_num_blocks; ++block) {
-    tree::ID const global_id = leaves[block];
-    for (auto const& adj : adjs.at(global_id)) {
-      tree::ID const adj_global_id = adj.neighbor;
-      PartInfo const I = get_part_info(num_ranks, adj_global_id, inv_z_leaves);
+    for (auto const& adj : adjs[block]) {
+      tree::ID const id = adj.neighbor;
+      PartInfo const I = get_part_info(num_ranks, id, inv_z_leaves);
       int const axis = adj.axis;
       int const dir = adj.dir;
       int const child = adj.which_child;
       int const idir = invert_dir(dir);
-      int const ichild = invert_child(axis, child);
+      int const ichild = invert_child(axis, child, adj.kind);
       int const buffer_start = m_buffer_offsets.h_view[msg];
       m_messages[SEND][msg].rank = I.rank;
       m_messages[SEND][msg].tag = get_tag(block, axis, dir, child);

@@ -53,7 +53,8 @@ static void apply_initial_conditions(State& state, Input const& in)
         }
       }
     };
-    seq_for_each(cell_grid, functor);
+    Subgrid3 const owned_cells = get_owned_cells(cell_grid);
+    seq_for_each(owned_cells, functor);
     Kokkos::deep_copy(U_field.get_view(block), U_host);
   }
 }
