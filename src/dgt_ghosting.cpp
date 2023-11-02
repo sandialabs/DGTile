@@ -145,14 +145,24 @@ void Ghosting::build(Mesh const& mesh)
 void Ghosting::begin_transfer(
     Field<real***> const& U,
     Basis<View> const& B,
-    int const start_eq,
-    int const end_eq)
+    int const eq_start,
+    int const eq_end)
 {
-  int const neq = end_eq - start_eq;
+  int const neq = eq_end - eq_start;
   set_message_size(neq);
-  pack(U, B, start_eq, end_eq);
+  pack(U, B, eq_start, eq_end);
   Kokkos::fence();
   post_messages();
+}
+
+void Ghosting::end_transfer(
+    Field<real***> const& U,
+    Basis<View> const& B,
+    int const eq_start,
+    int const eq_end)
+{
+  wait_messages();
+  unpack(U, B, eq_start, eq_end);
 }
 
 void Ghosting::set_message_size(int const neq)

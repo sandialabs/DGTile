@@ -4,8 +4,6 @@
 
 #include <gtest/gtest.h>
 
-#include <dgt_print.hpp> // debug
-
 using namespace dgt;
 
 static Mesh get_single_block_mesh(
@@ -45,12 +43,6 @@ static void fill_U0(Mesh& mesh)
       Vec3<int> const& cell_ijk) DGT_ALWAYS_INLINE
   {
     int const cell = cell_grid.index(cell_ijk);
-
-    // debug
-    std::cout << cell_ijk << "\n";
-    std::cout << cell << "\n";
-    std::cout << "\n";
-
     for (int eq = 0; eq < 5; ++eq) {
       U[block](cell, eq, 0) = cell;
     }
@@ -68,4 +60,5 @@ TEST(ghosting, build_single_block_2D)
   auto const U = mesh.get_solution("hydro", 0);
   auto const B = mesh.basis();
   ghosting.begin_transfer(U, B, 0, 5);
+  ghosting.end_transfer(U, B, 0, 5);
 }
