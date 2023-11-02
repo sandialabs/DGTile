@@ -138,6 +138,28 @@ DGT_METHOD inline Vec<real, NEQ> get_hllc_flux(
   else return Vec<real, NEQ>::zero();
 }
 
+void zero_residual(State& state)
+{
+  Mesh& mesh = state.mesh;
+  int const num_blocks = mesh.num_owned_blocks();
+  int const num_modes = mesh.basis().num_modes;
+  Grid3 const cell_grid = mesh.cell_grid();
+  auto R = mesh.get_residual("hydro").get();
+  auto functor = [=] DGT_DEVICE (
+      int const block,
+      Vec3<int> const& cell_ijk) DGT_ALWAYS_INLINE
+  {
+    int const cell = cell_grid.index(cell_ijk);
+    for (int eq = 0; eq < NEQ; ++eq) {
+      for (int mode = 0; mode < num_modes; ++mode) {
+        R[block](cell, eq, mode) = 0.;
+      }
+    }
+  };
+  for_each("zero_residual", num_blocks, cell_grid, functor);
+
+}
+
 static void compute_fluxes(State& state, int const soln_idx, int const axis)
 {
   Mesh& mesh = state.mesh;
@@ -186,7 +208,7 @@ void compute_fluxes(State& state, int const soln_idx)
   }
 }
 
-void compute_vol_integral(State& state, int const soln_idx)
+void compute_volume_integral(State& state, int const soln_idx)
 {
   Mesh& mesh = state.mesh;
   int const num_blocks = mesh.num_owned_blocks();
@@ -201,7 +223,7 @@ void compute_vol_integral(State& state, int const soln_idx)
   auto const R = mesh.get_residual("hydro").get();
   auto functor = [=] DGT_DEVICE (
       int const block,
-      Vec3<int> const& cell_ijk)
+      Vec3<int> const& cell_ijk) DGT_ALWAYS_INLINE
   {
     Vec<real, NEQ> U, F;
     int const cell = cell_grid.index(cell_ijk);
@@ -246,7 +268,7 @@ void compute_face_integral(State& state)
   }
   auto functor = [=] DGT_DEVICE(
       int const block,
-      Vec3<int> const& cell_ijk)
+      Vec3<int> const& cell_ijk) DGT_ALWAYS_INLINE
   {
     int const cell = cell_grid.index(cell_ijk);
     real const detJ = block_info.cell_detJs[block];
@@ -285,7 +307,7 @@ void advance_explicitly(
   auto const B = mesh.basis();
   auto const block_info = mesh.block_info();
   auto const R = mesh.get_residual("hydro").get();
-  auto from = mesh.get_solution("hydro", from_idx).get();
+  auto const from = mesh.get_solution("hydro", from_idx).get();
   auto to = mesh.get_solution("hydro", to_idx).get();
   auto functor = [=] DGT_DEVICE(
       int const block,

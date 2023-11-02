@@ -51,7 +51,7 @@ static void handle_step_output(Input const& in, State const& state)
   real const dt = state.dt;
   if (!when->now(step, time)) return;
   std::string const msg = fmt::format(
-      "[step]: {} [time]: {} [dt]: {}", step, time, dt);
+      "[step]: {:<7} [time]: {:.15e}   [dt]: {:.15e}", step, time, dt);
   printf("%s\n", msg.c_str());
 }
 
@@ -68,10 +68,21 @@ void run(mpicpp::comm* comm, Input const& in)
   setup(state, comm, in);
 
   // begin the loop here
-  state.dt = compute_dt(in, state);
-  handle_step_output(in, state);
-  compute_fluxes(state, 0);
-  compute_vol_integral(state, 0);
+  for (int i = 0; i < 1000; ++i) {
+    state.dt = compute_dt(in, state);
+    handle_step_output(in, state);
+    zero_residual(state);
+    state.mesh.ghost("hydro", 0, 0, NEQ);
+    compute_fluxes(state, 0);
+    compute_volume_integral(state, 0);
+    compute_face_integral(state);
+    advance_explicitly(state, 0, 0, state.dt);
+    state.time += state.dt;
+    state.step++;
+  }
+
+  write_out(in, state, 0);
+
 
 }
 
