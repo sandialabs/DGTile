@@ -34,16 +34,10 @@ void copy_to_device(T const& v)
 
 void Ghosting::build_views(Mesh const& mesh)
 {
+  int const dim = mesh.dim();
   auto const& leaves = mesh.owned_leaves();
   auto const& adjs = mesh.owned_adjacencies();
-  int const dim = mesh.dim();
-  int const num_blocks = int(leaves.size());
-  m_cell_grid = mesh.cell_grid();
-  m_num_msgs = count_messages(mesh);
-  m_max_eqs = get_max_eqs(mesh);
-  m_num_modes = mesh.basis().num_modes;
-  m_num_blocks = int(leaves.size());
-  m_block_offsets = DualView<int*>("Ghosting::block_offsets", num_blocks+1);
+  m_block_offsets = DualView<int*>("Ghosting::block_offsets", m_num_blocks+1);
   m_buffer_offsets = DualView<int*>("Ghosting::buffer_offsets", m_num_msgs+1);
   m_adjacencies = DualView<tree::Adjacent*>("Ghosting::adjacencies", m_num_msgs);
   m_subgrids[SEND] = DualView<Subgrid3*>("Ghosting::subgrids[SEND]", m_num_msgs);
@@ -107,14 +101,14 @@ static int invert_child(int const axis, int const child)
 void Ghosting::build_messages(Mesh const& mesh)
 {
   using namespace linear_partitioning;
-  int const num_ranks = mesh.comm()->size();
+  int const num_ranks = m_comm->size();
   auto const& leaves = mesh.owned_leaves();
   auto const& adjs = mesh.owned_adjacencies();
   auto const inv_z_leaves = mesh.inv_z_leaves();
   m_messages[SEND].resize(m_num_msgs);
   m_messages[RECV].resize(m_num_msgs);
   int msg = 0;
-  for (int block = 0; block < int(leaves.size()); ++block) {
+  for (int block = 0; block < m_num_blocks; ++block) {
     tree::ID const global_id = leaves[block];
     for (auto const& adj : adjs.at(global_id)) {
       tree::ID const adj_global_id = adj.neighbor;
@@ -125,17 +119,12 @@ void Ghosting::build_messages(Mesh const& mesh)
       int const idir = invert_dir(dir);
       int const ichild = invert_child(axis, child);
       int const buffer_start = m_buffer_offsets.h_view[msg];
-      int const buffer_end = m_buffer_offsets.h_view[msg+1];
-      int const num_cells = buffer_end - buffer_start;
-      int const size = num_cells * m_max_eqs * m_num_modes;
       m_messages[SEND][msg].rank = I.rank;
       m_messages[SEND][msg].tag = get_tag(block, axis, dir, child);
       m_messages[SEND][msg].data = &(m_buffers[SEND](buffer_start, 0, 0));
-      m_messages[SEND][msg].size = size;
       m_messages[RECV][msg].rank = I.rank;
       m_messages[RECV][msg].tag = get_tag(I.block, axis, idir, ichild);
       m_messages[RECV][msg].data = &(m_buffers[RECV](buffer_start, 0, 0));
-      m_messages[RECV][msg].size = size;
       msg++;
     }
   }
@@ -143,6 +132,12 @@ void Ghosting::build_messages(Mesh const& mesh)
 
 void Ghosting::build(Mesh const& mesh)
 {
+  m_comm = const_cast<mpicpp::comm*>(mesh.comm());
+  m_cell_grid = mesh.cell_grid();
+  m_num_msgs = count_messages(mesh);
+  m_max_eqs = get_max_eqs(mesh);
+  m_num_modes = mesh.basis().num_modes;
+  m_num_blocks = int(mesh.owned_leaves().size());
   build_views(mesh);
   build_messages(mesh);
 }
@@ -153,7 +148,23 @@ void Ghosting::begin_transfer(
     int const start_eq,
     int const end_eq)
 {
+  int const neq = end_eq - start_eq;
+  set_message_size(neq);
   pack(U, B, start_eq, end_eq);
+  Kokkos::fence();
+  post_messages();
+}
+
+void Ghosting::set_message_size(int const neq)
+{
+  for (int msg = 0; msg < m_num_msgs; ++msg) {
+    int const buffer_start = m_buffer_offsets.h_view[msg];
+    int const buffer_end = m_buffer_offsets.h_view[msg+1];
+    int const num_cells = buffer_end - buffer_start;
+    int const size = num_cells * neq * m_num_modes;
+    m_messages[SEND][msg].size = size;
+    m_messages[RECV][msg].size = size;
+  }
 }
 
 void Ghosting::pack(
@@ -196,6 +207,65 @@ void Ghosting::pack(
     }
   };
   for_each("Ghosting::pack", m_num_blocks, m_cell_grid, functor);
+  (void)B; //TODO: used for restricting
+}
+
+void Ghosting::post_messages()
+{
+  for (int msg = 0; msg < m_num_msgs; ++msg) {
+    m_messages[RECV][msg].recv(m_comm);
+    m_messages[SEND][msg].send(m_comm);
+  }
+}
+
+void Ghosting::wait_messages()
+{
+  for (int msg = 0; msg < m_num_msgs; ++msg) {
+    m_messages[RECV][msg].wait();
+    m_messages[SEND][msg].wait();
+  }
+}
+
+void Ghosting::unpack(
+    Field<real***> const& U_field,
+    Basis<View> const& B,
+    int const eq_start,
+    int const eq_end)
+{
+  int const num_modes = m_num_modes;
+  Grid3 const cell_grid = m_cell_grid;
+  auto const U = U_field.get();
+  auto const subgrids = m_subgrids[RECV].d_view;
+  auto const block_offsets = m_block_offsets.d_view;
+  auto const buffer_offsets = m_buffer_offsets.d_view;
+  auto const adjacencies = m_adjacencies.d_view;
+  auto buffer = m_buffers[RECV];
+  auto functor = [=] DGT_DEVICE (
+      int const block,
+      Vec3<int> const& cell_ijk) DGT_ALWAYS_INLINE
+  {
+    int const msg_begin = block_offsets[block];
+    int const msg_end = block_offsets[block+1];
+    for (int msg = msg_begin; msg < msg_end; ++msg) {
+      Subgrid3 const& subgrid = subgrids[msg];
+      if (!subgrid.contains(cell_ijk)) continue;
+      int const buffer_start = buffer_offsets[msg];
+      int const buffer_idx = buffer_start + subgrid.index(cell_ijk);
+      int const cell = cell_grid.index(cell_ijk);
+      tree::Adjacent const& adj = adjacencies[msg];
+      if (adj.kind == tree::EQUAL) {
+        for (int eq = eq_start; eq < eq_end; ++eq) {
+          for (int mode = 0; mode < num_modes; ++mode) {
+            U[block](cell, eq, mode) = buffer(buffer_idx, eq, mode);
+          }
+        }
+      }
+      else {
+        throw std::runtime_error("oops\n"); //TODO: do AMR
+      }
+    }
+  };
+  for_each("Ghosting::unpack", m_num_blocks, m_cell_grid, functor);
   (void)B; //TODO: used for restricting
 }
 

@@ -22,6 +22,7 @@ class Ghosting
 
     using buffer_t = HostPinnedRightView<real***>;
 
+    mpicpp::comm* m_comm = nullptr;
     Grid3 m_cell_grid = {0,0,0};
 
     int m_max_eqs = -1;
@@ -47,14 +48,29 @@ class Ghosting
         int const start_eq,
         int const end_eq);
 
-    void end_transfer();
+    void end_transfer(
+        Field<real***> const& U,
+        Basis<View> const& B,
+        int const start_eq,
+        int const end_eq);
 
   private:
 
     void build_views(Mesh const& mesh);
     void build_messages(Mesh const& mesh);
 
+    void set_message_size(int const neq);
+
     void pack(
+        Field<real***> const& U,
+        Basis<View> const& B,
+        int const start_eq,
+        int const end_eq);
+
+    void post_messages();
+    void wait_messages();
+
+    void unpack(
         Field<real***> const& U,
         Basis<View> const& B,
         int const start_eq,
