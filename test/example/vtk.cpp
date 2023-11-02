@@ -52,22 +52,25 @@ dgt::vtk::VtkView<real> get_variable(
   Grid3 const ginner_grid = generalize(B.dim, inner_grid);
   Grid3 const viz_cell_grid = vtk::get_viz_cell_grid(cell_grid, B.q);
   Grid3 const gviz_cell_grid = generalize(B.dim, viz_cell_grid);
+  Subgrid3 const owned_cells = get_owned_cells(cell_grid);
+  Vec3<int> const ghost_offset = owned_cells.lower();
   auto const U = mesh.get_solution("hydro", soln_idx).get();
   dgt::vtk::VtkView<real> var;
   Kokkos::resize(var, gviz_cell_grid.size(), num_comps);
   Data data = {U, B, state.eos, block};
   auto functor = [=] DGT_HOST_DEVICE (Vec3<int> const& cell_ijk) {
     int const cell = cell_grid.index(cell_ijk);
+    Vec3<int> const owned_ijk = cell_ijk - ghost_offset;
     inner_for_each(ginner_grid,
     [&] (Vec3<int> const& inner_ijk) DGT_ALWAYS_INLINE {
       int const pt = ginner_grid.index(inner_ijk);
-      Vec3<int> const viz_cell_ijk = (B.q * cell_ijk) + inner_ijk;
+      Vec3<int> const viz_cell_ijk = (B.q * owned_ijk) + inner_ijk;
       int const viz_cell = gviz_cell_grid.index(viz_cell_ijk);
       auto const val = function(data, cell, pt);
       assign_variable(var, viz_cell, val);
     });
   };
-  for_each("vtk::get_variable", cell_grid, functor);
+  for_each("vtk::get_variable", owned_cells, functor);
   return var;
 }
 

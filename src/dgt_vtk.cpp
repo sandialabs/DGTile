@@ -30,7 +30,8 @@ static void write_vtr_header(std::stringstream& stream)
 
 static Vec3<int> get_nviz_cells(Grid3 const& cell_grid, int const q)
 {
-  Vec3<int> const ncells = cell_grid.extents();
+  Subgrid3 const owned_cells = get_owned_cells(cell_grid);
+  Vec3<int> const ncells = owned_cells.extents();
   Vec3<int> const nviz_cells = q * ncells;
   return nviz_cells;
 }
@@ -212,7 +213,7 @@ static void write_coordinate(
   int const num_pts = get_nviz_cells(mesh.cell_grid(), q)[axis] + 1;
   Box3<real> const block_domain = mesh.block_info_h().domains[block];
   Vec3<real> const cell_dx = mesh.block_info_h().cell_dxs[block];
-  real const o = block_domain.lower()[axis];
+  real const o = block_domain.lower()[axis] + cell_dx[axis];
   real const dx = cell_dx[axis] / q;
   real const q4 = std::sqrt(30.)/36.;
   VtkView<float> coord;
@@ -244,36 +245,6 @@ static void write_vtr_coordinates(
   stream << "</Coordinates>\n";
 }
 
-static void write_vtr_ghost(
-    std::stringstream& stream,
-    Mesh const& mesh)
-{
-  int const q = mesh.basis().q;
-  int const dim = mesh.basis().dim;
-  Grid3 const cell_grid = mesh.cell_grid();
-  Grid3 const inner_grid = tensor_bounds(dim, q-1);
-  Grid3 const ginner_grid = generalize(dim, inner_grid);
-  Grid3 const viz_cell_grid = get_viz_cell_grid(cell_grid, q);
-  Grid3 const gviz_cell_grid = generalize(dim, viz_cell_grid);
-  dgt::vtk::VtkView<std::int8_t> ghost;
-  Kokkos::resize(ghost, gviz_cell_grid.size(), 1);
-  auto functor = [&] (Vec3<int> const& cell_ijk) {
-    std::int8_t val = 0;
-    bool const is = is_cell_ghost(dim, cell_grid, cell_ijk);
-    if (is) val = 1;
-    inner_for_each(ginner_grid,
-    [&] (Vec3<int> const& inner_ijk) DGT_ALWAYS_INLINE {
-      Vec3<int> const viz_cell_ijk = (q*cell_ijk) + inner_ijk;
-      int const viz_cell = gviz_cell_grid.index(viz_cell_ijk);
-      ghost.h_view(viz_cell, 0) = val;
-    });
-  };
-  seq_for_each(cell_grid, functor);
-  write_data_start(stream, "UInt8", "vtkGhostType", 1);
-  write_data(stream, ghost, false);
-  write_data_end(stream);
-}
-
 void write_vtr_start(
     std::stringstream& stream,
     int const block,
@@ -287,7 +258,6 @@ void write_vtr_start(
   write_vtr_piece_start(stream, mesh);
   write_vtr_coordinates(stream, block, mesh);
   stream << "<CellData>\n";
-  write_vtr_ghost(stream, mesh);
 }
 
 void write_vtr_end(std::stringstream& stream)
