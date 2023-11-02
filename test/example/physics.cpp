@@ -273,8 +273,8 @@ void compute_face_integral(State& state)
       Vec3<int> const& cell_ijk) DGT_ALWAYS_INLINE
   {
     int const cell = cell_grid.index(cell_ijk);
-    real const detJ = block_info.cell_detJs[block];
     for (int axis = 0; axis < dim; ++axis) {
+      real const detJ = block_info.face_detJs[axis][block];
       for (int dir = 0; dir < DIRECTIONS; ++dir) {
         int const loc = basis_locations::face(axis, dir);
         Vec3<int> const face_ijk = get_cells_adj_face(cell_ijk, axis, dir);
