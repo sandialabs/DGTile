@@ -114,5 +114,9 @@ void compute_volume_integral(State& state, int const soln_idx);
 void compute_face_integral(State& state);
 void advance_explicitly(
     State& state, int const from_idx, int const to_idx, real const dt);
+void axpby(
+    State& state, Field<real***>& r,
+    real const a, Field<real***> const& x,
+    real const b, Field<real***> const& y);
 
 }

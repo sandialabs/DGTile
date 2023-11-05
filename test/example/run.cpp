@@ -109,11 +109,26 @@ void run(mpicpp::comm* comm, Input const& in)
 
     // stage 0
     zero_residual(state);
-    state.mesh.ghost("hydro", 0, 0, NEQ);
+    state.mesh.ghost("hydro", 0);
     compute_fluxes(state, 0);
     compute_volume_integral(state, 0);
     compute_face_integral(state);
-    advance_explicitly(state, 0, 0, state.dt);
+    advance_explicitly(state, 0, 1, state.dt);
+
+    // stage 1
+    zero_residual(state);
+    state.mesh.ghost("hydro", 1);
+    compute_fluxes(state, 1);
+    compute_volume_integral(state, 1);
+    compute_face_integral(state);
+    advance_explicitly(state, 1, 1, state.dt);
+
+    // final convex combination
+    auto& mesh = state.mesh;
+    auto& r = mesh.get_solution("hydro", 0);
+    auto const& x = mesh.get_solution("hydro", 0);
+    auto const& y = mesh.get_solution("hydro", 1);
+    axpby(state, r, 0.5, x, 0.5, y);
 
     // time update
     state.time += state.dt;

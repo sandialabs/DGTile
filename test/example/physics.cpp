@@ -330,13 +330,17 @@ void advance_explicitly(
   for_each("explicit_advance", num_blocks, owned_cells, functor);
 }
 
+//TODO: this should probably be added (along with other functionality
+// like zero'ing a field) to a file like field_ops.hpp
+// that provides some fast mechanism to perform operations on fields
+// that is independent of the discretization state
 void axpby(
     State& state,
     Field<real***>& r,
     real const a,
-    Field<real***>& x,
+    Field<real***> const& x,
     real const b,
-    Field<real***>& y)
+    Field<real***> const& y)
 {
   auto R = r.get();
   auto X = x.get();
