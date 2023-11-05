@@ -302,6 +302,14 @@ Field<real***> const& Mesh::get_residual(std::string const& name) const
 
 void Mesh::ghost(
     std::string const& name,
+    int const soln_idx)
+{
+  int const num_comps = get_modal_descriptor(name).num_comps;
+  ghost(name, soln_idx, 0, num_comps);
+}
+
+void Mesh::ghost(
+    std::string const& name,
     int const soln_idx,
     int const eq_start,
     int const eq_end)

@@ -89,11 +89,9 @@ class Mesh
     Field<real***> const& get_fluxes(std::string const& name, int const axis) const;
     Field<real***> const& get_residual(std::string const& name) const;
 
-    void ghost(
-        std::string const& name,
-        int const soln_idx,
-        int const eq_start,
-        int const eq_end);
+    void ghost(std::string const& name, int const soln_idx);
+    void ghost(std::string const& name, int const soln_idx,
+        int const eq_start, int const eq_end);
 
     void print_stats() const;
 
