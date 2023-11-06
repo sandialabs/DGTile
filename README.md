@@ -21,6 +21,16 @@ DGTile has required dependencies on:
   * [mpicpp](https://github.com/sandialabs/mpicpp) - MPI C++ interfacing
   * [zlib](https://github.com/zlib-ng/zlib-ng) - data compression
 
+## Documentation
+
+See the [documentation](https://sandialabs.github.io/DGTile/index.html)
+for information about:
+
+  * deployment (compiling and installing the code)
+  * mathematical, numerical, and computation theory
+  * usage (how the code can be used in applications)
+  * code performance
+
 ##
 
 At Sandia, DGTile is SCR 2806.0
