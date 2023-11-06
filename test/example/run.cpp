@@ -102,10 +102,10 @@ void run(mpicpp::comm* comm, Input const& in)
   setup(state, comm, in);
 
   while (true) {
-    handle_step_output(in, state);
     handle_viz_output(in, state);
     if (state.time >= in.time.end_time) break;
     state.dt = compute_dt(in, state);
+    handle_step_output(in, state);
 
     // stage 0
     zero_residual(state);

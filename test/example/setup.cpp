@@ -75,10 +75,6 @@ void setup(State& state, mpicpp::comm* comm, Input const& in)
   state.mesh.print_stats();
   state.eos = EoS(in.gamma);
   apply_initial_conditions(state, in);
-
-  // debug
-  write_out(in, state, 0);
-
 }
 
 }
