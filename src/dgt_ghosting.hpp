@@ -13,69 +13,64 @@ namespace dgt {
 
 class Mesh;
 
-class Ghosting
+struct Ghosting
 {
 
-  private:
+  template <class T>
+  using DualView = typename Kokkos::DualView<T>;
 
-    template <class T>
-    using DualView = typename Kokkos::DualView<T>;
+  using buffer_t = HostPinnedRightView<real***>;
 
-    using buffer_t = HostPinnedRightView<real***>;
+  mpicpp::comm* m_comm = nullptr;
+  Grid3 m_cell_grid = {0,0,0};
 
-    mpicpp::comm* m_comm = nullptr;
-    Grid3 m_cell_grid = {0,0,0};
+  int m_max_eqs = -1;
+  int m_num_blocks = -1;
+  int m_num_modes = -1;
+  int m_num_msgs = -1;
 
-    int m_max_eqs = -1;
-    int m_num_blocks = -1;
-    int m_num_modes = -1;
-    int m_num_msgs = -1;
+  DualView<int*> m_block_offsets;
+  DualView<int*> m_buffer_offsets;
+  DualView<tree::Adjacent*> m_adjacencies;
+  DualView<Subgrid3*> m_subgrids[DIRECTIONS];
+  buffer_t m_buffers[DIRECTIONS];
 
-    DualView<int*> m_block_offsets;
-    DualView<int*> m_buffer_offsets;
-    DualView<tree::Adjacent*> m_adjacencies;
-    DualView<Subgrid3*> m_subgrids[DIRECTIONS];
-    buffer_t m_buffers[DIRECTIONS];
+  std::vector<Message<real>> m_messages[DIRECTIONS];
 
-    std::vector<Message<real>> m_messages[DIRECTIONS];
+  void build(Mesh const& mesh);
 
-  public:
+  void begin_transfer(
+      Field<real***> const& U,
+      Basis<View> const& B,
+      int const eq_start,
+      int const eq_end);
 
-    void build(Mesh const& mesh);
+  void end_transfer(
+      Field<real***> const& U,
+      Basis<View> const& B,
+      int const eq_start,
+      int const eq_end);
 
-    void begin_transfer(
-        Field<real***> const& U,
-        Basis<View> const& B,
-        int const eq_start,
-        int const eq_end);
 
-    void end_transfer(
-        Field<real***> const& U,
-        Basis<View> const& B,
-        int const eq_start,
-        int const eq_end);
+  void build_views(Mesh const& mesh);
+  void build_messages(Mesh const& mesh);
 
-  private:
+  void set_message_size(int const neq);
 
-    void build_views(Mesh const& mesh);
-    void build_messages(Mesh const& mesh);
+  void pack(
+      Field<real***> const& U,
+      Basis<View> const& B,
+      int const start_eq,
+      int const end_eq);
 
-    void set_message_size(int const neq);
+  void post_messages();
+  void wait_messages();
 
-    void pack(
-        Field<real***> const& U,
-        Basis<View> const& B,
-        int const start_eq,
-        int const end_eq);
-
-    void post_messages();
-    void wait_messages();
-
-    void unpack(
-        Field<real***> const& U,
-        Basis<View> const& B,
-        int const start_eq,
-        int const end_eq);
+  void unpack(
+      Field<real***> const& U,
+      Basis<View> const& B,
+      int const start_eq,
+      int const end_eq);
 
 };
 

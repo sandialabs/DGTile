@@ -208,12 +208,12 @@ void Ghosting::pack(
         }
       }
       else {
-        throw std::runtime_error("oops\n"); //TODO: do AMR
+        //TODO: AMR
+        (void)B;
       }
     }
   };
   for_each("Ghosting::pack", m_num_blocks, m_cell_grid, functor);
-  (void)B; //TODO: used for restricting
 }
 
 void Ghosting::post_messages()
@@ -267,12 +267,12 @@ void Ghosting::unpack(
         }
       }
       else {
-        throw std::runtime_error("oops\n"); //TODO: do AMR
+        //TODO: AMR
+        (void)B;
       }
     }
   };
   for_each("Ghosting::unpack", m_num_blocks, m_cell_grid, functor);
-  (void)B; //TODO: used for restricting
 }
 
 }

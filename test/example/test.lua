@@ -23,6 +23,10 @@ input = {
     Y = {num_blocks = 2, num_cells = 10, min = 0., max = 1.},
   },
 
+  vtk = {
+    when = {{kind='at_time_periodically', frequency=0.1}}
+  },
+
   initial_conditions = {
     density = function(x,y,z)
       xi = x + y + z
@@ -34,10 +38,6 @@ input = {
     velocity = function(x,y,z)
       return 1.,1.,0.
     end
-  },
-
-  vtk = {
-    when = {{kind='at_time_periodically', frequency='0.1'}}
   }
 
 }
