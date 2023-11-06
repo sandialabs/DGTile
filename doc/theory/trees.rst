@@ -95,7 +95,7 @@ Z-Curve Ordering
 
 For the purpose of information locality in a distributed memory context,
 it is useful to order the leaves using a space filling curve. That is to
-say, we would each MPI rank to contain data associated with leaves
+say, we would like each MPI rank to contain data associated with leaves
 that are relatively close to one another in a spatial sense. This is
 known to reduce the wall-time associated with the transfer of data
 from adjacent leaves in an MPI context. Presently, we consider a
