@@ -12,3 +12,4 @@ using DGTile.
     :caption: Table of Contents:
 
     packing
+    kernels
