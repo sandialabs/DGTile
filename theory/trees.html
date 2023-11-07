@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trees &mdash; DGTile 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DG Bases" href="dg.html" />
+    <link rel="prev" title="Theory" href="theory.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            DGTile
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="theory.html">Theory</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Trees</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#uniquely-identifying-nodes-in-the-tree">Uniquely Identifying Nodes in the Tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tree-representation">Tree Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#z-curve-ordering">Z-Curve Ordering</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#leaf-adjacencies">Leaf Adjacencies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ensuring-balanced-leaf-interfaces">Ensuring Balanced Leaf Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dg.html">DG Bases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transfer.html">Solution Transfer</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../performance/performance.html">Performance</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DGTile</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="theory.html">Theory</a></li>
+      <li class="breadcrumb-item active">Trees</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/theory/trees.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="trees">
+<h1>Trees<a class="headerlink" href="#trees" title="Link to this heading"></a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h2>
+<p>A <em>tree</em> is an abstract hierarchical data type that connects <em>nodes</em>
+via <em>edges</em>. Each node in a tree is connected to a single <em>parent node</em>
+with the exception of the <em>root node</em>, which has no parent.
+Additionally, each node may be connected to multiple <em>child nodes</em>.
+In DGTile, we use a <em>binary tree</em>, a <em>quadtree</em>, and an
+<em>octree</em> to enable mesh adaptivity in one, two, and three spatial
+dimensions, respectively. In a binary tree, quadtree, and octree each
+<em>internal node</em> is connected to exactly two, four, and eight <em>child nodes</em>,
+respectively. In contrast, a <em>leaf node</em> is any node in the tree that contains
+no children. The <em>level</em> of a node in the tree is its distance away from
+the rood node, where the <em>distance</em> is the number of edges along the
+shortest path between two nodes. The root node in a tree has a level of 0.</p>
+</section>
+<section id="uniquely-identifying-nodes-in-the-tree">
+<h2>Uniquely Identifying Nodes in the Tree<a class="headerlink" href="#uniquely-identifying-nodes-in-the-tree" title="Link to this heading"></a></h2>
+<p>For the purposes of identifying, storing, modifying, and computing adjacencies
+of leaves in the tree, it is useful to assign unique identifiers to every
+possible node in the tree at every possible level. These identifiers are
+computed using simple integer arithmetic. At every potential level <span class="math notranslate nohighlight">\(l\)</span> in
+the octree, we can assign a level-specific identifier <span class="math notranslate nohighlight">\(\text{id}(l,i,j,k)\)</span>
+to a potential node in the tree given the node’s ijk Cartesian grid location
+at that level. Presently, we consider the following choice for the
+level-specific identifier</p>
+<div class="math notranslate nohighlight">
+\[\text{id}(l,i,j,k) = i + 2^l(j + k 2^l)\]</div>
+<p>where identifiers are strided the quickest along the x-axis and slowest
+along the z-axis. Note that for a two-dimensional quadtree k will always
+be 0 and likewise, for a one-dimensional binary tree k and j will always
+be 0.</p>
+<a class="reference internal image-reference" href="../_images/tree_level_ids.png"><img alt="Level-specific node identifiers" class="align-center" src="../_images/tree_level_ids.png" style="width: 500px;" /></a>
+<p>The figure above illustrates level-specific identifiers
+for levels <span class="math notranslate nohighlight">\(l=0,1,2\)</span> for an octree, where the x-axis extends from the
+left to right of the page, the y-axis extends from out to into the page, and the
+z-axis extends from bottom to top of the page. This convention will be used
+in subsequent figures as well. For compatibility with C++, all indices
+start from 0.</p>
+<p>A unique identifier for each node can then be found by computing a
+level-specific offset <span class="math notranslate nohighlight">\(\delta(d,l)\)</span> that denotes the total number of
+potential nodes in the tree up to the current level <span class="math notranslate nohighlight">\(l\)</span>. Here
+<span class="math notranslate nohighlight">\(d=1,2,3\)</span> denotes the spatial dimension of the mesh. This offset
+is computed as</p>
+<div class="math notranslate nohighlight">
+\[\delta(d,l) = \sum_{n=0}^l (2^d)^n = \frac{(2^d)^l - 1}{2^d - 1},\]</div>
+<p>and the resultant unique node identifier in the octree is specified as the sum
+of the offset <span class="math notranslate nohighlight">\(\delta(d,l)\)</span> and the level-specific identifier
+<span class="math notranslate nohighlight">\(\text{id}(l,i,j,k)\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\text{ID}(d,l,i,j,k) = \delta(d,l) + \text{id}(l,i,j,k).\]</div>
+<p>The figure below illustrates unique identifiers <span class="math notranslate nohighlight">\(\text{ID}\)</span> for
+levels <span class="math notranslate nohighlight">\(l=0,1,2\)</span> for an octree.</p>
+<a class="reference internal image-reference" href="../_images/tree_global_ids.png"><img alt="Global node identifiers" class="align-center" src="../_images/tree_global_ids.png" style="width: 500px;" /></a>
+</section>
+<section id="tree-representation">
+<h2>Tree Representation<a class="headerlink" href="#tree-representation" title="Link to this heading"></a></h2>
+<p>Once the leaves in the tree are known, the tree itself is simply stored as
+the unique global identifiers <span class="math notranslate nohighlight">\(\text{ID}_i, i = 1,2,\dots,n_{lf}\)</span>, for
+each of the <span class="math notranslate nohighlight">\(n_{lf}\)</span> leaves in the tree. That’s it! Concretely,
+the C++ data structure used to store the global leaf identifiers is a
+<span class="math notranslate nohighlight">\(\texttt{std::unordered_set&lt;std::uin64_t&gt;}\)</span> so that the look-up
+of identifiers is, on average, <span class="math notranslate nohighlight">\(\mathcal{O}(1)\)</span> and the global
+identifiers are stored with the type <span class="math notranslate nohighlight">\(\texttt{std::uint64_t}\)</span> so that
+nodes at higher levels <span class="math notranslate nohighlight">\(l\)</span> may be represented without integer overflow.</p>
+</section>
+<section id="z-curve-ordering">
+<h2>Z-Curve Ordering<a class="headerlink" href="#z-curve-ordering" title="Link to this heading"></a></h2>
+<p>For the purpose of information locality in a distributed memory context,
+it is useful to order the leaves using a space filling curve. That is to
+say, we would like each MPI rank to contain data associated with leaves
+that are relatively close to one another in a spatial sense. This is
+known to reduce the wall-time associated with the transfer of data
+from adjacent leaves in an MPI context. Presently, we consider a
+Z-curve ordering of the leaves in the tree. The figure below illustrates
+an example Z-curve ordering of the leaves for a two-dimensional mesh.</p>
+<a class="reference internal image-reference" href="../_images/tree_zcurve.png"><img alt="Z-curve ordering of a 2D mesh" class="align-center" src="../_images/tree_zcurve.png" style="width: 500px;" /></a>
+<p>The pseudo-code below illustrates how a z-curve ordering of an arbitrary
+tree is obtained recursively, starting from the root global id <span class="math notranslate nohighlight">\(0\)</span>.</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kr">function</span> <span class="nf">recursively_order</span>
+  <span class="n">inputs</span> <span class="o">&lt;-</span> <span class="n">global_id</span><span class="p">,</span> <span class="n">leaves</span>
+  <span class="n">output</span> <span class="o">&lt;-</span> <span class="n">zleaves</span>
+  <span class="kr">if</span> <span class="p">(</span><span class="n">global_id</span> <span class="n">is</span> <span class="kr">in</span> <span class="n">leaves</span><span class="p">)</span>
+    <span class="n">zleaves</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">global_id</span><span class="p">)</span>
+    <span class="kr">return</span>
+  <span class="kr">end</span> <span class="kr">if</span>
+  <span class="kr">if</span> <span class="p">(</span><span class="n">level</span><span class="p">(</span><span class="n">global_id</span><span class="p">)</span> <span class="o">==</span> <span class="n">max_level</span><span class="p">(</span><span class="n">leaves</span><span class="p">))</span>
+    <span class="kr">return</span>
+  <span class="kr">end</span> <span class="kr">if</span>
+  <span class="kr">for</span> <span class="n">child</span><span class="p">(</span><span class="n">global_id</span><span class="p">)</span> <span class="kr">in</span> <span class="n">global_id</span>
+    <span class="n">recursively_order</span><span class="p">(</span><span class="n">child</span><span class="p">(</span><span class="n">global_id</span><span class="p">),</span> <span class="n">leaves</span><span class="p">)</span>
+  <span class="kr">end</span> <span class="kr">for</span>
+<span class="kr">end</span> <span class="kr">function</span>
+</pre></div>
+</div>
+<p>Extensions to other types of space-filling curves, such as a Hilbert curve,
+could be considered in the future.</p>
+</section>
+<section id="leaf-adjacencies">
+<h2>Leaf Adjacencies<a class="headerlink" href="#leaf-adjacencies" title="Link to this heading"></a></h2>
+<p>For the purposes of physics-based simulations, it is necessary to
+have knowledge of the adjacenct leaves to a given leaf. This allows
+physics specific information to be transferred from one leaf to
+another. Presently, DGTile considers only leaf adjacencies through a
+<em>bridge dimension</em> of <span class="math notranslate nohighlight">\(d-1\)</span>. Alternatively stated, DGTile only
+considers face adjacencies for a given leaf. This is simply a choice
+that reduces the overhead of transfer from one block to another while
+still meeting the needs of applications that DGTile supports. Extensions
+to support full leaf adjacency information could be considered in
+the future.</p>
+<p>For each leaf, a variable sized container of adjacencies can be
+computed and stored based on the underlying tree structure. Each
+individual adjacency is represented with the following data structure:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">Adjacenct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">ID</span><span class="w"> </span><span class="n">neighbor</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">axis</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">direction</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">kind</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">which_child</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>where <em>neighbor</em> represents the global unique identifier
+<span class="math notranslate nohighlight">\(\text{ID}(l,i,j,k)\)</span> of the adjacent leaf, the combination of
+<em>axis</em> (<span class="math notranslate nohighlight">\(=x,y,z\)</span>) and <em>direction</em> (left/right) uniquely
+determines the direction of the adjacent leaf with respect to the
+current leaf, <em>kind</em> = (equal, coarse to fine, fine to coarse)
+represents the kind of interface that the adjacency represents,
+and <em>which_child</em> represents two things in different contexts.
+In the case of a coarse to fine adjacency, the variable <em>which_child</em>
+represents the child index of the current leaf with respect to its
+parent. In the case of a fine to coarse adjacency, the variable
+<em>which_child</em> represents the child index of the current leaf
+that would be adjacent to the adjacent leaf if that child actually
+existed in the tree.</p>
+</section>
+<section id="ensuring-balanced-leaf-interfaces">
+<h2>Ensuring Balanced Leaf Interfaces<a class="headerlink" href="#ensuring-balanced-leaf-interfaces" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="theory.html" class="btn btn-neutral float-left" title="Theory" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dg.html" class="btn btn-neutral float-right" title="DG Bases" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Sandia National Laboratories.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

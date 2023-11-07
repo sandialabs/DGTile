@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kernel Consolidation &mdash; DGTile 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Packing" href="packing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            DGTile
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../theory/theory.html">Theory</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="performance.html">Performance</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="packing.html">Packing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Kernel Consolidation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#previous-method">Previous Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#new-method">New Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#performance">Performance</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DGTile</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="performance.html">Performance</a></li>
+      <li class="breadcrumb-item active">Kernel Consolidation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/performance/kernels.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="kernel-consolidation">
+<h1>Kernel Consolidation<a class="headerlink" href="#kernel-consolidation" title="Link to this heading"></a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h2>
+<p>This page is intended to overview shared-memory parallelism design
+decisions and their impacts on code performance on GPU architectures
+only. As of this writing, the main branch of DGTile provides a
+simple mechanism for shared-memory parallelism of physics kernels
+in a tree-based AMR context. This simple method, however, incurs
+a significant performance penalty when many AMR blocks are present
+on a single GPU. A newer approach (currently in the higher-order
+branch of FLEXO) addresses this performance penalty by launching
+significantly fewer kernels. This new approach requires some C++
+code sophistication and more advanced Kokkos usage techniques,
+but seems worth the effort, as outlined in the results below.</p>
+</section>
+<section id="previous-method">
+<h2>Previous Method<a class="headerlink" href="#previous-method" title="Link to this heading"></a></h2>
+<p>In both approaches, a single GPU contains a collection of blocks
+(axis-aligned cartesian grids) over which physics is performed.
+In the previous approach for shared memory parallelism, a single
+GPU kernel is launched <em>per block</em> every time its computation
+is required. So, for instance, the computation of the numerical
+fluxes in this approach launches <cite>(3 * n_blocks)</cite> kernels for
+every time integration stage. Here the factor of <cite>3</cite> is
+for the number of spatial dimensions. Additionally, for MPI
+communication, a GPU kernel is launched for all 6 faces of each
+block to perform the packing and unpacking of MPI message
+information, resulting in <cite>2 * 6 * n_blocks</cite> GPU kernel launches
+every time a transfer of border information is required.</p>
+</section>
+<section id="new-method">
+<h2>New Method<a class="headerlink" href="#new-method" title="Link to this heading"></a></h2>
+<p>In contrast, the new method provides shared-memory parallelism
+over all blocks and all cells at the same time. This requires
+two new abstractions that were not present in the previous
+method. First, a dynamic data structure for the modal solution
+information must be created, so that the entirety of the
+solution information over each <cite>n_block</cite> blocks can be accessed
+in a single kernel. Our chosen method to implement this dynamic
+data structure is a <cite>Kokkos::View</cite> of <cite>Kokkos::View</cite>’s
+(which we will endeavor to document more completely at a later
+time). With this data structure in hand, we also require a
+4D loop abstraction (in contrast to our previous 3D loop
+abstractions), which loop over the indices i,j,k,b in the
+Cartesian grid <span class="math notranslate nohighlight">\(otimes\)</span> blocks product space. With these
+in place, the corresponding numerical flux computation in
+this approach launches <cite>3</cite> kernels for every time integration
+stage (vs. <cite>(3 * n_blocks)</cite>). Additionally, we have
+coalesced the packing and unpacking routines for MPI communication
+into a single buffer, resulting in <cite>2</cite> GPU kernel launches
+every time a transfer of border information is required.</p>
+</section>
+<section id="performance">
+<h2>Performance<a class="headerlink" href="#performance" title="Link to this heading"></a></h2>
+<p>As a very initial performance consideration, we compare timings
+from the mini-app in the main branch of DGTile with timings
+from the mini-app in the higher_order branch of DGTile for a
+simple advection problem without any slope/positivity limiting
+or visualization output. We consider an initial test case
+of 4x4x4 blocks with 8x8x8 cells in each block on a single GPU
+(determining an optimal block size will be an interesting topic
+of future investigation). As a first comparison point, we will
+simply consider the overall wall-time to solution for the two
+approaches, as shown in the example outputs below:</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">Old approach</span><a class="headerlink" href="#id1" title="Link to this code"></a></div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>---
+dg hydro example!
+---
+ &gt; name: compare
+ &gt; num mpi ranks: 1
+ &gt; polynomial order: 1
+ &gt; tensor product basis: 1
+ &gt; xmin: [0, 0, 0]
+ &gt; xmax: [1, 1, 1]
+ &gt; block grid: [4, 4, 4]
+ &gt; cell grid: [8, 8, 8]
+ &gt; periodic: [1, 1, 1]
+ &gt; init amr:
+ &gt; initial conditions: advect
+ &gt; gamma: 1.4
+ &gt; final time: 1
+ &gt; CFL: 0.9
+ &gt; beta: 0.5
+ &gt; M: 1e+08
+ &gt; gravity: 0
+ &gt; gravity axis: 1
+ &gt; step frequency: 100
+ &gt; out frequency: 100000
+ &gt; amr frequency: -1
+ &gt; error regression: 1
+[step]       0 [t] 0.0000000e+00 [dt] 1.1310604e-03
+[step]     100 [t] 1.1309353e-01 [dt] 1.1309752e-03
+[step]     200 [t] 2.2618798e-01 [dt] 1.1309211e-03
+[step]     300 [t] 3.3928336e-01 [dt] 1.1308980e-03
+[step]     400 [t] 4.5237965e-01 [dt] 1.1309058e-03
+[step]     500 [t] 5.6547675e-01 [dt] 1.1309445e-03
+[step]     600 [t] 6.7857466e-01 [dt] 1.1310139e-03
+[step]     700 [t] 7.9167335e-01 [dt] 1.1311140e-03
+[step]     800 [t] 9.0477300e-01 [dt] 1.1310407e-03
+[step]     885 [t] 1.0000000e+00 [dt] 2.2253669e-04
+
+real  2m22.758s
+user  1m55.273s
+sys 0m26.731s
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">New approach</span><a class="headerlink" href="#id2" title="Link to this code"></a></div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="n">_____</span>     <span class="n">______</span>     <span class="n">______</span>   <span class="n">__</span>     <span class="n">__</span>         <span class="n">______</span>
+<span class="o">/</span>\  <span class="n">__</span><span class="o">-.</span>  <span class="o">/</span>\  <span class="n">___</span>\   <span class="o">/</span>\<span class="n">__</span>  <span class="n">_</span>\ <span class="o">/</span>\ \   <span class="o">/</span>\ \       <span class="o">/</span>\  <span class="n">___</span>\
+\ \ \<span class="o">/</span>\ \ \ \ \<span class="n">__</span> \  \<span class="o">/</span><span class="n">_</span><span class="o">/</span>\ \<span class="o">/</span> \ \ \  \ \ \<span class="n">____</span>  \ \  <span class="n">__</span>\
+ \ \<span class="n">____</span><span class="o">-</span>  \ \<span class="n">_____</span>\    \ \<span class="n">_</span>\  \ \<span class="n">_</span>\  \ \<span class="n">_____</span>\  \ \<span class="n">_____</span>\
+  \<span class="o">/</span><span class="n">____</span><span class="o">/</span>   \<span class="o">/</span><span class="n">_____</span><span class="o">/</span>     \<span class="o">/</span><span class="n">_</span><span class="o">/</span>   \<span class="o">/</span><span class="n">_</span><span class="o">/</span>   \<span class="o">/</span><span class="n">_____</span><span class="o">/</span>   \<span class="o">/</span><span class="n">_____</span><span class="o">/</span>
+ <span class="o">&gt;</span> <span class="n">running</span><span class="p">:</span> <span class="s1">&#39;advection&#39;</span>
+ <span class="o">&gt;</span> <span class="kn">from</span> <span class="nn">file</span><span class="p">:</span> <span class="s1">&#39;test.lua&#39;</span>
+<span class="n">mesh</span> <span class="n">stats</span><span class="p">:</span>
+<span class="o">&gt;</span> <span class="n">blocks</span><span class="p">:</span> <span class="mi">64</span>
+<span class="o">&gt;</span> <span class="n">cells</span><span class="p">:</span> <span class="mi">32768</span>
+<span class="o">&gt;</span> <span class="n">minimum</span> <span class="n">cell</span> <span class="n">dx</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.125000e-02</span><span class="p">,</span> <span class="mf">3.125000e-02</span><span class="p">,</span> <span class="mf">3.125000e-02</span><span class="p">]</span>
+<span class="o">&gt;</span> <span class="n">maximum</span> <span class="n">cell</span> <span class="n">dx</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.125000e-02</span><span class="p">,</span> <span class="mf">3.125000e-02</span><span class="p">,</span> <span class="mf">3.125000e-02</span><span class="p">]</span>
+<span class="p">[</span><span class="n">step</span><span class="p">]:</span> <span class="mi">0</span>       <span class="p">[</span><span class="n">time</span><span class="p">]:</span> <span class="mf">0.000000000000000e+00</span>   <span class="p">[</span><span class="n">dt</span><span class="p">]:</span> <span class="mf">1.131060390553168e-03</span>
+<span class="p">[</span><span class="n">step</span><span class="p">]:</span> <span class="mi">100</span>     <span class="p">[</span><span class="n">time</span><span class="p">]:</span> <span class="mf">1.130935266167213e-01</span>   <span class="p">[</span><span class="n">dt</span><span class="p">]:</span> <span class="mf">1.130975239244203e-03</span>
+<span class="p">[</span><span class="n">step</span><span class="p">]:</span> <span class="mi">200</span>     <span class="p">[</span><span class="n">time</span><span class="p">]:</span> <span class="mf">2.261879821031447e-01</span>   <span class="p">[</span><span class="n">dt</span><span class="p">]:</span> <span class="mf">1.130921098120344e-03</span>
+<span class="p">[</span><span class="n">step</span><span class="p">]:</span> <span class="mi">300</span>     <span class="p">[</span><span class="n">time</span><span class="p">]:</span> <span class="mf">3.392833622508727e-01</span>   <span class="p">[</span><span class="n">dt</span><span class="p">]:</span> <span class="mf">1.130897956940815e-03</span>
+<span class="p">[</span><span class="n">step</span><span class="p">]:</span> <span class="mi">400</span>     <span class="p">[</span><span class="n">time</span><span class="p">]:</span> <span class="mf">4.523796462452452e-01</span>   <span class="p">[</span><span class="n">dt</span><span class="p">]:</span> <span class="mf">1.130905767297175e-03</span>
+<span class="p">[</span><span class="n">step</span><span class="p">]:</span> <span class="mi">500</span>     <span class="p">[</span><span class="n">time</span><span class="p">]:</span> <span class="mf">5.654767549422777e-01</span>   <span class="p">[</span><span class="n">dt</span><span class="p">]:</span> <span class="mf">1.130944453457778e-03</span>
+<span class="p">[</span><span class="n">step</span><span class="p">]:</span> <span class="mi">600</span>     <span class="p">[</span><span class="n">time</span><span class="p">]:</span> <span class="mf">6.785746637451791e-01</span>   <span class="p">[</span><span class="n">dt</span><span class="p">]:</span> <span class="mf">1.131013912863365e-03</span>
+<span class="p">[</span><span class="n">step</span><span class="p">]:</span> <span class="mi">700</span>     <span class="p">[</span><span class="n">time</span><span class="p">]:</span> <span class="mf">7.916733491839930e-01</span>   <span class="p">[</span><span class="n">dt</span><span class="p">]:</span> <span class="mf">1.131114014544715e-03</span>
+<span class="p">[</span><span class="n">step</span><span class="p">]:</span> <span class="mi">800</span>     <span class="p">[</span><span class="n">time</span><span class="p">]:</span> <span class="mf">9.047729976757121e-01</span>   <span class="p">[</span><span class="n">dt</span><span class="p">]:</span> <span class="mf">1.131040717982266e-03</span>
+
+<span class="n">real</span>  <span class="mi">0</span><span class="n">m40</span><span class="mf">.100</span><span class="n">s</span>
+<span class="n">user</span>  <span class="mi">0</span><span class="n">m27</span><span class="mf">.506</span><span class="n">s</span>
+<span class="n">sys</span> <span class="mi">0</span><span class="n">m11</span><span class="mf">.258</span><span class="n">s</span>
+</pre></div>
+</div>
+</div>
+<p>That’s over <code class="docutils literal notranslate"><span class="pre">3.5</span></code> times faster! Nice!</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">nsys profiling of old approach</span><a class="headerlink" href="#id3" title="Link to this code"></a></div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Time</span><span class="p">(</span><span class="o">%</span><span class="p">),</span> <span class="n">Total</span> <span class="n">Time</span> <span class="p">(</span><span class="n">ns</span><span class="p">),</span> <span class="n">Instances</span><span class="p">,</span> <span class="n">Average</span><span class="p">,</span>  <span class="n">Minimum</span><span class="p">,</span> <span class="n">Maximum</span><span class="p">,</span> <span class="n">Name</span>
+<span class="mf">24.4</span><span class="p">,</span>    <span class="mi">17075074573</span><span class="p">,</span>     <span class="mi">339840</span><span class="p">,</span>    <span class="mf">50244.5</span><span class="p">,</span>  <span class="mi">47456</span><span class="p">,</span>   <span class="mi">67712</span><span class="p">,</span>   <span class="n">compute_intr_fluxes</span>
+<span class="mf">23.0</span><span class="p">,</span>    <span class="mi">16112298547</span><span class="p">,</span>     <span class="mi">339840</span><span class="p">,</span>    <span class="mf">47411.4</span><span class="p">,</span>  <span class="mi">44032</span><span class="p">,</span>   <span class="mi">63327</span><span class="p">,</span>   <span class="n">compute_side_integral</span>
+<span class="mf">20.0</span><span class="p">,</span>    <span class="mi">14023823490</span><span class="p">,</span>     <span class="mi">113280</span><span class="p">,</span>    <span class="mf">123797.9</span><span class="p">,</span> <span class="mi">122207</span><span class="p">,</span>  <span class="mi">158559</span><span class="p">,</span>  <span class="n">compute_vol_integral</span>
+<span class="mf">16.3</span><span class="p">,</span>    <span class="mi">11435717681</span><span class="p">,</span>     <span class="mi">679680</span><span class="p">,</span>    <span class="mf">16825.1</span><span class="p">,</span>  <span class="mi">15392</span><span class="p">,</span>   <span class="mi">27232</span><span class="p">,</span>   <span class="n">fill_border</span>
+<span class="mf">12.0</span><span class="p">,</span>    <span class="mi">8391473427</span><span class="p">,</span>      <span class="mi">679680</span><span class="p">,</span>    <span class="mf">12346.2</span><span class="p">,</span>  <span class="mi">11264</span><span class="p">,</span>   <span class="mi">21664</span><span class="p">,</span>   <span class="n">compute_border_fluxes</span>
+<span class="mf">3.0</span><span class="p">,</span>     <span class="mi">2125561930</span><span class="p">,</span>      <span class="mi">113280</span><span class="p">,</span>    <span class="mf">18763.8</span><span class="p">,</span>  <span class="mi">16799</span><span class="p">,</span>   <span class="mi">27616</span><span class="p">,</span>   <span class="n">advance_explicitly</span>
+<span class="mf">0.8</span><span class="p">,</span>     <span class="mi">587556176</span><span class="p">,</span>       <span class="mi">56640</span><span class="p">,</span>     <span class="mf">10373.5</span><span class="p">,</span>  <span class="mi">9311</span><span class="p">,</span>    <span class="mi">23616</span><span class="p">,</span>   <span class="n">compute_dt</span>
+<span class="mf">0.3</span><span class="p">,</span>     <span class="mi">199853143</span><span class="p">,</span>       <span class="mi">56640</span><span class="p">,</span>     <span class="mf">3528.5</span><span class="p">,</span>   <span class="mi">2880</span><span class="p">,</span>    <span class="mi">14464</span><span class="p">,</span>   <span class="n">axpby</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">nsys profiling of new approach</span><a class="headerlink" href="#id4" title="Link to this code"></a></div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Time</span><span class="p">(</span><span class="o">%</span><span class="p">),</span> <span class="n">Total</span> <span class="n">Time</span> <span class="p">(</span><span class="n">ns</span><span class="p">),</span> <span class="n">Instances</span><span class="p">,</span> <span class="n">Average</span><span class="p">,</span>   <span class="n">Minimum</span><span class="p">,</span> <span class="n">Maximum</span><span class="p">,</span> <span class="n">Name</span>
+<span class="mf">31.4</span><span class="p">,</span>    <span class="mi">10774213772</span><span class="p">,</span>     <span class="mi">5310</span><span class="p">,</span>      <span class="mf">2029042.1</span><span class="p">,</span> <span class="mi">1746063</span><span class="p">,</span> <span class="mi">2329737</span><span class="p">,</span> <span class="n">compute_fluxes</span>
+<span class="mf">22.4</span><span class="p">,</span>    <span class="mi">7674387329</span><span class="p">,</span>      <span class="mi">1770</span><span class="p">,</span>      <span class="mf">4335812.1</span><span class="p">,</span> <span class="mi">4281846</span><span class="p">,</span> <span class="mi">4511636</span><span class="p">,</span> <span class="n">pack</span>
+<span class="mf">14.1</span><span class="p">,</span>    <span class="mi">4818854308</span><span class="p">,</span>      <span class="mi">1770</span><span class="p">,</span>      <span class="mf">2722516.6</span><span class="p">,</span> <span class="mi">2503336</span><span class="p">,</span> <span class="mi">2931747</span><span class="p">,</span> <span class="n">volume_integral</span>
+<span class="mf">13.6</span><span class="p">,</span>    <span class="mi">4668608713</span><span class="p">,</span>      <span class="mi">1770</span><span class="p">,</span>      <span class="mf">2637632.0</span><span class="p">,</span> <span class="mi">2539974</span><span class="p">,</span> <span class="mi">2825796</span><span class="p">,</span> <span class="n">face_integral</span>
+<span class="mf">6.6</span><span class="p">,</span>     <span class="mi">2271002011</span><span class="p">,</span>      <span class="mi">1770</span><span class="p">,</span>      <span class="mf">1283052.0</span><span class="p">,</span> <span class="mi">1215444</span><span class="p">,</span> <span class="mi">1351474</span><span class="p">,</span> <span class="n">unpack</span>
+<span class="mf">5.3</span><span class="p">,</span>     <span class="mi">1812959779</span><span class="p">,</span>      <span class="mi">1770</span><span class="p">,</span>      <span class="mf">1024271.1</span><span class="p">,</span> <span class="mi">890744</span><span class="p">,</span>  <span class="mi">1138965</span><span class="p">,</span> <span class="n">zero_residual</span>
+<span class="mf">3.2</span><span class="p">,</span>     <span class="mi">1105485589</span><span class="p">,</span>      <span class="mi">1770</span><span class="p">,</span>      <span class="mf">624568.1</span><span class="p">,</span>  <span class="mi">551131</span><span class="p">,</span>  <span class="mi">709817</span><span class="p">,</span>  <span class="n">advance_explicitly</span>
+<span class="mf">1.8</span><span class="p">,</span>     <span class="mi">619580668</span><span class="p">,</span>       <span class="mi">885</span><span class="p">,</span>       <span class="mf">700091.2</span><span class="p">,</span>  <span class="mi">636442</span><span class="p">,</span>  <span class="mi">800984</span><span class="p">,</span>  <span class="n">axpby</span>
+<span class="mf">1.5</span><span class="p">,</span>     <span class="mi">517904319</span><span class="p">,</span>       <span class="mi">885</span><span class="p">,</span>       <span class="mf">585202.6</span><span class="p">,</span>  <span class="mi">467323</span><span class="p">,</span>  <span class="mi">670553</span><span class="p">,</span>  <span class="n">compute_dt</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="packing.html" class="btn btn-neutral float-left" title="Packing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Sandia National Laboratories.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

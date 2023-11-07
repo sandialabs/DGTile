@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solution Transfer &mdash; DGTile 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Performance" href="../performance/performance.html" />
+    <link rel="prev" title="DG Bases" href="dg.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            DGTile
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="theory.html">Theory</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="trees.html">Trees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dg.html">DG Bases</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Solution Transfer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#prolongation">Prolongation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../performance/performance.html">Performance</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DGTile</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="theory.html">Theory</a></li>
+      <li class="breadcrumb-item active">Solution Transfer</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/theory/transfer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="solution-transfer">
+<h1>Solution Transfer<a class="headerlink" href="#solution-transfer" title="Link to this heading"></a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h2>
+<p>When a single block is <em>refined</em>, <span class="math notranslate nohighlight">\(2^d\)</span> child blocks are created and
+it is necessary to <em>prolong</em> solution information from the cells in the
+original block to the cells in the newly created finer blocks.
+Conversely, when <span class="math notranslate nohighlight">\(2^d\)</span> blocks that share a single parent are <em>coarsened</em>,
+it is necessary to <em>restrict</em> the solution from the cells in the original
+blocks to the remaining coarse block. The figure below illustrates the concept
+of a sinlge cell being split into <span class="math notranslate nohighlight">\(n_s = 2^d\)</span> child cells, denoted
+by <span class="math notranslate nohighlight">\(\Omega^{e,s}\)</span>.</p>
+<img alt="Illustration of refining/coarsening a single cell" class="align-center" src="../_images/children.png" />
+</section>
+<section id="prolongation">
+<h2>Prolongation<a class="headerlink" href="#prolongation" title="Link to this heading"></a></h2>
+<p>To prolong the solution state from a coarse cell <span class="math notranslate nohighlight">\(\Omega^e\)</span> to a fine
+cell <span class="math notranslate nohighlight">\(\Omega^{e,s}\)</span>, we perform an <span class="math notranslate nohighlight">\(L^2\)</span> projection of the
+original solution <span class="math notranslate nohighlight">\(\boldsymbol{U}^e\)</span> onto the modal basis on the
+finer cell, so that</p>
+<div class="math notranslate nohighlight">
+\[\left( u^{e,s}(\boldsymbol{x}, t), \phi_b(\boldsymbol{x}) \right)_{\Omega^{e,s}} =
+\left( u^e(\boldsymbol{x}, t), \phi_b(\boldsymbol{x}) \right)_{\Omega^{e,s}},
+\quad b=1,2,\dots,n_b.\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}\int_{\Omega^R} u^{e,s}(\boldsymbol{\xi}, t) \phi_b(\boldsymbol{\xi}) \,
+\mathcal{J}^e \, \text{d} \Omega &amp;=
+\int_{\Omega^R} u^e(\hat{\boldsymbol{\xi}}^s, t) \phi_b(\boldsymbol{\xi}) \,
+\mathcal{J}^e \, \text{d} \Omega, \\
+\sum_{i=1}^{n_b} c^{e,s}_i(t)
+\int_{\Omega^R} \phi_i(\boldsymbol{\xi}) \phi_b(\boldsymbol{\xi}) \, \text{d} \Omega &amp;=
+\sum_{a=1}^{n_b} c^e_a(t)
+\int_{\Omega^R} \phi_a(\hat{\boldsymbol{\xi}}^s) \phi_b(\boldsymbol{\xi}) \, \text{d} \Omega, \\
+c^{e,s}_b(t) &amp;=
+\frac{1}{M_b} \sum_{a=1}^{n_b} c^e_a(t)
+\int_{\Omega^R} \phi_a(\hat{\boldsymbol{\xi}}^s) \phi_b(\boldsymbol{\xi}) \, \text{d} \Omega, \\
+c^{e,s}_b(t) &amp;=
+\frac{1}{M_b} [\boldsymbol{\mathcal{P}}^s]^T \boldsymbol{c}^e(t).\end{split}\]</div>
+<p>In the first equality, the original solution <span class="math notranslate nohighlight">\(u^e\)</span> is evaluated at
+<em>shifted</em> reference points <span class="math notranslate nohighlight">\(\hat{\boldsymbol{\xi}}^s\)</span> so that
+the solution <span class="math notranslate nohighlight">\(u^e(\hat{\boldsymbol{\xi}}, t)\)</span> in the original cell
+is evaluated at the same reference locations as the prolonged solution
+<span class="math notranslate nohighlight">\(u^{e,s}(\boldsymbol{\xi}, t)\)</span> in the current subcell. In the
+second equality, the Jacobian determinants have cancelled as they are
+constant over axis aligned cells and the definition of the solution
+representation has been used on both sides of the equality. The
+orthogonality of the basis functions has been used in the third equality.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The prolongation operation is <em>exact</em> in that it exactly preserves the
+original solution distribution within each refined cell</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Because refinement occurs at the <em>block</em> level, rather than at individual
+cells, it is also necessary to map parent cells in the original block
+to child cells in each refined block. To facilitate the ease of this
+mapping, we require that the number of cells along each axis (in a block)
+is divisible by 2 for meshes that make use of AMR.</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dg.html" class="btn btn-neutral float-left" title="DG Bases" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../performance/performance.html" class="btn btn-neutral float-right" title="Performance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Sandia National Laboratories.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
