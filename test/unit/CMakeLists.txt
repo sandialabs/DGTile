@@ -30,6 +30,10 @@ set(UNIT_TEST_SOURCES
   when.cpp
 )
 
+if(DGT_ENABLE_CONDUIT)
+  list(APPEND UNIT_TEST_SOURCES conduit.cpp)
+endif()
+
 set_source_files_properties(${UNIT_TEST_SOURCES} PROPERTIES LANGUAGE ${DGT_LANGUAGE})
 
 add_executable(dgt-unit-tests ${UNIT_TEST_SOURCES})

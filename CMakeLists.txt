@@ -6,6 +6,8 @@ enable_testing()
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
+option(DGT_ENABLE_CONDUIT "Use conduit for file IO" OFF)
+
 set(DGT_ARCHITECTURES "" CACHE STRING "GPU architecture")
 
 find_package(fmt REQUIRED)
@@ -16,8 +18,12 @@ find_package(MPI REQUIRED)
 find_package(mpicpp REQUIRED)
 find_package(ZLIB REQUIRED)
 
+if(DGT_ENABLE_CONDUIT)
+  find_package(Conduit REQUIRED)
+endif()
+
 set(DGT_LANGUAGE CXX)
-if (Kokkos_COMPILE_LANGUAGE)
+if(Kokkos_COMPILE_LANGUAGE)
   set(DGT_LANGUAGE "${Kokkos_COMPILE_LANGUAGE}")
 endif()
 enable_language(${DGT_LANGUAGE})
