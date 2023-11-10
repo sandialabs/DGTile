@@ -25,32 +25,42 @@ void dummy(Mesh const& mesh)
   std::string const dim_names[DIMENSIONS] = {"i", "j", "k"};
   std::string const origin_names[DIMENSIONS] = {"x", "y", "z"};
   std::string const spacing_names[DIMENSIONS] = {"dx", "dy", "dz"};
-  for (int block = 0; block < num_blocks; ++block) {
-    Box3<real> const domain = mesh.block_info_h().domains[block];
-    Vec3<real> const dx = mesh.block_info_h().cell_dxs[block];
-    Vec3<real> const o = domain.lower() + dx;
-    std::string const block_name = fmt::format("block_{}", block);
-    conduit::Node& b = node[block_name];
-//    b["state/cycle"] = 0;
-    b["state/domain_id"] = block;
-    b["coordsets/coords/type"] = "uniform";
-    b["topologies/topo/type"] = "uniform";
-    b["topologies/topo/coordset"] = "coords";
-    for (int axis = 0; axis < dim; ++axis) {
-      b["coordsets/coords/dims/" + dim_names[axis]] = ncells[axis] + 1;
-      b["coordsets/coords/origin/" + origin_names[axis]] = o[axis];
-      b["coordsets/coords/spacing/" + spacing_names[axis]] = dx[axis];
+  for (int cycle = 0; cycle < 2; ++cycle) {
+    for (int block = 0; block < num_blocks; ++block) {
+      Box3<real> const domain = mesh.block_info_h().domains[block];
+      Vec3<real> const dx = mesh.block_info_h().cell_dxs[block];
+      Vec3<real> const o = domain.lower() + dx;
+      std::string const block_name = fmt::format("block_{}", block);
+      conduit::Node& b = node[block_name];
+      b["state/cycle"] = cycle;
+      b["state/time"] = 1.0 + double(cycle);
+      b["state/domain_id"] = block;
+      b["coordsets/coords/type"] = "uniform";
+      b["topologies/topo/type"] = "uniform";
+      b["topologies/topo/coordset"] = "coords";
+      for (int axis = 0; axis < dim; ++axis) {
+        b["coordsets/coords/dims/" + dim_names[axis]] = ncells[axis] + 1;
+        b["coordsets/coords/origin/" + origin_names[axis]] = o[axis];
+        b["coordsets/coords/spacing/" + spacing_names[axis]] = dx[axis];
+      }
     }
+    conduit::Node debug;
+    if (!conduit::blueprint::mesh::verify(node, debug)) {
+      std::string const msg = fmt::format(
+          "dgt::silo::dummy(): {}\n", debug.to_yaml());
+      throw std::runtime_error(msg);
+    }
+    conduit::Node options;
+    options["number_of_files"] = 1;
+    options["file_style"] = "multi_file";
+    options["suffix"] = "none";
+    if (cycle == 0) {
+      options["truncate"] = true;
+    } else {
+      options["truncate"] = false;
+    }
+    conduit::relay::io::silo::save_mesh(node, "debug", options);
   }
-  conduit::Node debug;
-  if (!conduit::blueprint::mesh::verify(node, debug)) {
-    std::string const msg = fmt::format(
-        "dgt::silo::dummy(): {}\n", debug.to_yaml());
-    throw std::runtime_error(msg);
-  }
-  conduit::Node options;
-  options["number_of_files"] = 1;
-  conduit::relay::io::silo::save_mesh(node, "debug", options);
 }
 
 }
