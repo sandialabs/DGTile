@@ -14,6 +14,7 @@ set(UNIT_TEST_SOURCES
   for_each.cpp
   ghosting.cpp
   grid3.cpp
+  integrator.cpp
   mesh.cpp
   main.cpp
   partitioning.cpp

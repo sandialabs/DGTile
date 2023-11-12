@@ -11,11 +11,13 @@ set(DGT_HEADERS
   dgt_ghosting.hpp
   dgt_grid3.hpp
   dgt_initialize.hpp
+  dgt_integrator.hpp
   dgt_lua.hpp
   dgt_macros.hpp
   dgt_mesh.hpp
   dgt_message.hpp
   dgt_partitioning.hpp
+  dgt_physics.hpp
   dgt_print.hpp
   dgt_reduce.hpp
   dgt_stl.hpp
@@ -35,6 +37,7 @@ set(DGT_SOURCES
   dgt_dg.cpp
   dgt_ghosting.cpp
   dgt_initialize.cpp
+  dgt_integrator.cpp
   dgt_lua.cpp
   dgt_mesh.cpp
   dgt_partitioning.cpp
