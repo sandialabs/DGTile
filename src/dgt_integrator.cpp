@@ -83,7 +83,7 @@ void SSPRK::do_stage(Physics& physics, int const stage, real const dt)
     p->advance_explicitly(from, -1, into, dt);
     p->end_explicit_stage(from, -1, into, dt);
     if (stage == 0) continue;
-    p->axpby(I.r, I.a, I.x, I.b, I.y);
+    else p->axpby(I.r, I.a, I.x, I.b, I.y);
   }
 }
 
