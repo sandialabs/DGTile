@@ -267,7 +267,7 @@ void Border::allocate(int nmodal_eq, int nflux_eq) {
       m_amr[msg_dir].soln = View<double****>(
           amr_name(msg_dir), nsides, nchild, npts, nmodal_eq);
       m_amr[msg_dir].avg_soln = View<double***>(
-          amr_avg_name(msg_dir), nsides, nchild, nflux_eq);
+          amr_avg_name(msg_dir), nsides, nchild, nmodal_eq);
       for (int which_child = 0; which_child < nchild; ++which_child) {
         m_amr[msg_dir].child_soln[which_child].val = View<double***>(
             amr_name(msg_dir, which_child), nsides, npts, nmodal_eq);
