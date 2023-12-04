@@ -15,12 +15,12 @@ set(UNIT_TEST_SOURCES
   ghosting.cpp
   grid3.cpp
   integrator.cpp
+  interpolate.cpp
   mesh.cpp
   main.cpp
   partitioning.cpp
   print.cpp
   reduce.cpp
-  search.cpp
   stl.cpp
   subgrid3.cpp
   tree.cpp

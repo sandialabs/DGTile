@@ -12,6 +12,7 @@ set(DGT_HEADERS
   dgt_grid3.hpp
   dgt_initialize.hpp
   dgt_integrator.hpp
+  dgt_interpoloate.hpp
   dgt_lua.hpp
   dgt_macros.hpp
   dgt_mesh.hpp
@@ -21,7 +22,6 @@ set(DGT_HEADERS
   dgt_print.hpp
   dgt_reduce.hpp
   dgt_stl.hpp
-  dgt_search.hpp
   dgt_subgrid3.hpp
   dgt_tree.hpp
   dgt_vec.hpp
