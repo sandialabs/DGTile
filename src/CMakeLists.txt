@@ -21,6 +21,7 @@ set(DGT_HEADERS
   dgt_print.hpp
   dgt_reduce.hpp
   dgt_stl.hpp
+  dgt_search.hpp
   dgt_subgrid3.hpp
   dgt_tree.hpp
   dgt_vec.hpp

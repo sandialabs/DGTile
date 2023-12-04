@@ -20,6 +20,7 @@ set(UNIT_TEST_SOURCES
   partitioning.cpp
   print.cpp
   reduce.cpp
+  search.cpp
   stl.cpp
   subgrid3.cpp
   tree.cpp
