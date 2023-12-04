@@ -19,8 +19,8 @@ input = {
   },
 
   mesh = {
-    X = {num_blocks = 2, num_cells = 10, min = 0., max = 1.},
-    Y = {num_blocks = 2, num_cells = 10, min = 0., max = 1.},
+    X = {num_blocks = 2, num_cells = 20, min = 0., max = 1., periodic=true},
+    Y = {num_blocks = 2, num_cells = 20, min = 0., max = 1., periodic=true},
   },
 
   vtk = {

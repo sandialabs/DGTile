@@ -17,10 +17,14 @@ class PhysicsPackage
 
   public:
 
+    virtual void apply_initial_conditions() {}
+
+  public:
+
     virtual double compute_time_step() = 0;
     virtual void handle_visualization() {}
     virtual void handle_steps() {}
-    virtual void handle_tallies() {}
+    virtual void handle_history() {}
 
   public:
 
