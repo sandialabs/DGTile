@@ -43,6 +43,7 @@ class Spring : public PhysicsPackage
         int const from,
         int const,
         int const,
+        real const,
         real const) override
     {
       pos_resid = vel[from];
@@ -53,7 +54,8 @@ class Spring : public PhysicsPackage
         int const from,
         int const,
         int const into,
-        real const dt) override
+        real const dt,
+        real const) override
     {
       pos[into] = pos[from] + dt*pos_resid;
       vel[into] = vel[from] + dt*vel_resid;
@@ -84,7 +86,7 @@ static real test_ssprk_spring(int const order, real const dt)
   real t = 0.;
   while (t <= 4.*pi/w) {
     for (int stage = 0; stage < I.num_stages(); ++stage) {
-      I.do_stage(P, stage, dt);
+      I.do_stage(P, stage, dt, t);
     }
     t += dt;
   }

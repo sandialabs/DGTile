@@ -70,7 +70,11 @@ static axpby get_ssprk_axpby(int const order, int const stage)
   return {-1, 0., -1, 0., -1};
 }
 
-void SSPRK::do_stage(Physics& physics, int const stage, real const dt)
+void SSPRK::do_stage(
+    Physics& physics,
+    int const stage,
+    real const t,
+    real const dt)
 {
   verify_stage(name(), num_stages(), stage);
   int const index = m_order-1;
@@ -78,10 +82,10 @@ void SSPRK::do_stage(Physics& physics, int const stage, real const dt)
   int const into = ssprk_table[index][stage+1];
   axpby const I = get_ssprk_axpby(m_order, stage);
   for (auto p : physics) {
-    p->begin_explicit_stage(from, -1, into, dt);
-    p->compute_explicit_residual(from, -1, into, dt);
-    p->advance_explicitly(from, -1, into, dt);
-    p->end_explicit_stage(from, -1, into, dt);
+    p->begin_explicit_stage(from, -1, into, t, dt);
+    p->compute_explicit_residual(from, -1, into, t, dt);
+    p->advance_explicitly(from, -1, into, t, dt);
+    p->end_explicit_stage(from, -1, into, t, dt);
     if (stage == 0) continue;
     else p->axpby(I.r, I.a, I.x, I.b, I.y);
   }

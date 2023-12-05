@@ -1,4 +1,5 @@
 set(APP_SOURCES
+  hydro.cpp
   lua.cpp
   main.cpp
   run.cpp

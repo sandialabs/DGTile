@@ -1,4 +1,5 @@
 #include "app.hpp"
+#include "hydro.hpp"
 
 namespace app {
 
@@ -22,8 +23,7 @@ void setup(mpicpp::comm* comm, Input const& in, State& state)
   state.mesh.set_periodic(in.mesh.periodic);
   state.mesh.set_basis(p, q, tensor);
   state.integrator = create_integrator(in.time.integrator);
-  int const num_stored_solns = state.integrator->required_containers();
-  state.mesh.add_modal({"hydro", num_stored_solns, 5, true});
+  state.physics.push_back(std::make_unique<Hydro>(&state, &in));
   state.mesh.initialize(in.mesh.block_grid);
   describe_integrator(state);
   state.mesh.print_stats();
