@@ -126,6 +126,7 @@ class PhysicsPackage
 
 };
 
-using Physics = std::vector<PhysicsPackage*>;
+using PhysicsPackagePtr = std::shared_ptr<PhysicsPackage>;
+using Physics = std::vector<PhysicsPackagePtr>;
 
 }

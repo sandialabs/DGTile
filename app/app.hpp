@@ -60,11 +60,12 @@ struct Input
 
 struct Timer
 {
+  Kokkos::Timer clock;
   real previous_time = 0;
   int previous_step = 0;
   int total_cells = 0;
   void update(dgt::Mesh const& mesh);
-  real compute(int step);
+  real compute(int current_step);
 };
 
 struct State
@@ -75,6 +76,7 @@ struct State
   Mesh mesh;
   Timer timer;
   IntegratorPtr integrator;
+  Physics physics;
 };
 
 void run_lua_file(std::string const& path);

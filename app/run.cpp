@@ -29,6 +29,22 @@ static void create_output_dir(std::string const& name)
   std::filesystem::create_directory(dir);
 }
 
+void Timer::update(Mesh const& mesh)
+{
+  total_cells = mesh.num_total_cells();
+}
+
+real Timer::compute(int current_step)
+{
+  real const current_time = clock.seconds();
+  real const elapsed_time = current_time - previous_time;
+  real const elapsed_steps = current_step - previous_step;
+  previous_time = current_time;
+  previous_step = current_step;
+  real const css = total_cells * elapsed_steps / elapsed_time;
+  return css;
+}
+
 static void echo_input_file(Input const& in)
 {
   std::filesystem::path const out_dir = in.name;

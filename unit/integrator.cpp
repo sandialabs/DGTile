@@ -78,8 +78,8 @@ static real test_ssprk_spring(int const order, real const dt)
   real const m = 1.;
   real const w = std::sqrt(k/m);
   real const pi = 3.14159265358979323;
-  Spring spring(k, m, 1., 0.);
-  Physics P = {&spring};
+  auto spring = std::make_shared<Spring>(k, m, 1., 0.);
+  Physics P = {spring};
   SSPRK I(order);
   real t = 0.;
   while (t <= 4.*pi/w) {
@@ -90,9 +90,8 @@ static real test_ssprk_spring(int const order, real const dt)
   }
   real const pos_exact = std::cos(w*t);
   real const vel_exact = -w*std::sin(w*t);
-  real const pos_error = pos_exact - spring.pos[0];
-  real const vel_error = vel_exact - spring.vel[0];
-
+  real const pos_error = pos_exact - spring->pos[0];
+  real const vel_error = vel_exact - spring->vel[0];
   real const error = std::sqrt(pos_error*pos_error + vel_error*vel_error);
   return error;
 }
@@ -105,7 +104,7 @@ static void check_rate(
   for (std::size_t i = 0; i < errors.size()-1; ++i) {
     real const reduction = errors[i] / errors[i+1];
     real const rate = std::log(reduction) / std::log(2.);
-    if ((0)) EXPECT_NEAR(rate, expected, tolerance);
+    EXPECT_NEAR(rate, expected, tolerance);
   }
 }
 
@@ -130,10 +129,10 @@ TEST(integrator, ssprk1_spring)
 
 TEST(integrator, ssprk2_spring)
 {
-  check_ssprk_spring(2, 0.01, 0.001);
+  check_ssprk_spring(2, 0.01, 0.01);
 }
 
 TEST(integrator, ssprk3_spring)
 {
-  check_ssprk_spring(3, 0.1, 0.001);
+  check_ssprk_spring(3, 0.1, 0.01);
 }
