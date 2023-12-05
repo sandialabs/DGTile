@@ -87,4 +87,17 @@ void SSPRK::do_stage(Physics& physics, int const stage, real const dt)
   }
 }
 
+IntegratorPtr create_integrator(std::string const& name)
+{
+  if (name == "ssprk1") {
+    return std::make_unique<SSPRK>(1);
+  } else if (name == "ssprk2") {
+    return std::make_unique<SSPRK>(2);
+  } else if (name == "ssprk3") {
+    return std::make_unique<SSPRK>(3);
+  } else {
+    throw std::runtime_error("dgt::Integrator - invalid name: " + name);
+  }
+}
+
 }

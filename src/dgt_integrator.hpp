@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "dgt_physics.hpp"
 
 namespace dgt {
@@ -32,5 +34,9 @@ class SSPRK : public Integrator
     int num_stages() const override;
     void do_stage(Physics& p, int const stage, real const dt) override;
 };
+
+using IntegratorPtr = std::unique_ptr<Integrator>;
+
+IntegratorPtr create_integrator(std::string const& name);
 
 }
