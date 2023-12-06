@@ -49,15 +49,38 @@ HostView<Triangle*> read(std::filesystem::path const& path)
   return triangles;
 }
 
+Box3<real> compute_bounding_box(HostView<Triangle*> const triangles)
+{
+  real min_x = std::numeric_limits<double>::max();
+  real min_y = std::numeric_limits<double>::max();
+  real min_z = std::numeric_limits<double>::max();
+  real max_x = std::numeric_limits<double>::min();
+  real max_y = std::numeric_limits<double>::min();
+  real max_z = std::numeric_limits<double>::min();
+  for (std::size_t tri = 0; tri < triangles.size(); ++tri) {
+    for (int vert = 1; vert < 4; ++vert) {
+      min_x = std::min(min_x, triangles[tri][vert].x());
+      min_y = std::min(min_y, triangles[tri][vert].y());
+      min_z = std::min(min_z, triangles[tri][vert].z());
+      max_x = std::max(max_x, triangles[tri][vert].x());
+      max_y = std::max(max_y, triangles[tri][vert].y());
+      max_z = std::max(max_z, triangles[tri][vert].z());
+    }
+  }
+  return Box3<real>(
+      {min_x, min_y, min_z},
+      {max_x, max_y, max_z});
+}
+
 DGT_METHOD inline bool ray_intesects_triangle(
     Vec3<real> const& ray_origin,
     Vec3<real> const& ray_vector,
     Triangle const& triangle)
 {
-  const double EPSILON = 1.e-8;
-  Vec3<real> const& v0 = triangle[0];
-  Vec3<real> const& v1 = triangle[1];
-  Vec3<real> const& v2 = triangle[2];
+  const double EPSILON = 1.e-14;
+  Vec3<real> const& v0 = triangle[1];
+  Vec3<real> const& v1 = triangle[2];
+  Vec3<real> const& v2 = triangle[3];
   Vec3<real> const e1 = v1-v0;
   Vec3<real> const e2 = v2-v0;
   Vec3<real> const rayXe2 = cross(ray_vector, e2);
@@ -85,7 +108,7 @@ View<Triangle*> to_device(HostView<Triangle*> const triangles)
 
 Field<real**> compute_vfs(Mesh const& mesh, View<Triangle*> const triangles)
 {
-  Vec3<real> const ray(0.1, 0.1, 0.1);
+  Vec3<real> const ray(1., 2., 3.);
   static constexpr int CELL = basis_locations::CELL;
   int const ntriangles = triangles.size();
   Grid3 const cell_grid = mesh.cell_grid();
@@ -112,7 +135,8 @@ Field<real**> compute_vfs(Mesh const& mesh, View<Triangle*> const triangles)
         bool const intersects = ray_intesects_triangle(x, ray, triangle);
         if (intersects) num_intersections++;
       }
-      if (num_intersections % 2) vfs[block](cell, pt);
+      if (num_intersections % 2) vfs[block](cell, pt) = 1.;
+      else vfs[block](cell, pt) = 0.;
     }
   };
   for_each("stl::compute_vfs", nblocks, cell_grid, functor);

@@ -30,6 +30,7 @@ enable_language(${DGT_LANGUAGE})
 
 add_subdirectory(src)
 add_subdirectory(unit)
+add_subdirectory(util)
 add_subdirectory(app)
 
 configure_package_config_file(

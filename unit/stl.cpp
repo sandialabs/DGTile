@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <dgt_print.hpp> // debug
+
 using namespace dgt;
 using namespace dgt::stl;
 
@@ -44,6 +46,17 @@ TEST(stl, read)
   EXPECT_EQ(triangles[1][3].x(), 0.);
   EXPECT_NEAR(triangles[1][3].y(), 1.23, 1.e-7);
   EXPECT_EQ(triangles[1][3].z(), 0.);
+}
+
+TEST(stl, bounding_box)
+{
+  std::filesystem::path const data_dir(std::getenv("UNIT_DATA_DIR"));
+  std::filesystem::path const stl_path = data_dir / "ex.stl";
+  HostView<Triangle*> const triangles = read(stl_path);
+  Box3<real> const bounding_box = compute_bounding_box(triangles);
+
+  std::cout << bounding_box << "\n";
+
 }
 
 TEST(stl, to_device)

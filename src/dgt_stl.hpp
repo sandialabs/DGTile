@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <vector>
 
+#include "dgt_box3.hpp"
 #include "dgt_field.hpp"
 #include "dgt_vec.hpp"
 #include "dgt_vec3.hpp"
@@ -18,6 +19,7 @@ using Triangle = Vec<Vec3<real>, 4>;
 
 HostView<Triangle*> read(std::filesystem::path const& path);
 View<Triangle*> to_device(HostView<Triangle*> const triangles);
+Box3<real> compute_bounding_box(HostView<Triangle*> const triangles);
 Field<real**> compute_vfs(Mesh const& mesh, View<Triangle*> const triangles);
 
 }

@@ -1,0 +1,5 @@
+set_source_files_properties(stl.cpp PROPERTIES LANGUAGE ${DGT_LANGUAGE})
+add_executable(dgtstl stl.cpp)
+target_compile_features(dgtstl PUBLIC cxx_std_17)
+set_target_properties(dgtstl PROPERTIES ${DGT_LANGUAGE}_ARCHITECTURES "${DGT_ARCHITECTURES}")
+target_link_libraries(dgtstl PRIVATE dgtile)
