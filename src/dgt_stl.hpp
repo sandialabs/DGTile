@@ -3,17 +3,22 @@
 #include <filesystem>
 #include <vector>
 
-#include "dgt_defines.hpp"
-#include "dgt_tree.hpp"
+#include "dgt_field.hpp"
 #include "dgt_vec.hpp"
+#include "dgt_vec3.hpp"
+#include "dgt_view.hpp"
 
 namespace dgt {
+
+class Mesh;
+
 namespace stl {
 
 using Triangle = Vec<Vec3<real>, 4>;
-using Triangles = std::vector<Triangle>;
 
-Triangles read(std::filesystem::path const& path);
+HostView<Triangle*> read(std::filesystem::path const& path);
+View<Triangle*> to_device(HostView<Triangle*> const triangles);
+Field<real**> compute_vfs(Mesh const& mesh, View<Triangle*> const triangles);
 
 }
 }

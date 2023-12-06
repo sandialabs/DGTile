@@ -189,6 +189,15 @@ DGT_METHOD constexpr T dot(Vec3<T> const& a, Vec3<T> const& b)
 }
 
 template <class T>
+DGT_METHOD constexpr Vec3<T> cross(Vec3<T> const& a, Vec3<T> const& b)
+{
+  return Vec3<T>(
+      a.y()*b.z() - a.z()*b.y(),
+      a.z()*b.x() - a.x()*b.z(),
+      a.x()*b.y() - a.y()*b.x());
+}
+
+template <class T>
 DGT_METHOD constexpr Vec3<T> abs(Vec3<T> const& v)
 {
   return Vec3<T>(std::abs(v.x()), std::abs(v.y()), std::abs(v.z()));

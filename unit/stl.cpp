@@ -2,13 +2,14 @@
 
 #include <gtest/gtest.h>
 
+using namespace dgt;
 using namespace dgt::stl;
 
 TEST(stl, read)
 {
   std::filesystem::path const data_dir(std::getenv("UNIT_DATA_DIR"));
   std::filesystem::path const stl_path = data_dir / "ex.stl";
-  Triangles triangles = read(stl_path);
+  HostView<Triangle*> triangles = read(stl_path);
   EXPECT_EQ(triangles.size(), 2);
   // normal of first triangle
   EXPECT_EQ(triangles[0][0].x(), 1.);
@@ -43,4 +44,13 @@ TEST(stl, read)
   EXPECT_EQ(triangles[1][3].x(), 0.);
   EXPECT_NEAR(triangles[1][3].y(), 1.23, 1.e-7);
   EXPECT_EQ(triangles[1][3].z(), 0.);
+}
+
+TEST(stl, to_device)
+{
+  std::filesystem::path const data_dir(std::getenv("UNIT_DATA_DIR"));
+  std::filesystem::path const stl_path = data_dir / "ex.stl";
+  HostView<Triangle*> host_triangles = read(stl_path);
+  View<Triangle*> device_triangles = to_device(host_triangles);
+  EXPECT_EQ(device_triangles.size(), 2);
 }

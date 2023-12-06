@@ -356,6 +356,14 @@ TEST(vec3, dot)
   test_dot<real>();
 }
 
+TEST(vec3, cross)
+{
+  Vec3<real> const a(1.,2.,3.);
+  Vec3<real> const b(4.,5.,6.);
+  Vec3<real> const c = cross(a,b);
+  EXPECT_EQ(c, Vec3<real>(-3.,6.,-3.));
+}
+
 TEST(vec3, abs)
 {
   test_abs<int>();
