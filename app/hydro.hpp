@@ -12,7 +12,6 @@ class Hydro : public PhysicsPackage
   public:
     State* state;
     Input const* input;
-    static int constexpr NEQ = 5;
   public:
     Hydro(State* state, Input const* in);
     std::string name() const override { return "Hydro"; }

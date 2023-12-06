@@ -47,6 +47,14 @@ struct Mesh
   Vec3<bool> periodic = {false, false, false};
 };
 
+struct Hydro
+{
+  real gamma = 0.;
+  function_ptr<real> density;
+  function_ptr<real> pressure;
+  function_ptr<Vec3<real>> velocity;
+};
+
 }
 
 struct Input
@@ -56,6 +64,7 @@ struct Input
   inputs::Time time;
   inputs::Basis basis;
   inputs::Mesh mesh;
+  inputs::Hydro hydro;
 };
 
 struct Timer

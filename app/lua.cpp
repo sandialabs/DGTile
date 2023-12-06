@@ -177,6 +177,138 @@ static inputs::Mesh parse_mesh(lua::table const& in)
   return result;
 }
 
+struct lua_scalar_constant : inputs::function<real>
+{
+  double val = 0.;
+  lua_scalar_constant(double val_in) : val(val_in) {}
+  ~lua_scalar_constant() override {}
+  real operator()(Vec3<real> const&) override { return val; }
+};
+
+struct lua_scalar : inputs::function<real>
+{
+  lua::function f;
+  lua_scalar(lua::function const& f_in) : f(f_in)
+  {
+    auto f_results = f(0.,0.,0.);
+    if (f_results.size() != 1) {
+      auto const msg = fmt::format("{}-> function must be a scalar", f_in.name());
+      fprintf(stderr, "%s\n", msg.c_str());
+      parsing_errors++;
+    }
+  }
+  ~lua_scalar() override {}
+  real operator()(Vec3<real> const& x) override
+  {
+    auto f_results = f(x.x(), x.y(), x.z());
+    real const f_val = lua::number(std::move(f_results[0])).value();
+    return f_val;
+  }
+};
+
+struct lua_vector_constant : inputs::function<Vec3<real>>
+{
+  Vec3<real> val = {0.,0.,0.};
+  lua_vector_constant(Vec3<real> const& val_in) : val(val_in) {}
+  ~lua_vector_constant() override {}
+  Vec3<real> operator()(Vec3<real> const&) override { return val; }
+};
+
+struct lua_vector : inputs::function<Vec3<real>>
+{
+  lua::function f;
+  lua_vector(lua::function const& f_in) : f(f_in) {
+    auto f_results = f(0.,0.,0.);
+    if (f_results.size() != 3) {
+      auto const msg = fmt::format("{}-> function must be a vector", f_in.name());
+      fprintf(stderr, "%s\n", msg.c_str());
+      parsing_errors++;
+    }
+  }
+  ~lua_vector() override {}
+  Vec3<real> operator()(Vec3<real> const& x) override {
+    auto f_results = f(x.x(), x.y(), x.z());
+    real const f_x = lua::number(std::move(f_results[0])).value();
+    real const f_y = lua::number(std::move(f_results[1])).value();
+    real const f_z = lua::number(std::move(f_results[2])).value();
+    return Vec3<real>(f_x, f_y, f_z);
+  }
+};
+
+inputs::function_ptr<real> make_scalar_function(
+    lua::table const& in,
+    std::string const& key)
+{
+  auto object = in.get_optional(key.c_str());
+  if (!object.has_value()) {
+    auto const msg = fmt::format("{}-> key `{}` doesn't exist", in.name(), key);
+    fprintf(stderr, "%s\n", msg.c_str());
+    parsing_errors++;
+    return nullptr;
+  }
+  lua::stack_object lua_so = object.value();
+  if (lua_so.type() == LUA_TNUMBER) {
+    double const val = in.get_number(key.c_str());
+    return std::make_unique<lua_scalar_constant>(val);
+  } else if (lua_so.type() == LUA_TFUNCTION) {
+    auto f = lua::function(in.get(key.c_str()));
+    return std::make_unique<lua_scalar>(f);
+  } else {
+    auto const msg = fmt::format(
+        "{}-> key `{}` isn't a lua function", in.name(), key);
+    fprintf(stderr, "%s\n", msg.c_str());
+    parsing_errors++;
+    return nullptr;
+  }
+}
+
+inputs::function_ptr<Vec3<real>> make_vector_function(
+    lua::table const& in,
+    std::string const& key)
+{
+  auto object = in.get_optional(key.c_str());
+  if (!object.has_value()) {
+    auto const msg = fmt::format("{}-> key `{}` doesn't exist", in.name(), key);
+    fprintf(stderr, "%s\n", msg.c_str());
+    parsing_errors++;
+    return nullptr;
+  }
+  lua::stack_object lua_so = object.value();
+  if (lua_so.type() == LUA_TTABLE) {
+    auto vec_table = in.get_table(key.c_str());
+    Vec3<real> vals = Vec3<real>::zero();
+    vals.x() = vec_table.get_or(1, 0.);
+    vals.y() = vec_table.get_or(2, 0.);
+    vals.z() = vec_table.get_or(3, 0.);
+    return std::make_unique<lua_vector_constant>(vals);
+  } else if (lua_so.type() == LUA_TFUNCTION) {
+    auto f = lua::function(in.get(key.c_str()));
+    return std::make_unique<lua_vector>(f);
+  } else {
+    auto const msg = fmt::format(
+        "{}-> key `{}` isn't a lua function", in.name(), key);
+    fprintf(stderr, "%s\n", msg.c_str());
+    parsing_errors++;
+    return nullptr;
+  }
+}
+
+static inputs::Hydro parse_hydro(lua::table const& in)
+{
+  check_valid_keys(in, {
+      "gamma",
+      "density",
+      "pressure",
+      "velocity"});
+  inputs::Hydro result;
+  result.gamma = in.get_number("gamma");
+  result.density = make_scalar_function(in, "density");
+  result.pressure = make_scalar_function(in, "pressure");
+  result.velocity = make_vector_function(in, "velocity");
+  if (result.gamma < 0) cond_err(in, "gamma < 0");
+  return result;
+}
+
 Input make_input(
     lua::table const& in,
     std::string const& file_name)
@@ -185,13 +317,15 @@ Input make_input(
       "name",
       "time",
       "basis",
-      "mesh"});
+      "mesh",
+      "hydro"});
   Input result;
   result.name = in.get_string("name");
   result.input_file_name = file_name;
   result.time = parse_time(in.get_table("time"));
   result.basis = parse_basis(in.get_table("basis"));
   result.mesh = parse_mesh(in.get_table("mesh"));
+  result.hydro = parse_hydro(in.get_table("hydro"));
   if (parsing_errors > 0) {
     throw std::runtime_error("dgtapp-> encountered parsing errors");
   }

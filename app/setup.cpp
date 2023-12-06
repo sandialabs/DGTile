@@ -3,6 +3,20 @@
 
 namespace app {
 
+static void describe_mesh(State const& state)
+{
+  state.mesh.print_stats();
+}
+
+static void describe_basis(State const& state)
+{
+  if (state.mesh.comm()->rank()) return;
+  printf("basis:\n");
+  printf(" > polynomial order: %d\n", state.mesh.basis().p);
+  printf(" > quadrature rule: %d\n", state.mesh.basis().q);
+  printf(" > tensor product: %d\n", state.mesh.basis().tensor);
+}
+
 static void describe_integrator(State const& state)
 {
   if (state.mesh.comm()->rank()) return;
@@ -10,6 +24,15 @@ static void describe_integrator(State const& state)
   printf("> %s\n", state.integrator->name().c_str());
   printf("> stages: %d\n", state.integrator->num_stages());
   printf("> required storage: %d\n", state.integrator->required_containers());
+}
+
+static void describe_physics(State const& state)
+{
+  if (state.mesh.comm()->rank()) return;
+  printf("physics:\n");
+  for (auto physics : state.physics) {
+    printf(" %s\n", (physics->name()).c_str());
+  }
 }
 
 void setup(mpicpp::comm* comm, Input const& in, State& state)
@@ -25,8 +48,10 @@ void setup(mpicpp::comm* comm, Input const& in, State& state)
   state.integrator = create_integrator(in.time.integrator);
   state.physics.push_back(std::make_unique<Hydro>(&state, &in));
   state.mesh.initialize(in.mesh.block_grid);
+  describe_mesh(state);
+  describe_basis(state);
   describe_integrator(state);
-  state.mesh.print_stats();
+  describe_physics(state);
 }
 
 }

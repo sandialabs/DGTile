@@ -64,6 +64,24 @@ static void echo_input_file(Input const& in)
   out_file.close();
 }
 
+static void apply_initial_conditions(State& state)
+{
+  for (auto physics : state.physics) {
+    physics->apply_initial_conditions();
+  }
+}
+
+static double compute_time_step(Input const& in, State& state)
+{
+  real min_dt = std::numeric_limits<double>::max();
+  for (auto physics : state.physics) {
+    real dt = physics->compute_time_step();
+    min_dt = std::min(min_dt, dt);
+  }
+  min_dt = std::min(min_dt, in.time.end_time - state.time);
+  return min_dt;
+}
+
 void run(mpicpp::comm* comm, Input const& in)
 {
   print_banner(comm, in);
@@ -71,6 +89,8 @@ void run(mpicpp::comm* comm, Input const& in)
   echo_input_file(in);
   State state;
   setup(comm, in, state);
+  apply_initial_conditions(state);
+  state.dt = compute_time_step(in, state);
 }
 
 }
