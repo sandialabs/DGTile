@@ -39,9 +39,9 @@ real Timer::compute(int current_step)
   real const current_time = clock.seconds();
   real const elapsed_time = current_time - previous_time;
   real const elapsed_steps = current_step - previous_step;
+  real const css = total_cells * elapsed_steps / elapsed_time;
   previous_time = current_time;
   previous_step = current_step;
-  real const css = total_cells * elapsed_steps / elapsed_time;
   return css;
 }
 
@@ -82,6 +82,34 @@ static double compute_time_step(Input const& in, State& state)
   return min_dt;
 }
 
+static void handle_step_output(Input const& in, State& state)
+{
+  auto const when = in.time.to_terminal;
+  int const step = state.step;
+  real const time = state.time;
+  real const dt = state.dt;
+  if (!when->now(step, time)) return;
+  if (state.mesh.comm()->rank()) return;
+  real const css = state.timer.compute(state.step);
+  std::string const msg = fmt::format(
+      "[step]: {:<7} [time]: {:.15e} [dt]: {:.15e} [cs/s]: {:.5e}",
+      step, time, dt, css);
+  printf("%s\n", msg.c_str());
+}
+
+static void take_time_step(State& state)
+{
+  IntegratorPtr const& I = state.integrator;
+  Physics& physics = state.physics;
+  real const dt = state.dt;
+  real const t = state.time;
+  for (int stage = 0; stage < I->num_stages(); ++stage) {
+    // TODO: might need integrator to handle the take time step
+    // part so that different times / dts can be passed in here
+    I->do_stage(physics, stage, dt, t);
+  }
+}
+
 void run(mpicpp::comm* comm, Input const& in)
 {
   print_banner(comm, in);
@@ -90,7 +118,16 @@ void run(mpicpp::comm* comm, Input const& in)
   State state;
   setup(comm, in, state);
   apply_initial_conditions(state);
-  state.dt = compute_time_step(in, state);
+  state.timer.update(state.mesh);
+  while (true) {
+    if (state.time >= in.time.end_time) break;
+    state.dt = compute_time_step(in, state);
+    handle_step_output(in, state);
+    take_time_step(state);
+    state.time += state.dt;
+    state.step++;
+  }
+  handle_step_output(in, state);
 }
 
 }

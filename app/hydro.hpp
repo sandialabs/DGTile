@@ -9,9 +9,9 @@ struct State;
 
 class Hydro : public PhysicsPackage
 {
-  public:
-    State* state;
-    Input const* input;
+  private:
+    State* m_state;
+    Input const* m_input;
   public:
     Hydro(State* state, Input const* in);
     std::string name() const override { return "Hydro"; }

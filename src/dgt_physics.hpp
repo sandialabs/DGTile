@@ -23,7 +23,6 @@ class PhysicsPackage
 
     virtual double compute_time_step() = 0;
     virtual void handle_visualization() {}
-    virtual void handle_terminal() {}
     virtual void handle_history() {}
 
   public:
