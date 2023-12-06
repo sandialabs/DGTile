@@ -1,6 +1,8 @@
 #include <fstream>
 #include <filesystem>
 
+#include <dgt_print.hpp>
+
 #include "app.hpp"
 
 namespace app {
@@ -97,6 +99,40 @@ static void handle_step_output(Input const& in, State& state)
   printf("%s\n", msg.c_str());
 }
 
+static void handle_vtk_output(Input const& in, State& state)
+{
+  static int ctr = 0;
+  auto const when = in.vtk.when;
+  int const step = state.step;
+  real const time = state.time;
+  if (!when->now(step, time)) return;
+  std::string const msg = fmt::format(
+      "[visualization]: {:<7} [step]: {:<7} [time]: {:.15e}",
+      ctr, step, time);
+  printf("%s\n", msg.c_str());
+  for (auto physics : state.physics) {
+    physics->handle_visualization();
+  }
+  state.vtk_times.push_back(state.time);
+  ctr++;
+}
+
+static void write_pvd(Input const& in, State const& state)
+{
+  std::filesystem::path const out_dir(in.name + "/vtk");
+  std::filesystem::path const pvd_path(in.name + ".pvd");
+  std::filesystem::path const out_path = out_dir / pvd_path;
+  std::stringstream stream;
+  stream << "<VTKFile type=\"Collection\" version=\"0.1\">\n<Collection>\n";
+  for (size_t i = 0; i < state.vtk_times.size(); ++i) {
+    std::string const vtm_path = std::to_string(i) + "/blocks.vtm";
+    stream << "<DataSet timestep=\"" << state.vtk_times[i] << "\" part=\"0\" ";
+    stream << "file=\"" << vtm_path << "\"/>\n";
+  }
+  stream << "</Collection>\n</VTKFile>\n";
+  write_stream(out_path, stream);
+}
+
 static void take_time_step(State& state)
 {
   IntegratorPtr const& I = state.integrator;
@@ -120,6 +156,7 @@ void run(mpicpp::comm* comm, Input const& in)
   apply_initial_conditions(state);
   state.timer.update(state.mesh);
   while (true) {
+    handle_vtk_output(in, state);
     if (state.time >= in.time.end_time) break;
     state.dt = compute_time_step(in, state);
     handle_step_output(in, state);
@@ -128,6 +165,7 @@ void run(mpicpp::comm* comm, Input const& in)
     state.step++;
   }
   handle_step_output(in, state);
+  write_pvd(in, state);
 }
 
 }

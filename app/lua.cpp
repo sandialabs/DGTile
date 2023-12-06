@@ -309,6 +309,14 @@ static inputs::Hydro parse_hydro(lua::table const& in)
   return result;
 }
 
+static inputs::VTK parse_vtk(lua::table const& in)
+{
+  check_valid_keys(in, {"when"});
+  inputs::VTK result;
+  result.when = make_when(in.get_or_table("when"));
+  return result;
+}
+
 Input make_input(
     lua::table const& in,
     std::string const& file_name)
@@ -318,7 +326,8 @@ Input make_input(
       "time",
       "basis",
       "mesh",
-      "hydro"});
+      "hydro",
+      "vtk"});
   Input result;
   result.name = in.get_string("name");
   result.input_file_name = file_name;
@@ -326,6 +335,7 @@ Input make_input(
   result.basis = parse_basis(in.get_table("basis"));
   result.mesh = parse_mesh(in.get_table("mesh"));
   result.hydro = parse_hydro(in.get_table("hydro"));
+  result.vtk = parse_vtk(in.get_table("vtk"));
   if (parsing_errors > 0) {
     throw std::runtime_error("dgtapp-> encountered parsing errors");
   }

@@ -55,6 +55,11 @@ struct Hydro
   function_ptr<Vec3<real>> velocity;
 };
 
+struct VTK
+{
+  WhenPtr when;
+};
+
 }
 
 struct Input
@@ -65,6 +70,7 @@ struct Input
   inputs::Basis basis;
   inputs::Mesh mesh;
   inputs::Hydro hydro;
+  inputs::VTK vtk;
 };
 
 struct Timer
@@ -86,6 +92,7 @@ struct State
   Timer timer;
   IntegratorPtr integrator;
   Physics physics;
+  std::vector<real> vtk_times;
 };
 
 void run_lua_file(std::string const& path);
