@@ -152,8 +152,8 @@ static void parse_mesh_axis(
       "periodic"});
   int const nblocks = in.get_integer("num_blocks");
   int const ncells = in.get_integer("num_cells");
-  int const min = in.get_number("min");
-  int const max = in.get_number("max");
+  real const min = in.get_number("min");
+  real const max = in.get_number("max");
   result.block_grid.extents()[axis] = nblocks;
   result.cell_grid.extents()[axis] = ncells;
   result.domain.lower()[axis] = min;

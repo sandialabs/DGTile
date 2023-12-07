@@ -58,12 +58,37 @@ static void verify_modal(std::vector<ModalDescriptor> const& modal)
   }
 }
 
+static void verify_domain(int const dim, Box3<real> const& domain)
+{
+  for (int axis = 0; axis < dim; ++axis) {
+    real const min = domain.lower()[axis];
+    real const max = domain.upper()[axis];
+    if (min >= max) {
+      std::string const msg = fmt::format(
+          "dgt::Mesh - domain[{}] invalid {} >= {}",
+          get_axis_name(axis), min, max);
+      throw std::runtime_error(msg);
+    }
+  }
+  for (int axis = dim; axis < DIMENSIONS; ++axis) {
+    real const min = domain.lower()[axis];
+    real const max = domain.upper()[axis];
+    if (min != max) {
+      std::string const msg = fmt::format(
+          "dgt::Mesh - domain[{}] invalid {} != {}",
+          get_axis_name(axis), min, max);
+      throw std::runtime_error(msg);
+    }
+  }
+}
+
 void Mesh::ensure_set()
 {
   verify_comm(m_comm);
   verify_cell_grid(m_cell_grid);
   verify_basis(m_basis);
   verify_dimensions(m_cell_grid, m_basis);
+  verify_domain(dim(), m_domain);
 }
 
 void Mesh::ensure_added()
