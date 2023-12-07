@@ -81,6 +81,7 @@ DGT_METHOD inline Vec<real, NEQ> get_physical_flux(
   F[MMTM + Y] = v[j] * v[Y] * rho;
   F[MMTM + Z] = v[j] * v[Z] * rho;
   F[ENER]     = v[j] * (En + p);
+  F[MMTM + j] += p;
   return F;
 }
 
@@ -127,6 +128,30 @@ DGT_METHOD inline Vec<real, NEQ> get_hllc_flux(
   else if ((s_star <= 0.) && (0. <= s[RIGHT])) return F_star[RIGHT];
   else if (s[RIGHT] < 0.) return F[RIGHT];
   else return Vec<real, NEQ>::zero();
+}
+
+DGT_METHOD inline Vec<real, NEQ> get_llf_flux(
+    Vec<real, NEQ> const U[DIRECTIONS],
+    Vec<real, NEQ> const F[DIRECTIONS],
+    real const p[DIRECTIONS],
+    real const c[DIRECTIONS],
+    int const axis)
+{
+  (void)p;
+  Vec<real, NEQ> F_hat;
+  real c_stab = 0.;
+  for (int dir = 0; dir < DIRECTIONS; ++dir) {
+    real const rho = U[dir][DENS];
+    real const v = U[dir][MMTM + axis] / rho;
+    real const cs = std::abs(v) + c[dir];
+    c_stab = std::max(c_stab, cs);
+  }
+  for (int eq = 0; eq < NEQ; ++eq) {
+    F_hat[eq] =
+      0.5*(F[RIGHT][eq] + F[LEFT][eq]) -
+      0.5*c_stab*(U[RIGHT][eq] - U[LEFT][eq]);
+  }
+  return F_hat;
 }
 
 Hydro::Hydro(State* state_in, Input const* input_in)
@@ -280,7 +305,8 @@ static void compute_fluxes(
         c[dir] = c_from_rho_p(U[dir][DENS], p[dir], gamma);
         F[dir] = get_physical_flux(U[dir], p[dir], axis);
       }
-      F_hat = get_hllc_flux(U, F, p, c, axis);
+      if ((0)) F_hat = get_hllc_flux(U, F, p, c, axis);
+      F_hat = get_llf_flux(U, F, p, c, axis);
       for (int eq = 0; eq < NEQ; ++eq) {
         flux[block](face, pt, eq) = F_hat[eq];
       }
@@ -298,41 +324,6 @@ static void compute_fluxes(
   for (int axis = 0; axis < state->mesh.dim(); ++axis) {
     compute_fluxes(state, input, soln_idx, axis);
   }
-}
-
-static void advance_explicitly(
-    State* state,
-    int const from_idx,
-    int const to_idx,
-    real const dt)
-{
-  Mesh& mesh = state->mesh;
-  int const num_blocks = mesh.num_owned_blocks();
-  Grid3 const cell_grid = mesh.cell_grid();
-  Subgrid3 const owned_cells = get_owned_cells(cell_grid);
-  auto const B = mesh.basis();
-  auto const block_info = mesh.block_info();
-  auto const R = mesh.get_residual("hydro").get();
-  auto const from = mesh.get_solution("hydro", from_idx).get();
-  auto const to = mesh.get_solution("hydro", to_idx).get();
-  auto functor = [=] DGT_DEVICE (
-      int const block,
-      Vec3<int> const& cell_ijk) DGT_ALWAYS_INLINE
-  {
-    int const cell = cell_grid.index(cell_ijk);
-    real const detJ = block_info.cell_detJs[block];
-    for (int mode = 0; mode < B.num_modes; ++mode) {
-      real const mass = detJ * B.mass[mode];
-      real const fac = dt / mass;
-      for (int eq = 0; eq < NEQ; ++eq) {
-        real const from_eq = from[block](cell, eq, mode);
-        real const R_eq = R[block](cell, eq, mode);
-        to[block](cell, eq, mode) = from_eq + fac * R_eq;
-      }
-    }
-  };
-  for_each("hydro::advance_explicitly",
-      num_blocks, owned_cells, functor);
 }
 
 static void compute_volume_integral(
@@ -360,20 +351,19 @@ static void compute_volume_integral(
     real const detJ = block_info.cell_detJs[block];
     Vec3<real> const dx = block_info.cell_dxs[block];
     for (int pt = 0; pt < B.num_cell_pts; ++pt) {
-      real const wt = B.cell_weights[pt];
+      real const wt = B.cell_weights(pt);
       U = eval<NEQ>(soln, block, cell, B, loc, pt);
       real const e = get_eint(U);
       real const p = p_from_rho_e(U[DENS], e, gamma);
       for (int axis = 0; axis < dim; ++axis) {
         F = get_physical_flux(U, p, axis);
         for (int eq = 0; eq < NEQ; ++eq) {
-          for (int mode = 0; mode < B.num_modes; ++mode) {
+          for (int mode = 1; mode < B.num_modes; ++mode) {
             real const dphi_dxi = B.modes[loc].grad_phis(axis, pt, mode);
             real const dphi_dx = dphi_dxi * (2./dx[axis]);
             R[block](cell, eq, mode) += F[eq] * dphi_dx * detJ * wt;
           }
         }
-
       }
     }
   };
@@ -413,8 +403,8 @@ static void compute_face_integral(State* state)
           for (int mode = 0; mode < B.num_modes; ++mode) {
             real const phi = B.modes[loc].phis(pt, mode);
             for (int eq = 0; eq < NEQ; ++eq) {
-              R[block](cell, eq, mode) -=
-                sgn * F[axis][block](face, pt, eq) * phi * wt * detJ;
+              real const F_eq = F[axis][block](face, pt, eq);
+              R[block](cell, eq, mode) -= sgn * F_eq * phi * detJ * wt;
             }
           }
         }
@@ -422,6 +412,41 @@ static void compute_face_integral(State* state)
     }
   };
   for_each("face_integral", num_blocks, owned_cells, functor);
+}
+
+static void advance_explicitly(
+    State* state,
+    int const from_idx,
+    int const to_idx,
+    real const dt)
+{
+  Mesh& mesh = state->mesh;
+  int const num_blocks = mesh.num_owned_blocks();
+  Grid3 const cell_grid = mesh.cell_grid();
+  Subgrid3 const owned_cells = get_owned_cells(cell_grid);
+  auto const B = mesh.basis();
+  auto const block_info = mesh.block_info();
+  auto const R = mesh.get_residual("hydro").get();
+  auto const from = mesh.get_solution("hydro", from_idx).get();
+  auto const to = mesh.get_solution("hydro", to_idx).get();
+  auto functor = [=] DGT_DEVICE (
+      int const block,
+      Vec3<int> const& cell_ijk) DGT_ALWAYS_INLINE
+  {
+    int const cell = cell_grid.index(cell_ijk);
+    real const detJ = block_info.cell_detJs[block];
+    for (int mode = 0; mode < B.num_modes; ++mode) {
+      real const mass = detJ * B.mass[mode];
+      real const fac = dt / mass;
+      for (int eq = 0; eq < NEQ; ++eq) {
+        real const from_eq = from[block](cell, eq, mode);
+        real const R_eq = R[block](cell, eq, mode);
+        to[block](cell, eq, mode) = from_eq + fac * R_eq;
+      }
+    }
+  };
+  for_each("hydro::advance_explicitly",
+      num_blocks, owned_cells, functor);
 }
 
 static void axpby(
