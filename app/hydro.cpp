@@ -308,8 +308,8 @@ static void compute_fluxes(
         c[dir] = c_from_rho_p(U[dir][DENS], p[dir], gamma);
         F[dir] = get_physical_flux(U[dir], p[dir], axis);
       }
-      if ((0)) F_hat = get_hllc_flux(U, F, p, c, axis);
-      F_hat = get_llf_flux(U, F, p, c, axis);
+      F_hat = get_hllc_flux(U, F, p, c, axis);
+      if ((0)) F_hat = get_llf_flux(U, F, p, c, axis);
       for (int eq = 0; eq < NEQ; ++eq) {
         flux[block](face, pt, eq) = F_hat[eq];
       }
