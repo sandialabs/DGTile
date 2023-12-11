@@ -112,6 +112,7 @@ void Ghosting::build_messages(Mesh const& mesh)
       int const axis = adj.axis;
       int const dir = adj.dir;
       int const child = adj.which_child;
+      bool const boundary = adj.boundary;
       int const idir = invert_dir(dir);
       int const ichild = invert_child(axis, child, adj.kind);
       int const buffer_start = m_buffer_offsets.h_view[msg];
@@ -119,7 +120,11 @@ void Ghosting::build_messages(Mesh const& mesh)
       m_messages[SEND][msg].tag = get_tag(block, axis, dir, child);
       m_messages[SEND][msg].data = &(m_buffers[SEND](buffer_start, 0, 0));
       m_messages[RECV][msg].rank = I.rank;
-      m_messages[RECV][msg].tag = get_tag(I.block, axis, idir, ichild);
+      if (boundary) {
+        m_messages[RECV][msg].tag = get_tag(I.block, axis, dir, child);
+      } else {
+        m_messages[RECV][msg].tag = get_tag(I.block, axis, idir, ichild);
+      }
       m_messages[RECV][msg].data = &(m_buffers[RECV](buffer_start, 0, 0));
       msg++;
     }
