@@ -332,6 +332,12 @@ static AdjImpl get_adj(
         if (periodic[axis]) {
           adj_pt = make_periodic(adj_pt, bounds, axis, dir);
         } else {
+          Adjacent adj;
+          adj.neighbor = global_id;
+          adj.axis = static_cast<std::int8_t>(axis);
+          adj.dir = static_cast<std::int8_t>(dir);
+          adj.boundary = true;
+          result.adj.push_back(adj);
           continue;
         }
       }

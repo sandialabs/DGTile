@@ -34,6 +34,7 @@ struct Adjacent
   std::int8_t dir = -1;
   std::int8_t kind = EQUAL;
   std::int8_t which_child = 0;
+  bool boundary = false;
 };
 
 using AdjacentToLeaf = std::vector<Adjacent>;

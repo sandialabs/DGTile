@@ -115,12 +115,13 @@ TEST(tree_amr, get_adjacencies_2D)
   Periodic const periodic(false, false, false);
   Adjacencies const adjs = get_adjacencies(
       dim, z_leaves, leaves, base_pt, periodic);
-  EXPECT_EQ(adjs[0].size(), 2);
-  EXPECT_EQ(adjs[1].size(), 3);
-  EXPECT_EQ(adjs[2].size(), 3);
+  EXPECT_EQ(adjs[0].size(), 4);
+  EXPECT_EQ(adjs[1].size(), 4);
+  EXPECT_EQ(adjs[2].size(), 4);
   EXPECT_EQ(adjs[3].size(), 4);
   EXPECT_EQ(adjs[3][1].which_child, 3);
   EXPECT_EQ(adjs[4][1].which_child, 2);
+  EXPECT_EQ(adjs[0][0].boundary, true);
 }
 
 TEST(tree_amr, modify_1D)

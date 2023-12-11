@@ -187,46 +187,46 @@ static Adjacencies get_adj_single_block(int const dim, bool const p)
   return adjs;
 }
 
+static void check_single_adjs(int const dim, bool const periodic)
+{
+  Adjacencies const adjs = get_adj_single_block(dim, periodic);
+  bool const boundary = !periodic;
+  EXPECT_EQ(adjs.size(), 1);
+  EXPECT_EQ(adjs[0].size(), 2*dim);
+  for (auto const& adj : adjs[0]) {
+    EXPECT_EQ(adj.kind, EQUAL);
+    EXPECT_EQ(adj.boundary, boundary);
+  }
+}
+
 TEST(tree_uniform, get_adjacencies_single_block_1D)
 {
-  Adjacencies const adjs = get_adj_single_block(1, false);
-  EXPECT_EQ(adjs.size(), 1);
-  EXPECT_EQ(adjs[0].size(), 0);
+  check_single_adjs(1, false);
 }
 
 TEST(tree_uniform, get_adjacencies_single_block_2D)
 {
-  Adjacencies const adjs = get_adj_single_block(2, false);
-  EXPECT_EQ(adjs.size(), 1);
-  EXPECT_EQ(adjs[0].size(), 0);
+  check_single_adjs(2, false);
 }
 
 TEST(tree_uniform, get_adjacencies_single_block_3D)
 {
-  Adjacencies const adjs = get_adj_single_block(3, false);
-  EXPECT_EQ(adjs.size(), 1);
-  EXPECT_EQ(adjs[0].size(), 0);
+  check_single_adjs(3, false);
 }
 
 TEST(tree_uniform, get_adjacencies_single_block_periodic_1D)
 {
-  Adjacencies const adjs = get_adj_single_block(1, true);
-  EXPECT_EQ(adjs.size(), 1);
-  EXPECT_EQ(adjs[0].size(), 2);
+  check_single_adjs(1, true);
 }
 
 TEST(tree_uniform, get_adjacencies_single_block_periodic_2D)
 {
-  Adjacencies const adjs = get_adj_single_block(2, true);
-  EXPECT_EQ(adjs.size(), 1);
-  EXPECT_EQ(adjs[0].size(), 4);
+  check_single_adjs(2, true);
 }
 
 TEST(tree_uniform, get_adjacencies_single_block_periodic_3D)
 {
-  Adjacencies const adjs = get_adj_single_block(3, true);
-  EXPECT_EQ(adjs.size(), 1);
-  EXPECT_EQ(adjs[0].size(), 6);
+  check_single_adjs(3, true);
 }
 
 TEST(tree_uniform, get_domain_1D)
