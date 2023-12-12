@@ -53,7 +53,7 @@ static constexpr int ssprk_table[3][4] = {
   {0, 1, 1, 1}
 };
 
-struct axpby
+struct AXPBY
 {
   int r;
   real a;
@@ -62,12 +62,77 @@ struct axpby
   int y;
 };
 
-static axpby get_ssprk_axpby(int const order, int const stage)
+static AXPBY get_ssprk_axpby(int const order, int const stage)
 {
   if ((order == 2) && (stage == 1)) return {0, 0.5, 0, 0.5, 1};
   if ((order == 3) && (stage == 1)) return {1, 0.75, 0, 0.25, 1};
   if ((order == 3) && (stage == 2)) return {0, 1./3., 0, 2./3., 1};
   return {-1, 0., -1, 0., -1};
+}
+
+static void begin_explicit_stage(
+    Physics& physics,
+    int const from1,
+    int const from2,
+    int const into,
+    real const dt,
+    real const t)
+{
+  for (auto p : physics) {
+    p->begin_explicit_stage(from1, from2, into, t, dt);
+  }
+}
+
+static void compute_explicit_residual(
+    Physics& physics,
+    int const from1,
+    int const from2,
+    int const into,
+    real const dt,
+    real const t)
+{
+  for (auto p : physics) {
+    p->compute_explicit_residual(from1, from2, into, t, dt);
+  }
+}
+
+static void advance_explicitly(
+    Physics& physics,
+    int const from1,
+    int const from2,
+    int const into,
+    real const dt,
+    real const t)
+{
+  for (auto p : physics) {
+    p->advance_explicitly(from1, from2, into, dt, t);
+  }
+}
+
+static void end_explicit_stage(
+    Physics& physics,
+    int const from1,
+    int const from2,
+    int const into,
+    real const dt,
+    real const t)
+{
+  for (auto p : physics) {
+    p->end_explicit_stage(from1, from2, into, dt, t);
+  }
+}
+
+static void axpby(
+    Physics& physics,
+    int const r,
+    real const a,
+    int const x,
+    real const b,
+    int const y)
+{
+  for (auto p : physics) {
+    p->axpby(r, a, x, b, y);
+  }
 }
 
 void SSPRK::do_stage(
@@ -80,15 +145,13 @@ void SSPRK::do_stage(
   int const index = m_order-1;
   int const from = ssprk_table[index][stage];
   int const into = ssprk_table[index][stage+1];
-  axpby const I = get_ssprk_axpby(m_order, stage);
-  for (auto p : physics) {
-    p->begin_explicit_stage(from, -1, into, t, dt);
-    p->compute_explicit_residual(from, -1, into, t, dt);
-    p->advance_explicitly(from, -1, into, t, dt);
-    p->end_explicit_stage(from, -1, into, t, dt);
-    if (stage == 0) continue;
-    else p->axpby(I.r, I.a, I.x, I.b, I.y);
-  }
+  AXPBY const I = get_ssprk_axpby(m_order, stage);
+  dgt::begin_explicit_stage(physics, from, -1, into, t, dt);
+  dgt::compute_explicit_residual(physics, from, -1, into, t, dt);
+  dgt::advance_explicitly(physics, from, -1, into, t, dt);
+  dgt::end_explicit_stage(physics, from, -1, into, t, dt);
+  if (stage == 0) return;
+  dgt::axpby(physics, I.r, I.a, I.x, I.b, I.y);
 }
 
 IntegratorPtr create_integrator(std::string const& name)
