@@ -60,6 +60,12 @@ struct VTK
   WhenPtr when;
 };
 
+struct Passive
+{
+  std::vector<std::string> names;
+  std::vector<function_ptr<real>> values;
+};
+
 }
 
 struct Input
@@ -71,6 +77,7 @@ struct Input
   inputs::Mesh mesh;
   inputs::Hydro hydro;
   inputs::VTK vtk;
+  std::optional<inputs::Passive> passive;
 };
 
 struct Timer

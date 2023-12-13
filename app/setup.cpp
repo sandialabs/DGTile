@@ -1,5 +1,6 @@
 #include "app.hpp"
 #include "hydro.hpp"
+#include "passive.hpp"
 
 namespace app {
 
@@ -47,6 +48,9 @@ void setup(mpicpp::comm* comm, Input const& in, State& state)
   state.mesh.set_basis(p, q, tensor);
   state.integrator = create_integrator(in.time.integrator);
   state.physics.push_back(std::make_unique<Hydro>(&in, &state));
+  if (in.passive.has_value()) {
+    state.physics.push_back(std::make_unique<Passive>(&in, &state));
+  }
   state.mesh.initialize(in.mesh.block_grid);
   describe_mesh(state);
   describe_basis(state);

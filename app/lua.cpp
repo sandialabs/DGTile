@@ -317,6 +317,24 @@ static inputs::VTK parse_vtk(lua::table const& in)
   return result;
 }
 
+static inputs::Passive parse_passive(lua::table const& in)
+{
+  inputs::Passive result;
+  int const num_passive = in.num_entries();
+  result.names.resize(num_passive);
+  result.values.resize(num_passive);
+  int index = 0;
+  for (auto pair : in) {
+    check_key_is_string(pair, in);
+    std::string const name = lua::string(pair.first).value();
+    std::cout << name << "\n";
+    result.names[index] = name;
+    result.values[index] = make_scalar_function(in, name);
+    index++;
+  }
+  return result;
+}
+
 Input make_input(
     lua::table const& in,
     std::string const& file_name)
@@ -327,6 +345,7 @@ Input make_input(
       "basis",
       "mesh",
       "hydro",
+      "passive",
       "vtk"});
   Input result;
   result.name = in.get_string("name");
@@ -336,6 +355,9 @@ Input make_input(
   result.mesh = parse_mesh(in.get_table("mesh"));
   result.hydro = parse_hydro(in.get_table("hydro"));
   result.vtk = parse_vtk(in.get_table("vtk"));
+  if (in.has("passive")) {
+    result.passive = parse_passive(in.get_table("passive"));
+  }
   if (parsing_errors > 0) {
     throw std::runtime_error("dgtapp-> encountered parsing errors");
   }
