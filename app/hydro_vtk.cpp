@@ -143,51 +143,25 @@ struct pressure
   }
 };
 
-static void write_mesh(
-    std::filesystem::path const& path,
+void write_out(
+    std::stringstream& stream,
     Input const* input,
     State const* state,
-    int const soln_idx)
+    int const soln_idx,
+    int const block)
 {
-  Mesh const& mesh = state->mesh;
-  int const nblocks = mesh.num_owned_blocks();
   density f_rho;
   momentum f_mmtm;
   total_energy f_En;
   internal_energy f_e;
   pressure f_p;
   velocity f_v;
-  for (int block = 0; block < nblocks; ++block) {
-    std::stringstream stream;
-    std::filesystem::path const block_path = path / fmt::format("{}.vtr", block);
-    dgt::vtk::write_vtr_start(stream, block, mesh, state->time, state->step);
-    dgt::vtk::write_vtr_field(stream, "density", get_variable(f_rho, input, state, block, 1, soln_idx));
-    dgt::vtk::write_vtr_field(stream, "momentum", get_variable(f_mmtm, input, state, block, DIMENSIONS, soln_idx));
-    dgt::vtk::write_vtr_field(stream, "total_energy", get_variable(f_En, input, state, block, 1, soln_idx));
-    dgt::vtk::write_vtr_field(stream, "internal_energy", get_variable(f_e, input, state, block, 1, soln_idx));
-    dgt::vtk::write_vtr_field(stream, "pressure", get_variable(f_p, input, state, block, 1, soln_idx));
-    dgt::vtk::write_vtr_field(stream, "velocity", get_variable(f_v, input, state, block, DIMENSIONS, soln_idx));
-    dgt::vtk::write_vtr_end(stream);
-    dgt::write_stream(block_path, stream);
-  }
-  if (state->mesh.comm()->rank() == 0) {
-    std::filesystem::path const vtm_path = path / "blocks.vtm";
-    std::stringstream stream;
-    dgt::vtk::write_vtm(stream, "", mesh.num_total_blocks());
-    dgt::write_stream(vtm_path, stream);
-  }
-}
-
-void write_out(Input const* input, State const* state, int soln_idx)
-{
-  static int ctr = 0;
-  std::filesystem::path const out_dir = input->name;
-  std::filesystem::path const vtk_dir = out_dir / "vtk";
-  std::filesystem::path const path = vtk_dir / std::to_string(ctr);
-  std::filesystem::create_directory(vtk_dir);
-  std::filesystem::create_directory(path);
-  write_mesh(path, input, state, soln_idx);
-  ctr++;
+  dgt::vtk::write_vtr_field(stream, "density", get_variable(f_rho, input, state, block, 1, soln_idx));
+  dgt::vtk::write_vtr_field(stream, "momentum", get_variable(f_mmtm, input, state, block, DIMENSIONS, soln_idx));
+  dgt::vtk::write_vtr_field(stream, "total_energy", get_variable(f_En, input, state, block, 1, soln_idx));
+  dgt::vtk::write_vtr_field(stream, "internal_energy", get_variable(f_e, input, state, block, 1, soln_idx));
+  dgt::vtk::write_vtr_field(stream, "pressure", get_variable(f_p, input, state, block, 1, soln_idx));
+  dgt::vtk::write_vtr_field(stream, "velocity", get_variable(f_v, input, state, block, DIMENSIONS, soln_idx));
 }
 
 }

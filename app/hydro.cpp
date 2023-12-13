@@ -118,9 +118,9 @@ real Hydro::compute_time_step()
   return hydro::compute_time_step(m_input, m_state);
 }
 
-void Hydro::handle_visualization()
+void Hydro::handle_vtk(std::stringstream& stream, int const block)
 {
-  hydro::write_out(m_input, m_state, 0);
+  hydro::write_out(stream, m_input, m_state, 0, block);
 }
 
 void Hydro::handle_history()

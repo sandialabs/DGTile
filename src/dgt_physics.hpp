@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sstream>
 #include <vector>
 
 #include "dgt_defines.hpp"
@@ -22,7 +23,15 @@ class PhysicsPackage
   public:
 
     virtual double compute_time_step() = 0;
-    virtual void handle_visualization() {}
+
+    virtual void handle_vtk(
+        std::stringstream& stream,
+        int const block)
+    {
+      (void)stream;
+      (void)block;
+    }
+
     virtual void handle_history() {}
 
   public:

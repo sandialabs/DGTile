@@ -93,7 +93,7 @@ class Hydro : public PhysicsPackage
     std::string name() const override { return "Hydro"; }
     void apply_initial_conditions() override;
     double compute_time_step() override;
-    void handle_visualization() override;
+    void handle_vtk(std::stringstream&, int) override;
     void handle_history() override;
     void begin_explicit_stage(int, int, int, real, real) override;
     void compute_explicit_residual(int, int, int, real, real) override;
@@ -104,7 +104,9 @@ class Hydro : public PhysicsPackage
 namespace hydro {
 void apply_ics(Input const* in, State* state);
 real compute_time_step(Input const* in, State* state);
-void write_out(Input const* in, State const* state, int const soln_idx);
+void write_out(
+    std::stringstream& stream, Input const* in, State const* state,
+    int const soln_idx, int const block);
 void compute_fluxes(Input const* in, State* state, int const from);
 void compute_volume_integral(Input const* in, State* state, int const from);
 void compute_face_integral(State* state);
