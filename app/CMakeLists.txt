@@ -1,5 +1,12 @@
 set(APP_SOURCES
   hydro.cpp
+  hydro_bounds.cpp
+  hydro_dt.cpp
+  hydro_face_integral.cpp
+  hydro_fluxes.cpp
+  hydro_ics.cpp
+  hydro_volume_integral.cpp
+  hydro_vtk.cpp
   lua.cpp
   main.cpp
   run.cpp
