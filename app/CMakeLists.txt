@@ -9,6 +9,9 @@ set(APP_SOURCES
   hydro_vtk.cpp
   lua.cpp
   main.cpp
+  passive.cpp
+  passive_ics.cpp
+  passive_vtk.cpp
   run.cpp
   setup.cpp
 )
