@@ -12,7 +12,7 @@ set(DGT_HEADERS
   dgt_grid3.hpp
   dgt_initialize.hpp
   dgt_integrator.hpp
-  dgt_interpoloate.hpp
+  dgt_interpolate.hpp
   dgt_lua.hpp
   dgt_macros.hpp
   dgt_mesh.hpp
