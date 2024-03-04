@@ -24,6 +24,7 @@ class Block {
     Border m_border[DIMS][ndirs];
     std::vector<View<double***>> m_soln;
     View<double***> m_flux[DIMS];
+    View<double***> m_path_cons[DIMS];
     View<double***> m_resid;
     std::vector<Field> m_fields;
   public:
@@ -46,9 +47,11 @@ class Block {
     [[nodiscard]] Border const& border(int axis, int dir) const;
     [[nodiscard]] View<double***> soln(int idx) const;
     [[nodiscard]] View<double***> flux(int axis) const;
+    [[nodiscard]] View<double***> path_cons(int axis) const;
     [[nodiscard]] View<double***> resid() const;
     [[nodiscard]] p3a::simd_view<double***> simd_soln(int idx) const;
     [[nodiscard]] p3a::simd_view<double***> simd_flux(int axis) const;
+    [[nodiscard]] p3a::simd_view<double***> simd_path_cons(int axis) const;
     [[nodiscard]] p3a::simd_view<double***> simd_resid() const;
     [[nodiscard]] int field_idx(std::string name) const;
     [[nodiscard]] Field const& field(std::string name) const;

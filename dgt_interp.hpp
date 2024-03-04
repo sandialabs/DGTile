@@ -163,6 +163,23 @@ p3a::static_vector<double, neq> interp_vec_intr(
 
 template <int neq>
 [[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
+p3a::static_vector<double, neq> d_interp_vec_intr(
+    View<double***> U, Basis const& b,
+    p3a::vector3<double> const& dx,
+    int axis, int cell, int pt) {        
+   p3a::static_vector<double, neq> val;
+   for (int eq = 0; eq < neq; ++eq){
+     val[eq] = 0.;
+     for (int m = 0; m < b.nmodes; ++m) {
+       double const dphi_dj = b.dphi_intr(axis, pt, m) * (2./dx[axis]);
+       val[eq] += U(cell, eq, m) * dphi_dj;
+     }
+   }
+   return val;
+}
+
+template <int neq>
+[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
 p3a::static_vector<double, neq> interp_vec_side(
     View<double***> U, Basis const& b,
     int cell, int axis, int dir, int pt) {
