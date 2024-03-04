@@ -242,6 +242,9 @@ void compute_vol_integral(State& state, Block& block, int soln_idx) {
     for (int pt = 0; pt < nintr_pts; ++pt) {
       double const wt = b.wt_intr(pt);
       U = dgt::interp_vec_intr<NEQ>(soln, b, cell, pt, mask);
+      //for (int axis = 0; axis < b.dim; ++axis) {
+      //   dUdx[axis] = dgt::d_interp_vec_intr<NEQ>(soln, b, dx, axis, cell, pt, mask);
+      //}
       P = get_pressure(U, gamma);
       if (any_of((P != P) && mask)) { *error_ptr = 1; }
       for (int axis = 0; axis < dim; ++axis) {

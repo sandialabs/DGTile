@@ -188,6 +188,11 @@ View<double****> Border::amr_flux() const {
   return m_amr_flux;
 }
 
+View<double****> Border::amr_path_cons() const {
+  return m_amr_path_cons;
+}
+
+
 void Border::set_axis(int axis) {
   m_axis = axis;
 }
@@ -248,6 +253,11 @@ static std::string amr_flux_name() {
   return "dgt::Border::m_amr_flux";
 }
 
+static std::string amr_path_cons_name() {
+  return "dgt::Border::m_amr_path_cons";
+}
+
+
 void Border::allocate(int nmodal_eq, int nflux_eq) {
   CALI_CXX_MARK_FUNCTION;
   verify_border(*this);
@@ -262,6 +272,11 @@ void Border::allocate(int nmodal_eq, int nflux_eq) {
     m_amr_flux = View<double****>(
         amr_flux_name(), nsides, nchild, npts, nflux_eq);
   }
+  if (m_type == COARSE_TO_FINE) {
+    m_amr_path_cons = View<double****>(
+        amr_path_cons_name(), nsides, nchild, npts, nflux_eq);
+  }
+
   for (int msg_dir = 0; msg_dir < ndirs; ++msg_dir) {
     if (m_type == COARSE_TO_FINE) {
       m_amr[msg_dir].soln = View<double****>(
@@ -286,6 +301,7 @@ void Border::allocate(int nmodal_eq, int nflux_eq) {
 void Border::deallocate() {
   CALI_CXX_MARK_FUNCTION;
   m_amr_flux = View<double****>();
+  m_amr_path_cons = View<double****>();
   for (int msg_dir = 0; msg_dir < ndirs; ++msg_dir) {
     m_soln[msg_dir].val = View<double***>();
     m_avg_soln[msg_dir].val = View<double**>();

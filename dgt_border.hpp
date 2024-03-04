@@ -37,6 +37,7 @@ class Border {
     Message<double**> m_avg_soln[ndirs];
     AMRBorderData m_amr[ndirs];
     View<double****> m_amr_flux;
+    View<double****> m_amr_path_cons;
   public:
     Border() = default;
     [[nodiscard]] int axis() const;
@@ -50,6 +51,7 @@ class Border {
     [[nodiscard]] p3a::static_array<View<double***>, ndirs> soln() const;
     [[nodiscard]] p3a::static_array<View<double****>, ndirs> amr_soln() const;
     [[nodiscard]] View<double****> amr_flux() const;
+    [[nodiscard]] View<double****> amr_path_cons() const;
     void set_axis(int axis);
     void set_dir(int dir);
     void set_type(int type);
